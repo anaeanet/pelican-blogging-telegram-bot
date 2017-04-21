@@ -1,4 +1,5 @@
-__pycache__
+.idea/
 .DS_Store
+__pycache__/
 *.sqlite
-src/config.py
+config.py

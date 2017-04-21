@@ -1,11 +1,11 @@
-__author__ = 'anaeanet'
-
 import sqlite3
+
+__author__ = 'anaeanet'
 
 
 class DBWrapper:
 
-    def __init__(self, dbname="telegramposts.sqlite"):
+    def __init__(self, dbname="database.sqlite"):
         self.dbname = dbname
         self.conn = sqlite3.connect(dbname)
 

@@ -1,6 +1,7 @@
+from enum import Enum
+
 __author__ = 'anaeanet'
 
-from enum import Enum
 
 class ParseMode(Enum):
     MARKDOWN = "Markdown"
