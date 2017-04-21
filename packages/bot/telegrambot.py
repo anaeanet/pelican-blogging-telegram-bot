@@ -13,8 +13,8 @@ class TelegramBot:
 
     def __init__(self, database):
         self.__url = config.url.format(config.token)
-        self.__DATABASE = database
-        self.__lastupdateid = None
+        self.__database = database
+        self.__last_update_id = None
 
     def get_url_response(self, url):
         response = requests.get(url)
@@ -54,27 +54,40 @@ class TelegramBot:
 
     def handle_updates(self, updates):
         for update in updates["result"]:
-            text = update["message"]["text"]
-            chatid = update["message"]["chat"]["id"]
+
+            print(update)
+
+            #TODO is user edits older message, there is no "message" key in update...
+            if "message" not in update:
+                continue
             user = update["message"]["chat"]["username"]
+            chat_id = update["message"]["chat"]["id"]
+
+            #TODO sending foto with caption does not contain text
+            if "text" not in update["message"]:
+                continue
+            text = update["message"]["text"]
+
+
+            #TODO only react if user is authorized to interact with bot
 
             if text == "/start":
-                self.send_message(chatid, "Welcome to your mobile blogging bot!"
+                self.send_message(chat_id, "Welcome to your mobile blogging bot!"
                                     + "\r\n" + "Send /help to see available commands.")
             elif text == "/help":
-                self.send_message(chatid, "*Drafts - Unpublished blog posts*"
+                self.send_message(chat_id, "*Drafts - Unpublished blog posts*"
                             + "\r\n" + "/createdraft - begin a new draft"
                             + "\r\n" + "/updatedraft - continue working on a draft"
                             + "\r\n" + "/deletedraft - delete a draft", parse_mode=ParseMode.MARKDOWN.value)
             elif text.startswith("/"):
-                continue
+                None
             else:
-                self.send_message(chatid, text)
+                self.send_message(chat_id, text)
 
     def run(self):
         while True:
-            updates = self.get_updates(self.__lastupdateid)
+            updates = self.get_updates(self.__last_update_id)
             if len(updates["result"]) > 0:
-                self.__lastupdateid = self.get_last_update_id(updates) + 1
+                self.__last_update_id = self.get_last_update_id(updates) + 1
                 self.handle_updates(updates)
             time.sleep(0.5)

@@ -8,8 +8,8 @@ __author__ = "anaeanet"
 def main():
     db = DBWrapper()
     db.setup()
-    #bot = TelegramBot(db)
-    bot = MockBot(db)
+    bot = TelegramBot(db)
+    #bot = MockBot(db)
     bot.run()
 
 
