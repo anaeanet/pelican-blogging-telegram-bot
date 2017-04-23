@@ -1,6 +1,6 @@
 import json
 
-from packages.bot.telegrambot import TelegramBot
+from packages.bot.pelicanmarkdownbot import PelicanMarkdownBot
 
 __author__ = "anaeanet"
 
@@ -20,7 +20,7 @@ class Sequence:
         return self.__index - 1
 
 
-class MockBot(TelegramBot):
+class MockBot(PelicanMarkdownBot):
 
     def __init__(self, database):
         super().__init__(database)

@@ -1,10 +1,10 @@
 __author__ = "aneanet"
 
 
-class BaseState:
+class AbstractState:
 
     def __init__(self):
-        if type(self) is BaseState:
+        if type(self) is AbstractState:
             raise TypeError("Abstract class! Cannot be instantiated.")
 
     def process_update(self, update):

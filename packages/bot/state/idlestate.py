@@ -1,10 +1,10 @@
-from packages.bot.state.basestate import BaseState
+from packages.bot.state.abstractstate import AbstractState
 from packages.bot.parsemode import ParseMode
 
 __author__ = "aneanet"
 
 
-class IdleState(BaseState):
+class IdleState(AbstractState):
 
     def __init__(self, context):
         self.__context = context
