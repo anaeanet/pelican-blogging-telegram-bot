@@ -20,13 +20,6 @@ def get_json_from_url(url):
     return js
 
 
-def get_latest_update_id(updates):
-    update_ids = []
-    for update in updates["result"]:
-        update_ids.append(int(update["update_id"]))
-    return max(update_ids)
-
-
 def build_keyboard(keyboard):
     reply_markup = {"keyboard": keyboard, "one_time_keyboard": True}
     return json.dumps(reply_markup)
@@ -80,11 +73,9 @@ class AbstractTelegramBot:
     def run(self):
         while True:
             updates = self.get_updates(self.__next_update_id)
-            #updates["result"].sort(key=lambda x: x["update_id"])
+            updates["result"].sort(key=lambda x: x["update_id"]) #sort updates by update_id
 
-            if len(updates["result"]) > 0:                                  #TODO obsolete after sorting updates
-                self.__next_update_id = get_latest_update_id(updates) + 1   #TODO obsolete after sorting updates
-                for update in updates["result"]:
-                    self.handle_update(update)
-                    #self.__next_update_id = max(self.__next_update_id, update["update_id"])
+            for update in updates["result"]:
+               self.handle_update(update)
+               self.__next_update_id = update["update_id"] + 1
             time.sleep(0.5)

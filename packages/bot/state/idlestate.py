@@ -16,7 +16,7 @@ class IdleState(AbstractState):
         # TODO is user edits older message, there is no "message" key in update...
         if "message" not in update:
             return
-        user = update["message"]["chat"]["username"]
+        user_id = update["message"]["from"]["id"]
         chat_id = update["message"]["chat"]["id"]
 
         # TODO sending foto with caption does not contain text
@@ -40,4 +40,4 @@ class IdleState(AbstractState):
             self.__context.send_message(chat_id, {"text":text})
 
         #TODO update user status after processing message
-        #self.__context.set_user_state()
+        #self.__context.set_user_state(user_id, <targetState>)
