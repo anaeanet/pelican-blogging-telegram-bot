@@ -37,17 +37,17 @@ class AbstractTelegramBot:
     def __init__(self, database):
         self.__url = config.url.format(config.token)
         self.__database = database
-        self.__start_state = None
         self.__next_update_id = None
-        self.__state = dict()
+        self.__user_state = dict()
+        self.__start_state = None
         if type(self) is AbstractTelegramBot:
             raise TypeError("Abstract class! Cannot be instantiated.")
 
     def set_start_state(self, state):
         self.__start_state = state
 
-    def set_state(self, user, state):
-        self.__state[user] = state
+    def set_user_state(self, user, state):
+        self.__user_state[user] = state
 
     def get_updates(self, offset=None):
         url = self.__url + "getUpdates?timeout=100"
@@ -72,17 +72,19 @@ class AbstractTelegramBot:
                 continue
             else:
                 user_id = update[key]["from"]["id"]
+                if user_id not in self.__user_state:
+                    self.set_user_state(user_id, self.__start_state)
 
-        if user_id not in self.__state:
-            self.set_state(user_id, self.__start_state)
-
-        self.__state[user_id].process_update(update)
+        self.__user_state[user_id].process_update(update)
 
     def run(self):
         while True:
             updates = self.get_updates(self.__next_update_id)
-            if len(updates["result"]) > 0:
-                self.__next_update_id = get_latest_update_id(updates) + 1
+            #updates["result"].sort(key=lambda x: x["update_id"])
+
+            if len(updates["result"]) > 0:                                  #TODO obsolete after sorting updates
+                self.__next_update_id = get_latest_update_id(updates) + 1   #TODO obsolete after sorting updates
                 for update in updates["result"]:
                     self.handle_update(update)
+                    #self.__next_update_id = max(self.__next_update_id, update["update_id"])
             time.sleep(0.5)

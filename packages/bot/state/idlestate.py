@@ -1,5 +1,6 @@
 from packages.bot.state.abstractstate import AbstractState
 from packages.bot.parsemode import ParseMode
+from packages.bot.abstracttelegrambot import AbstractTelegramBot
 
 __author__ = "aneanet"
 
@@ -37,3 +38,6 @@ class IdleState(AbstractState):
             None
         else:
             self.__context.send_message(chat_id, {"text":text})
+
+        #TODO update user status after processing message
+        #self.__context.set_user_state()
