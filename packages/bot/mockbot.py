@@ -1,3 +1,5 @@
+import json
+
 from packages.bot.telegrambot import TelegramBot
 
 __author__ = "anaeanet"
@@ -24,14 +26,12 @@ class MockBot(TelegramBot):
         super().__init__(database)
         self.__sequence = Sequence()
 
-    def get_url_response(self, url):
-        if "getUpdates?timeout" in url:
-            content = input("enter message to bot: ")
-            content = EMPTYRESPONSE1 + str(self.__sequence.get()) + EMPTYRESPONSE2 + '"' + str(content) + '"' + EMPTYRESPONSE3
-        else:
-            content = '{"ok":true,"result":[]}'
-        return content
+    def get_updates(self, offset=None):
+        userinput = input("enter message to bot: ")
+        content = EMPTYRESPONSE1 + str(self.__sequence.get()) + EMPTYRESPONSE2 + '"' + str(userinput) + '"' + EMPTYRESPONSE3
+        js = json.loads(content)
+        return js
 
-    def send_message(self, chat_id, text, reply_markup=None, parse_mode=None):
-        print(text)
-        super().send_message(chat_id, text, reply_markup=None, parse_mode=None)
+    def send_message(self, chat_id, content):
+        if "text" in content:
+            print(content["text"])
