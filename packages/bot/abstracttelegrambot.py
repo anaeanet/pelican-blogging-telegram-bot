@@ -50,9 +50,10 @@ class AbstractTelegramBot:
     def send_message(self, chat_id, content):
         url = self.__url + "sendMessage?chat_id={}".format(chat_id)
         for key in content:
-            if key == "text":
-                content[key] = urllib.parse.quote_plus(content[key])
-            url += ("&" + key + "={}").format(content[key])
+            if content[key] is not None: #ignore empty attributes
+                if key == "text":
+                    content[key] = urllib.parse.quote_plus(content[key])
+                url += ("&" + key + "={}").format(content[key])
         get_url_response(url)
 
     def handle_update(self, update):
