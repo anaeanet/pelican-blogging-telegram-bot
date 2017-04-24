@@ -3,8 +3,6 @@ import requests
 import time
 import urllib
 
-import config
-
 __author__ = "anaeanet"
 
 
@@ -27,8 +25,8 @@ def build_keyboard(keyboard):
 
 class AbstractTelegramBot:
 
-    def __init__(self, database):
-        self.__url = config.url.format(config.token)
+    def __init__(self, token, database):
+        self.__url = "https://api.telegram.org/bot{}/".format(token)
         self.__database = database
         self.__next_update_id = None
         self.__user_state = dict()

@@ -11,10 +11,10 @@ class PelicanMarkdownBot(AbstractTelegramBot):
     It sets up its own start state and database 
     """
 
-    def __init__(self):
+    def __init__(self, token):
         database = PelicanMarkdownDatabaseWrapper("database.sqlite")
-        super().__init__(database)
         database.setup()
+        super().__init__(token, database)
 
         #initialize statuses for all users on db
         for user in database.get_users():
