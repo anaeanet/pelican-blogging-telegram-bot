@@ -22,8 +22,8 @@ class Sequence:
 
 class MockBot(PelicanMarkdownBot):
 
-    def __init__(self, token):
-        super().__init__(token)
+    def __init__(self, token_url, start_state_class, authorized_users):
+        super().__init__(token_url, start_state_class, authorized_users)
         self.__sequence = Sequence()
 
     def get_updates(self, offset=None):
@@ -32,6 +32,5 @@ class MockBot(PelicanMarkdownBot):
         js = json.loads(content)
         return js
 
-    def send_message(self, chat_id, content):
-        if "text" in content:
-            print(content["text"])
+    def send_message(self, chat_id, text, disable_web_page_preview=None, disable_notification=None, parse_mode=None, reply_to_message_id=None, reply_markup=None):
+        print(text)

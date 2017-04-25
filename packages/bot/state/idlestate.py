@@ -25,17 +25,17 @@ class IdleState(AbstractState):
         # TODO only react if user is authorized to interact with bot
 
         if text == "/start":
-            self.get_context().send_message(chat_id, {"text":"Welcome to your mobile blogging bot!"
-                              + "\r\n" + "Send /help to see available commands."})
+            self.get_context().send_message(chat_id, "Welcome to your mobile blogging bot!"
+                              + "\r\n" + "Send /help to see available commands.")
         elif text == "/help":
-            self.get_context().send_message(chat_id, {"text":"*Drafts - Unpublished blog posts*"
+            self.get_context().send_message(chat_id, "*Drafts - Unpublished blog posts*"
                               + "\r\n" + "/createdraft - begin a new draft"
                               + "\r\n" + "/updatedraft - continue working on a draft"
-                              + "\r\n" + "/deletedraft - delete a draft", "parse_mode":ParseMode.MARKDOWN.value})
+                              + "\r\n" + "/deletedraft - delete a draft", parse_mode=ParseMode.MARKDOWN.value)
         elif text.startswith("/"):
             None
         else:
-            self.get_context().send_message(chat_id, {"text":text})
+            self.get_context().send_message(chat_id, text)
 
         #TODO update user status after processing message
         #self.__context.set_user_state(user_id, <targetState>)
