@@ -1,10 +1,14 @@
-from packages.bot.state.abstractstate import AbstractState
+from packages.states.abstractstate import AbstractState
 from packages.bot.parsemode import ParseMode
 
 __author__ = "aneanet"
 
 
 class IdleState(AbstractState):
+    """
+    Concrete state implementation.
+    This class serves as start state for all users of "PelicanMarkdownBot".
+    """
 
     def process_update(self, update):
         print(update)

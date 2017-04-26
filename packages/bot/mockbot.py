@@ -22,8 +22,8 @@ class Sequence:
 
 class MockBot(PelicanMarkdownBot):
 
-    def __init__(self, token_url, start_state_class, authorized_users):
-        super().__init__(token_url, start_state_class, authorized_users)
+    def __init__(self, token_url, start_state_class, database, authorized_users=[]):
+        super().__init__(token_url, start_state_class, database, authorized_users)
         self.__sequence = Sequence()
 
     def get_updates(self, offset=None):

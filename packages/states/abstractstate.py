@@ -2,6 +2,10 @@ __author__ = "aneanet"
 
 
 class AbstractState:
+    """
+    Abstract state class.
+    It provides access to its context and a single method to be implemented by all child classes.
+    """
 
     def __init__(self, context):
         self.__context = context

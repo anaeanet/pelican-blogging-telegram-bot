@@ -1,12 +1,15 @@
 import json
 import requests
-import time
 import urllib
 
 __author__ = "anaeanet"
 
 
 class AbstractTelegramBot:
+    """
+    Very basic abstract telegram bot class.
+    It only takes care of receiving updates and sending messages.
+    """
 
     def __init__(self, token_url):
         self.__url = token_url
@@ -63,5 +66,5 @@ class AbstractTelegramBot:
             updates["result"].sort(key=lambda x: x["update_id"])
 
             for update in updates["result"]:
-               self.handle_update(update)
-               self.__next_update_id = update["update_id"] + 1
+                self.handle_update(update)
+                self.__next_update_id = update["update_id"] + 1
