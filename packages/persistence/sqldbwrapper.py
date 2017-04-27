@@ -30,11 +30,13 @@ class SQLDBWrapper:
         self.__conn.commit()
 
     def __serialize_state(state):
-        return ".".join([state.__module__, state.__name__])
+        module = state.__module__
+        klass = state.__class__.__name__
+        return ".".join([module, klass])
 
     def __deserialize_state(self, module_dot_class):
         module, klass = module_dot_class.rsplit(".", 1)
-        return getattr(importlib.import_module(module), klass)(self.get_context())
+        return getattr(importlib.import_module(module), klass)
 
     def get_users(self, user_id=None, is_authorized=None, state=None):
         stmt = "SELECT * FROM user WHERE"
@@ -69,6 +71,17 @@ class SQLDBWrapper:
         self.__conn.commit()
 
     def update_user(self, user_id, is_authorized=None, state=None):
+        """
+        Fetches users from the database that fulfill *all* given criteria.
+        If no criterion is specified, all users stored in the database are returned.
+        If multiple criteria are specified, all of them need to be fulfilled for a user to be part of the result set.
+        
+        :param user_id: only users with given user_id are returned (at most 1 as user_id is primary key)
+        :param is_authorized: only users with specified authorization flag (True/False) are returned
+        :param state: only users with specified state are returned
+        :return: a list of dicionaries where each dictionary represents one user (user_id, is_authorized, state_class)
+        """
+
         stmt = "UPDATE user SET id = ?"
         args = [user_id]
 

@@ -1,4 +1,5 @@
 from packages.bot.abstracttelegrambot import AbstractTelegramBot
+import packages.bot.telegram as telegram
 
 __author__ = "anaeanet"
 
@@ -29,14 +30,9 @@ class AbstractUserStateBot(AbstractTelegramBot):
         return self.__user_state_dict[user_id] if user_id in self.__user_state_dict else None
 
     def handle_update(self, update):
-        user_id = None
+        user_id = telegram.get_update_sender_id(update)
 
-        for key in update:
-            if key == "update_id":
-                continue
-            else:
-                user_id = update[key]["from"]["id"]
-                if user_id not in self.__user_state_dict or self.get_user_state(user_id) is None:
-                    self.set_user_state(user_id, self.get_start_state_class()(self))
+        if user_id not in self.__user_state_dict or self.get_user_state(user_id) is None:
+            self.set_user_state(user_id, self.get_start_state_class()(self))
 
         self.get_user_state(user_id).process_update(update)
