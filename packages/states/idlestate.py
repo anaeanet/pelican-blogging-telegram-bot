@@ -36,8 +36,10 @@ class IdleState(AbstractState):
                               + "\r\n" + "/createdraft - begin a new draft"
                               + "\r\n" + "/updatedraft - continue working on a draft"
                               + "\r\n" + "/deletedraft - delete a draft", parse_mode=ParseMode.MARKDOWN.value)
+        elif text == "/createdraft":
+            from packages.states.newdraftstate import NewDraftState
+            self.get_context().set_user_state(user_id, NewDraftState(self.get_context()))
+            self.get_context().send_message(chat_id, "What is the *title* of your new draft?", parse_mode=ParseMode.MARKDOWN.value)
         else:
             self.get_context().send_message(chat_id, text)
 
-        #TODO update user status after processing message
-        #self.__context.set_user_state(user_id, <targetState>)

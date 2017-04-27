@@ -19,38 +19,21 @@ class PelicanMarkdownBot(AbstractUserStateBot):
         self.__database.setup()
 
         if authorized_users is not None:
-            self.__process_authorized_users(authorized_users)
-
-        self.__load_user_states_from_database()
-
-
-    def __process_authorized_users(self, authorized_users):
-        """
-        Store all authorized users on database.
-        
-        :param authorized_users: list of user ids authorized to interact with the bot
-        :return: -
-        """
-
-        for user_id in authorized_users:
-            if not self.__database.get_users(user_id=user_id):
-                self.__database.add_user(user_id, True, self.get_start_state_class()(self))
-            else:
-                self.__database.update_user(user_id, is_authorized=True)
-
-    def __load_user_states_from_database(self):
-        """
-        Initialize statuses for all users already stored on database
-        
-        :return: -
-        """
+            for user_id in authorized_users:
+                if not self.__database.get_users(user_id=user_id):
+                    self.__database.add_user(user_id, True, self.get_start_state_class()(self))
+                else:
+                    self.__database.update_user(user_id, is_authorized=True)
 
         for user in self.__database.get_users(is_authorized=True):
-            self.set_user_state(user["user_id"], user["state"](self))
+            super().set_user_state(user["user_id"], user["state"](self))
 
     def set_user_state(self, user_id, state):
-        # TODO store state on db, fetch back from db and call super
-        db_state = state
+        if not self.__database.get_users(user_id=user_id):
+            self.__database.add_user(user_id, False, self.get_start_state_class()(self))
+        else:
+            self.__database.update_user(user_id, state=state)
+
         super().set_user_state(user_id, state)
 
     def handle_update(self, update):
