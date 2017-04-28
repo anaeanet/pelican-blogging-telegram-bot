@@ -15,31 +15,34 @@ class IdleState(AbstractState):
         print(update)
 
         user_id = telegram.get_update_sender_id(update)
+        update_type = telegram.get_update_type(update)
 
-        # TODO only process specific updates, i.e. message, edited_message, ...
+        if update_type == "message":
+            chat_id = update["message"]["chat"]["id"]
+            text =  update[update_type]["text"].strip(' \t\n\r') if "text" in update[update_type] else None
 
-        # TODO is user edits older message, there is no "message" key in update...
-        if "message" not in update:
-            return
-        chat_id = update["message"]["chat"]["id"]
+            if text:
+                # text message
 
-        # TODO sending foto with caption does not contain text
-        if "text" not in update["message"]:
-            return
-        text = update["message"]["text"]
+                if text == "/start":
+                    self.get_context().send_message(chat_id, "Welcome to your mobile blogging bot!"
+                                      + "\r\n" + "Send /help to see currently available commands.")
+                    # TODO send custom reply keyboard with available commands to chose from
+                    return
 
-        if text == "/start":
-            self.get_context().send_message(chat_id, "Welcome to your mobile blogging bot!"
-                              + "\r\n" + "Send /help to see available commands.")
-        elif text == "/help":
-            self.get_context().send_message(chat_id, "*Drafts - Unpublished blog posts*"
-                              + "\r\n" + "/createdraft - begin a new draft"
-                              + "\r\n" + "/updatedraft - continue working on a draft"
-                              + "\r\n" + "/deletedraft - delete a draft", parse_mode=ParseMode.MARKDOWN.value)
-        elif text == "/createdraft":
-            from packages.states.newdraftstate import NewDraftState
-            self.get_context().set_user_state(user_id, NewDraftState(self.get_context()))
-            self.get_context().send_message(chat_id, "What is the *title* of your new draft?", parse_mode=ParseMode.MARKDOWN.value)
-        else:
-            self.get_context().send_message(chat_id, text)
+                elif text == "/help":
+                    self.get_context().send_message(chat_id, "*Drafts - Unpublished blog posts*"
+                                      + "\r\n" + "/createdraft - begin a new draft"
+                                      + "\r\n" + "/updatedraft - continue working on a draft"
+                                      + "\r\n" + "/deletedraft - delete a draft", parse_mode=ParseMode.MARKDOWN.value)
+                    return
 
+                elif text == "/createdraft":
+                    from packages.states.newdraftstate import NewDraftState
+                    self.get_context().send_message(chat_id, "What is the draft's *title*?", parse_mode=ParseMode.MARKDOWN.value)
+                    self.get_context().set_user_state(user_id, NewDraftState(self.get_context()))
+                    # TODO send custom reply keyboard with available commands to chose from
+                    return
+
+        self.get_context().send_message(chat_id, "Unrecognized command or message!"
+                                        + "\r\n" + "Send /help to see currently available commands.")

@@ -5,7 +5,7 @@ import packages.bot.telegram as telegram
 __author__ = "aneanet"
 
 
-class NewDraftState(AbstractState):
+class UpdateDraftState(AbstractState):
     """
     Concrete state implementation.
     This class serves as start state for all users of "PelicanMarkdownBot".
@@ -23,13 +23,7 @@ class NewDraftState(AbstractState):
 
             if text:
                 # text message
-
-                if "entities" not in update[update_type]:
-                    # plain text message, does not contain bot_commands, urls, ...
-
-                    # TODO create post record in db with text as title
-                    self.get_context().send_message(chat_id, "Draft '*" + text + "*' has been created.", parse_mode=ParseMode.MARKDOWN.value)
-                    return
+                return
 
         from packages.states.idlestate import IdleState
         self.get_context().send_message(chat_id, "Unrecognized command or message!")
