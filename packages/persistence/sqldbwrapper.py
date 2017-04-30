@@ -15,16 +15,27 @@ class SQLDBWrapper:
 
     def setup(self):
 
+        # TODO: what about posts with same title for one user?
+
         # create required tables
-        tblstmts = [  "CREATE TABLE IF NOT EXISTS user (id INTEGER PRIMARY KEY NOT NULL, is_authorized INTEGER DEFAULT 0 CHECK (is_authorized == 0 or is_authorized == 1), states TEXT NOT NULL)"
-                    , "CREATE TABLE IF NOT EXISTS post (id INTEGER PRIMARY KEY NOT NULL, title TEXT NOT NULL, author TEXT NOT NULL, content TEXT, status TEXT DEFAULT 'draft' CHECK (status == 'draft' or status == 'published'), tmsp_create NUMERIC DEFAULT CURRENT_DATETIME, tmsp_publish NUMERIC)"
+        tbl_stmts = [ "CREATE TABLE IF NOT EXISTS user (id INTEGER NOT NULL PRIMARY KEY"
+                                                        + ", is_authorized INTEGER NOT NULL DEFAULT 0 CHECK (is_authorized == 0 or is_authorized == 1)"
+                                                        +  ", states TEXT NOT NULL)"
+                    , "CREATE TABLE IF NOT EXISTS post (id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT"
+                                                        + ", user INTEGER NOT NULL"
+                                                        + ", title TEXT NOT NULL"
+                                                        + ", status TEXT NOT NULL DEFAULT 'draft' CHECK (status == 'draft' or status == 'published')"
+                                                        + ", tmsp_create TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP"
+                                                        + ", is_selected INTEGER NOT NULL DEFAULT 0 CHECK (is_selected == 0 or is_selected == 1)"
+                                                        + ", content TEXT"
+                                                        + ", tmsp_publish TIMESTAMP)"
                     ]
-        for stmt in tblstmts:
+        for stmt in tbl_stmts:
             self.__conn.execute(stmt)
 
         # create some indexes
-        idxstmts = ["CREATE INDEX IF NOT EXISTS postTitle ON post (title ASC)"]
-        for stmt in idxstmts:
+        idx_stmts = ["CREATE INDEX IF NOT EXISTS postTitle ON post (title ASC)"]
+        for stmt in idx_stmts:
             self.__conn.execute(stmt)
 
         self.__conn.commit()
@@ -39,6 +50,17 @@ class SQLDBWrapper:
         return getattr(importlib.import_module(module), klass)
 
     def get_users(self, user_id=None, is_authorized=None, state=None):
+        """
+        Fetches users from the database that fulfill *all* given criteria.
+        If no criterion is specified, all users stored in the database are returned.
+        If multiple criteria are specified, all of them need to be fulfilled for a user to be part of the result set.
+
+        :param user_id: only users with given user_id are returned (at most 1 as user_id is primary key)
+        :param is_authorized: only users with specified authorization flag (True/False) are returned
+        :param state: only users with specified state are returned
+        :return: a list of dicionaries where each dictionary represents one user (user_id, is_authorized, state_class)
+        """
+
         stmt = "SELECT * FROM user WHERE"
         args = []
 
@@ -50,7 +72,7 @@ class SQLDBWrapper:
 
         if is_authorized is not None:
             stmt += " is_authorized = ? AND"
-            args.append(is_authorized)
+            args.append(1 if is_authorized else 0)
         else:
             stmt += " 1 = 1 AND"
 
@@ -61,8 +83,9 @@ class SQLDBWrapper:
             stmt += " 1 = 1"
 
         args = tuple(args)
-        return [dict({"user_id": x[0], "is_authorized": True if x[1] == 1 else False
-                      , "state": self.__deserialize_state(x[2])}) for x in self.__conn.execute(stmt, args)]
+        return [dict({"user_id": x[0]
+                         , "is_authorized": True if x[1] == 1 else False
+                         , "state_class": self.__deserialize_state(x[2])}) for x in self.__conn.execute(stmt, args)]
 
     def add_user(self, user_id, is_authorized, state):
         stmt = "INSERT INTO user (id, is_authorized, states) VALUES (?, ?, ?)"
@@ -71,17 +94,6 @@ class SQLDBWrapper:
         self.__conn.commit()
 
     def update_user(self, user_id, is_authorized=None, state=None):
-        """
-        Fetches users from the database that fulfill *all* given criteria.
-        If no criterion is specified, all users stored in the database are returned.
-        If multiple criteria are specified, all of them need to be fulfilled for a user to be part of the result set.
-        
-        :param user_id: only users with given user_id are returned (at most 1 as user_id is primary key)
-        :param is_authorized: only users with specified authorization flag (True/False) are returned
-        :param state: only users with specified state are returned
-        :return: a list of dicionaries where each dictionary represents one user (user_id, is_authorized, state_class)
-        """
-
         stmt = "UPDATE user SET id = ?"
         args = [user_id]
 
@@ -101,19 +113,119 @@ class SQLDBWrapper:
 
     #-------------- not used yet -----------------------
 
-    def create_post(self, title, user):
-        stmt = "INSERT INTO post (title, author) VALUES (?, ?)"
-        args = (title, user)
+    def get_posts(self, user=None, title=None, status=None, tmsp_create=None, is_selected=None, content=None, tmsp_publish=None):
+        stmt = "SELECT * FROM post WHERE"
+        args = []
+
+        if user is not None:
+            stmt += " user = ? AND"
+            args.append(user)
+        else:
+            stmt += " 1 = 1 AND"
+
+        if title is not None:
+            stmt += " title = ? AND"
+            args.append(title)
+        else:
+            stmt += " 1 = 1 AND"
+
+        if status is not None:
+            stmt += " status = ? AND"
+            args.append(status)
+        else:
+            stmt += " 1 = 1 AND"
+
+        if tmsp_create is not None:
+            stmt += " tmsp_create = ? AND"
+            args.append(tmsp_create)
+        else:
+            stmt += " 1 = 1 AND"
+
+        if is_selected is not None:
+            stmt += " is_selected = ? AND"
+            args.append(1 if is_selected else 0)
+        else:
+            stmt += " 1 = 1 AND"
+
+        if content is not None:
+            stmt += " content = ? AND"
+            args.append(content)
+        else:
+            stmt += " 1 = 1 AND"
+
+        if tmsp_publish is not None:
+            stmt += " tmsp_publish = ?"
+            args.append(tmsp_publish)
+        else:
+            stmt += " 1 = 1"
+
+        args = tuple(args)
+        return [dict({"post_id": x[0]
+                         , "user_id": x[1]
+                         , "title": x[2]
+                         , "status": x[3]
+                         , "tmsp_create": x[4]
+                         , "is_selected": True if x[5] == 1 else False
+                         , "content": x[6]
+                         , "tmsp_publish": x[7]}) for x in self.__conn.execute(stmt, args)]
+
+    def create_post(self, user, title, status=None, tmsp_create=None, is_selected=None, content=None, tmsp_publish=None):
+        column_list = ["title", "user"]
+        args = [title, user]
+
+        if status is not None:
+            column_list.append("status")
+            args.append(status)
+
+        if tmsp_create is not None:
+            column_list.append("tmsp_create")
+            args.append(tmsp_create)
+
+        if is_selected is not None:
+            column_list.append("is_selected")
+            args.append(is_selected)
+
+        if content is not None:
+            column_list.append("content")
+            args.append(content)
+
+        if tmsp_publish is not None:
+            column_list.append("tmsp_publish")
+            args.append(tmsp_publish)
+
+        stmt = "INSERT INTO post (" + ",".join(column_list)  + ") VALUES (" + ",".join(["?" for x in column_list]) + ")"
+        args = tuple(args)
         self.__conn.execute(stmt, args)
         self.__conn.commit()
 
-    def delete_post(self, title, user):
-        stmt = "DELETE FROM post WHERE title = (?) and author = (?)"
-        args = (title, user)
+    def delete_post(self, user, title=None, status=None, tmsp_create=None, is_selected=None, content=None, tmsp_publish=None):
+        stmt = "DELETE FROM post WHERE user = ?"
+        args = [user]
+
+        if title is not None:
+            stmt += " AND title = ?"
+            args.append(title)
+
+        if status is not None:
+            stmt += " AND status = ?"
+            args.append(status)
+
+        if tmsp_create is not None:
+            stmt += " AND tmsp_create = ?"
+            args.append(tmsp_create)
+
+        if is_selected is not None:
+            stmt += " AND is_selected = ?"
+            args.append(1 if is_selected else 0)
+
+        if content is not None:
+            stmt += " AND content = ?"
+            args.append(content)
+
+        if tmsp_publish is not None:
+            stmt += " AND tmsp_publish = ?"
+            args.append(tmsp_publish)
+
+        args = tuple(args)
         self.__conn.execute(stmt, args)
         self.__conn.commit()
-
-    def get_posts(self, user):
-        stmt = "SELECT title FROM post WHERE author = (?)"
-        args = (user, )
-        return [x[0] for x in self.__conn.execute(stmt, args)]

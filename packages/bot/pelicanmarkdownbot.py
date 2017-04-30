@@ -26,7 +26,7 @@ class PelicanMarkdownBot(AbstractUserStateBot):
                     self.__database.update_user(user_id, is_authorized=True)
 
         for user in self.__database.get_users(is_authorized=True):
-            super().set_user_state(user["user_id"], user["state"](self))
+            super().set_user_state(user["user_id"], user["state_class"](self))
 
     def set_user_state(self, user_id, state):
         if not self.__database.get_users(user_id=user_id):
@@ -44,3 +44,12 @@ class PelicanMarkdownBot(AbstractUserStateBot):
             super().handle_update(update)
 
         # TODO: maybe do something with updates from unauthorized users?
+
+    def get_posts(self, user=None, title=None, status=None, tmsp_create=None, is_selected=None, content=None, tmsp_publish=None):
+        return self.__database.get_posts(user, title, status, tmsp_create, is_selected, content, tmsp_publish)
+
+    def create_post(self, user, title, status=None, tmsp_create=None, is_selected=None, content=None, tmsp_publish=None):
+        self.__database.create_post(user, title, status, tmsp_create, is_selected, content, tmsp_publish)
+
+    def delete_post(self, user, title=None, status=None, tmsp_create=None, is_selected=None, content=None, tmsp_publish=None):
+        self.__database.delete_post(user, title, status, tmsp_create, is_selected, content, tmsp_publish)

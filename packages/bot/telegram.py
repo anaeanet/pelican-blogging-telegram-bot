@@ -1,3 +1,5 @@
+import json
+
 __author__ = "anaeanet"
 
 
@@ -22,3 +24,9 @@ def get_update_type(update):
             break
 
     return result
+
+
+def build_keyboard(items, one_time_keyboard=True, resize_keyboard=True):
+    keyboard = [[item] for item in items]
+    reply_markup = {"keyboard":keyboard, "one_time_keyboard": one_time_keyboard, "resize_keyboard": resize_keyboard}
+    return json.dumps(reply_markup)

@@ -5,7 +5,7 @@ import packages.bot.telegram as telegram
 __author__ = "aneanet"
 
 
-class NewDraftState(AbstractState):
+class DeleteDraftState(AbstractState):
     """
     Concrete state implementation.
     """
@@ -22,9 +22,9 @@ class NewDraftState(AbstractState):
 
             if text:
                 # text message
-
                 if text in ["/start", "/help"]:
-                    self.get_context().send_message(chat_id, "Welcome to your mobile blogging bot! I am here to help you create new blog posts or update existing ones while you are on the go.\r\n"
+                    self.get_context().send_message(chat_id,
+                                                    "Welcome to your mobile blogging bot! I am here to help you create new blog posts or update existing ones while you are on the go.\r\n"
                                                     + "\r\n" + "You can control me by the following commands:\r\n"
                                                     + "\r\n" + "*Drafts - Unpublished blog posts*"
                                                     + "\r\n" + "/createdraft - begin a new draft"
@@ -40,8 +40,8 @@ class NewDraftState(AbstractState):
                 elif "entities" not in update[update_type]:
                     # plain text message, does not contain bot_commands, urls, ...
 
-                    self.get_context().create_post(user_id, text)
-                    self.get_context().send_message(chat_id, "Successfully created draft '*" + text + "*'"
+                    self.get_context().delete_post(user_id, status="draft", title=text)
+                    self.get_context().send_message(chat_id, "Deleted draft '*" + text + "*'"
                                                     , parse_mode=ParseMode.MARKDOWN.value)
                     from packages.states.idlestate import IdleState
                     self.get_context().set_user_state(user_id, IdleState(self.get_context()))
