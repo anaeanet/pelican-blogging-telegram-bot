@@ -33,6 +33,7 @@ class SQLDBWrapper:
             self.__conn.execute(stmt)
 
         # create some indexes
+        # TODO
         idx_stmts = ["CREATE INDEX IF NOT EXISTS postTitle ON post (title ASC)"]
         for stmt in idx_stmts:
             self.__conn.execute(stmt)
@@ -184,7 +185,7 @@ class SQLDBWrapper:
 
         if is_selected is not None:
             column_list.append("is_selected")
-            args.append(is_selected)
+            args.append(1 if is_selected else 0)
 
         if content is not None:
             column_list.append("content")
@@ -202,5 +203,43 @@ class SQLDBWrapper:
     def delete_post(self, post_id):
         stmt = "DELETE FROM post WHERE id = ?"
         args = (post_id, )
+        self.__conn.execute(stmt, args)
+        self.__conn.commit()
+
+    def update_post(self, post_id, user_id=None, title=None, status=None, tmsp_create=None, is_selected=None, content=None, tmsp_publish=None):
+        stmt = "UPDATE post SET id = ?"
+        args = [post_id]
+
+        if user_id is not None:
+            stmt += ", user_id = ?"
+            args.append(user_id)
+
+        if title is not None:
+            stmt += ", title = ?"
+            args.append(title)
+
+        if status is not None:
+            stmt += ", status = ?"
+            args.append(status)
+
+        if tmsp_create is not None:
+            stmt += ", tmsp_create = ?"
+            args.append(tmsp_create)
+
+        if is_selected is not None:
+            stmt += ", is_selected = ?"
+            args.append(1 if is_selected else 0)
+
+        if content is not None:
+            stmt += ", content = ?"
+            args.append(content)
+
+        if tmsp_publish is not None:
+            stmt += ", user_id = ?"
+            args.append(tmsp_publish)
+
+        stmt += " WHERE id = ?"
+        args.append(post_id)
+        args = tuple(args)
         self.__conn.execute(stmt, args)
         self.__conn.commit()

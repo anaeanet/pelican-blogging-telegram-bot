@@ -21,45 +21,54 @@ class IdleState(AbstractState):
             chat_id = update[update_type]["chat"]["id"]
             text = update[update_type]["text"].strip(' \t\n\r') if "text" in update[update_type] else None
 
-            if text:
-                # text message
+            if text:    # text message
+
 
                 if text in ["/start", "/help"]:
-                    self.get_context().send_message(chat_id, "Welcome to your mobile blogging bot! I am here to help you create new blog posts or update existing ones while you are on the go.\r\n"
-                                                    + "\r\n" + "You can control me by the following commands:\r\n"
+                    self.get_context().send_message(chat_id,
+                                                    "Welcome to your mobile blogging bot! I am here to help you create new blog posts or update existing ones while you are on the go."
+                                                    + "\r\n"
+                                                    + "\r\n" + "You can control me by the following commands:"
+                                                    + "\r\n"
                                                     + "\r\n" + "*Drafts - Unpublished blog posts*"
                                                     + "\r\n" + "/createdraft - begin a new draft"
                                                     + "\r\n" + "/updatedraft - continue working on a draft"
                                                     + "\r\n" + "/deletedraft - delete a draft"
-                                                    , parse_mode=ParseMode.MARKDOWN.value)
+                                                    , parse_mode=ParseMode.MARKDOWN.value
+                                                    , reply_markup=telegram.build_keyboard(None))
+                    from packages.states.idlestate import IdleState
+                    self.get_context().set_user_state(user_id, IdleState(self.get_context()))
                     return
 
                 elif text == "/createdraft":
                     from packages.states.createdraftstate import CreateDraftState
                     self.get_context().set_user_state(user_id, CreateDraftState(self.get_context()))
-                    self.get_context().send_message(chat_id, "Alright. What is the *title* of your new draft?"
-                                                    , parse_mode=ParseMode.MARKDOWN.value)
+                    self.get_context().send_message(chat_id, "What is the *title* of your new draft?"
+                                                    , parse_mode=ParseMode.MARKDOWN.value
+                                                    , reply_markup=telegram.build_keyboard(None))
                     return
 
                 elif text == "/deletedraft":
-                    from packages.states.deletedraftstate import DeleteDraftState
-                    self.get_context().set_user_state(user_id, DeleteDraftState(self.get_context()))
-
                     user_drafts = []
                     for post in self.get_context().get_posts(user_id=user_id, status="draft"):
                         user_drafts.append(post["title"])
 
                     if len(user_drafts) > 0:
+                        from packages.states.deletedraftstate import DeleteDraftState
+                        self.get_context().set_user_state(user_id, DeleteDraftState(self.get_context()))
                         self.get_context().send_message(chat_id, "Which draft do you want to delete?"
                                                     , parse_mode=ParseMode.MARKDOWN.value
                                                     , reply_markup=telegram.build_keyboard(user_drafts))
                     else:
-                        self.get_context().send_message(chat_id, "I am sorry, but you don't have any drafts left."
-                                                    , parse_mode=ParseMode.MARKDOWN.value)
+                        self.get_context().send_message(chat_id, "Sorry, you don't have any drafts left."
+                                                    , parse_mode=ParseMode.MARKDOWN.value
+                                                    , reply_markup=telegram.build_keyboard(None))
                     return
 
             self.get_context().send_message(chat_id, "Unrecognized command or message!"
-                                            + "\r\n" + "Send /help to see available commands.")
+                                            + "\r\n" + "Send /help to see available commands."
+                                            , parse_mode=ParseMode.MARKDOWN.value
+                                            , reply_markup=telegram.build_keyboard(None))
 
         else:
             print("un-implemented update type:", update)

@@ -27,6 +27,9 @@ def get_update_type(update):
 
 
 def build_keyboard(items, one_time_keyboard=True, resize_keyboard=True):
-    keyboard = [[item] for item in items]
-    reply_markup = {"keyboard":keyboard, "one_time_keyboard": one_time_keyboard, "resize_keyboard": resize_keyboard}
+    if items is None:
+        reply_markup = {"remove_keyboard": True}
+    else:
+        keyboard = [[item] for item in items]
+        reply_markup = {"keyboard": keyboard, "one_time_keyboard": one_time_keyboard, "resize_keyboard": resize_keyboard}
     return json.dumps(reply_markup)
