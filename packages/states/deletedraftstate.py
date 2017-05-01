@@ -40,9 +40,12 @@ class DeleteDraftState(AbstractState):
                 elif "entities" not in update[update_type]:
                     # plain text message, does not contain bot_commands, urls, ...
 
-                    self.get_context().delete_post(user_id, status="draft", title=text)
-                    self.get_context().send_message(chat_id, "Deleted draft '*" + text + "*'"
-                                                    , parse_mode=ParseMode.MARKDOWN.value)
+                    for post in self.get_context().get_posts(user_id, status="draft", title=text):
+                        # TODO: what about posts with same title for one user?
+                        self.get_context().delete_post(post["post_id"])
+                        self.get_context().send_message(chat_id, "Deleted draft '*" + text + "*'"
+                                                        , parse_mode=ParseMode.MARKDOWN.value)
+
                     from packages.states.idlestate import IdleState
                     self.get_context().set_user_state(user_id, IdleState(self.get_context()))
                     return

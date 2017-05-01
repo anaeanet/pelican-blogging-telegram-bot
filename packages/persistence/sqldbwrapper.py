@@ -15,20 +15,19 @@ class SQLDBWrapper:
 
     def setup(self):
 
-        # TODO: what about posts with same title for one user?
-
         # create required tables
         tbl_stmts = [ "CREATE TABLE IF NOT EXISTS user (id INTEGER NOT NULL PRIMARY KEY"
                                                         + ", is_authorized INTEGER NOT NULL DEFAULT 0 CHECK (is_authorized == 0 or is_authorized == 1)"
-                                                        +  ", states TEXT NOT NULL)"
+                                                        + ", state TEXT NOT NULL)"
                     , "CREATE TABLE IF NOT EXISTS post (id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT"
-                                                        + ", user INTEGER NOT NULL"
+                                                        + ", user_id INTEGER NOT NULL"
                                                         + ", title TEXT NOT NULL"
                                                         + ", status TEXT NOT NULL DEFAULT 'draft' CHECK (status == 'draft' or status == 'published')"
                                                         + ", tmsp_create TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP"
                                                         + ", is_selected INTEGER NOT NULL DEFAULT 0 CHECK (is_selected == 0 or is_selected == 1)"
                                                         + ", content TEXT"
-                                                        + ", tmsp_publish TIMESTAMP)"
+                                                        + ", tmsp_publish TIMESTAMP"
+                                                        + ", FOREIGN KEY(user_id) REFERENCES user(id))"
                     ]
         for stmt in tbl_stmts:
             self.__conn.execute(stmt)
@@ -48,6 +47,8 @@ class SQLDBWrapper:
     def __deserialize_state(self, module_dot_class):
         module, klass = module_dot_class.rsplit(".", 1)
         return getattr(importlib.import_module(module), klass)
+
+    # -------------------------------------------------- user ----------------------------------------------------------
 
     def get_users(self, user_id=None, is_authorized=None, state=None):
         """
@@ -77,7 +78,7 @@ class SQLDBWrapper:
             stmt += " 1 = 1 AND"
 
         if state is not None:
-            stmt += " states = ?"
+            stmt += " state = ?"
             args.append(SQLDBWrapper.__serialize_state(state))
         else:
             stmt += " 1 = 1"
@@ -88,7 +89,7 @@ class SQLDBWrapper:
                          , "state_class": self.__deserialize_state(x[2])}) for x in self.__conn.execute(stmt, args)]
 
     def add_user(self, user_id, is_authorized, state):
-        stmt = "INSERT INTO user (id, is_authorized, states) VALUES (?, ?, ?)"
+        stmt = "INSERT INTO user (id, is_authorized, state) VALUES (?, ?, ?)"
         args = (user_id, 1 if is_authorized else 0, SQLDBWrapper.__serialize_state(state))
         self.__conn.execute(stmt, args)
         self.__conn.commit()
@@ -102,7 +103,7 @@ class SQLDBWrapper:
             args.append(1 if is_authorized else 0)
 
         if state is not None:
-            stmt += ", states = ?"
+            stmt += ", state = ?"
             args.append(SQLDBWrapper.__serialize_state(state))
 
         stmt += " WHERE id = ?"
@@ -111,15 +112,15 @@ class SQLDBWrapper:
         self.__conn.execute(stmt, args)
         self.__conn.commit()
 
-    #-------------- not used yet -----------------------
+    # -------------------------------------------------- post ----------------------------------------------------------
 
-    def get_posts(self, user=None, title=None, status=None, tmsp_create=None, is_selected=None, content=None, tmsp_publish=None):
+    def get_posts(self, user_id=None, title=None, status=None, tmsp_create=None, is_selected=None, content=None, tmsp_publish=None):
         stmt = "SELECT * FROM post WHERE"
         args = []
 
-        if user is not None:
-            stmt += " user = ? AND"
-            args.append(user)
+        if user_id is not None:
+            stmt += " user_id = ? AND"
+            args.append(user_id)
         else:
             stmt += " 1 = 1 AND"
 
@@ -169,9 +170,9 @@ class SQLDBWrapper:
                          , "content": x[6]
                          , "tmsp_publish": x[7]}) for x in self.__conn.execute(stmt, args)]
 
-    def create_post(self, user, title, status=None, tmsp_create=None, is_selected=None, content=None, tmsp_publish=None):
-        column_list = ["title", "user"]
-        args = [title, user]
+    def add_post(self, user_id, title, status=None, tmsp_create=None, is_selected=None, content=None, tmsp_publish=None):
+        column_list = ["title", "user_id"]
+        args = [title, user_id]
 
         if status is not None:
             column_list.append("status")
@@ -193,39 +194,13 @@ class SQLDBWrapper:
             column_list.append("tmsp_publish")
             args.append(tmsp_publish)
 
-        stmt = "INSERT INTO post (" + ",".join(column_list)  + ") VALUES (" + ",".join(["?" for x in column_list]) + ")"
+        stmt = "INSERT INTO post (" + ",".join(column_list) + ") VALUES (" + ",".join(["?" for x in column_list]) + ")"
         args = tuple(args)
         self.__conn.execute(stmt, args)
         self.__conn.commit()
 
-    def delete_post(self, user, title=None, status=None, tmsp_create=None, is_selected=None, content=None, tmsp_publish=None):
-        stmt = "DELETE FROM post WHERE user = ?"
-        args = [user]
-
-        if title is not None:
-            stmt += " AND title = ?"
-            args.append(title)
-
-        if status is not None:
-            stmt += " AND status = ?"
-            args.append(status)
-
-        if tmsp_create is not None:
-            stmt += " AND tmsp_create = ?"
-            args.append(tmsp_create)
-
-        if is_selected is not None:
-            stmt += " AND is_selected = ?"
-            args.append(1 if is_selected else 0)
-
-        if content is not None:
-            stmt += " AND content = ?"
-            args.append(content)
-
-        if tmsp_publish is not None:
-            stmt += " AND tmsp_publish = ?"
-            args.append(tmsp_publish)
-
-        args = tuple(args)
+    def delete_post(self, post_id):
+        stmt = "DELETE FROM post WHERE id = ?"
+        args = (post_id, )
         self.__conn.execute(stmt, args)
         self.__conn.commit()

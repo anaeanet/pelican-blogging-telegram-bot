@@ -35,8 +35,8 @@ class IdleState(AbstractState):
                     return
 
                 elif text == "/createdraft":
-                    from packages.states.newdraftstate import NewDraftState
-                    self.get_context().set_user_state(user_id, NewDraftState(self.get_context()))
+                    from packages.states.createdraftstate import CreateDraftState
+                    self.get_context().set_user_state(user_id, CreateDraftState(self.get_context()))
                     self.get_context().send_message(chat_id, "Alright. What is the *title* of your new draft?"
                                                     , parse_mode=ParseMode.MARKDOWN.value)
                     return
@@ -46,7 +46,7 @@ class IdleState(AbstractState):
                     self.get_context().set_user_state(user_id, DeleteDraftState(self.get_context()))
 
                     user_drafts = []
-                    for post in self.get_context().get_posts(user=user_id, status="draft"):
+                    for post in self.get_context().get_posts(user_id=user_id, status="draft"):
                         user_drafts.append(post["title"])
 
                     if len(user_drafts) > 0:

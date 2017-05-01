@@ -5,7 +5,7 @@ import packages.bot.telegram as telegram
 __author__ = "aneanet"
 
 
-class NewDraftState(AbstractState):
+class CreateDraftState(AbstractState):
     """
     Concrete state implementation.
     """
@@ -40,7 +40,7 @@ class NewDraftState(AbstractState):
                 elif "entities" not in update[update_type]:
                     # plain text message, does not contain bot_commands, urls, ...
 
-                    self.get_context().create_post(user_id, text)
+                    self.get_context().add_post(user_id, text)
                     self.get_context().send_message(chat_id, "Successfully created draft '*" + text + "*'"
                                                     , parse_mode=ParseMode.MARKDOWN.value)
                     from packages.states.idlestate import IdleState

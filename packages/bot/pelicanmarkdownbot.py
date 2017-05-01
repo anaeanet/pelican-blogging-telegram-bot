@@ -42,14 +42,15 @@ class PelicanMarkdownBot(AbstractUserStateBot):
 
         if user_id is not None and len(authorized_users) == 1:
             super().handle_update(update)
+        else:
+            # TODO: maybe do something with updates from unauthorized users?
+            None
 
-        # TODO: maybe do something with updates from unauthorized users?
+    def get_posts(self, user_id=None, title=None, status=None, tmsp_create=None, is_selected=None, content=None, tmsp_publish=None):
+        return self.__database.get_posts(user_id, title, status, tmsp_create, is_selected, content, tmsp_publish)
 
-    def get_posts(self, user=None, title=None, status=None, tmsp_create=None, is_selected=None, content=None, tmsp_publish=None):
-        return self.__database.get_posts(user, title, status, tmsp_create, is_selected, content, tmsp_publish)
+    def add_post(self, user_id, title, status=None, tmsp_create=None, is_selected=None, content=None, tmsp_publish=None):
+        self.__database.add_post(user_id, title, status, tmsp_create, is_selected, content, tmsp_publish)
 
-    def create_post(self, user, title, status=None, tmsp_create=None, is_selected=None, content=None, tmsp_publish=None):
-        self.__database.create_post(user, title, status, tmsp_create, is_selected, content, tmsp_publish)
-
-    def delete_post(self, user, title=None, status=None, tmsp_create=None, is_selected=None, content=None, tmsp_publish=None):
-        self.__database.delete_post(user, title, status, tmsp_create, is_selected, content, tmsp_publish)
+    def delete_post(self, post_id):
+        self.__database.delete_post(post_id)
