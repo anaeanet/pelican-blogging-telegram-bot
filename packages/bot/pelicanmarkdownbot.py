@@ -46,11 +46,26 @@ class PelicanMarkdownBot(AbstractUserStateBot):
             # TODO: maybe do something with updates from unauthorized users?
             None
 
-    def get_posts(self, user_id=None, title=None, status=None, tmsp_create=None, is_selected=None, content=None, tmsp_publish=None):
-        return self.__database.get_posts(user_id, title, status, tmsp_create, is_selected, content, tmsp_publish)
+    def get_posts(self, post_id=None, user_id=None, title=None, status=None, tmsp_create=None, is_selected=None, content=None, tmsp_publish=None):
+        return self.__database.get_posts(post_id=post_id, user_id=user_id, title=title, status=status, tmsp_create=tmsp_create, is_selected=is_selected, content=content, tmsp_publish=tmsp_publish)
+
+    def __deselect_user_posts(self, user_id):
+        for post in self.get_posts(user_id=user_id, is_selected=True):
+            self.update_post(post["post_id"], is_selected=False)
 
     def add_post(self, user_id, title, status=None, tmsp_create=None, is_selected=None, content=None, tmsp_publish=None):
-        self.__database.add_post(user_id, title, status, tmsp_create, is_selected, content, tmsp_publish)
+        # if new post gets positive selection flag, deselect all other posts of same user
+        if is_selected:
+            self.__deselect_user_posts(user_id)
+        self.__database.add_post(user_id, title, status=status, tmsp_create=tmsp_create, is_selected=is_selected, content=content, tmsp_publish=tmsp_publish)
+
+    def update_post(self, post_id, user_id=None, title=None, status=None, tmsp_create=None, is_selected=None, content=None, tmsp_publish=None):
+        # if current post gets updated with positive selection flag, deselect all other posts of same user
+        if is_selected:
+            for post in self.get_posts(post_id=post_id):
+                self.__deselect_user_posts(post["user_id"])
+                break
+        self.__database.update_post(post_id, user_id=user_id, title=title, status=status, tmsp_create=tmsp_create, is_selected=is_selected, content=content, tmsp_publish=tmsp_publish)
 
     def delete_post(self, post_id):
         self.__database.delete_post(post_id)

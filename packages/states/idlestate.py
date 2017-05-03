@@ -23,7 +23,6 @@ class IdleState(AbstractState):
 
             if text:    # text message
 
-
                 if text in ["/start", "/help"]:
                     self.get_context().send_message(chat_id,
                                                     "Welcome to your mobile blogging bot! I am here to help you create new blog posts or update existing ones while you are on the go."

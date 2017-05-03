@@ -115,9 +115,15 @@ class SQLDBWrapper:
 
     # -------------------------------------------------- post ----------------------------------------------------------
 
-    def get_posts(self, user_id=None, title=None, status=None, tmsp_create=None, is_selected=None, content=None, tmsp_publish=None):
+    def get_posts(self, post_id=None, user_id=None, title=None, status=None, tmsp_create=None, is_selected=None, content=None, tmsp_publish=None):
         stmt = "SELECT * FROM post WHERE"
         args = []
+
+        if post_id is not None:
+            stmt += " post_id = ? AND"
+            args.append(post_id)
+        else:
+            stmt += " 1 = 1 AND"
 
         if user_id is not None:
             stmt += " user_id = ? AND"
