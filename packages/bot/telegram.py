@@ -33,3 +33,10 @@ def build_keyboard(items, one_time_keyboard=True, resize_keyboard=True):
         keyboard = [[item] for item in items]
         reply_markup = {"keyboard": keyboard, "one_time_keyboard": one_time_keyboard, "resize_keyboard": resize_keyboard}
     return json.dumps(reply_markup)
+
+
+def build_inline_keyboard(items):
+    keyboard = [[item] for item in items]
+    reply_markup = {"inline_keyboard": keyboard}
+
+    return json.dumps(reply_markup)

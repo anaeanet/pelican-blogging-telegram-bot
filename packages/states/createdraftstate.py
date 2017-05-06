@@ -17,7 +17,7 @@ class CreateDraftState(AbstractState):
 
         if update_type == "message":
             user_id = telegram.get_update_sender_id(update)
-            chat_id = update["message"]["chat"]["id"]
+            chat_id = update[update_type]["chat"]["id"]
             text = update[update_type]["text"].strip(' \t\n\r') if "text" in update[update_type] else None
 
             if text:    # text message

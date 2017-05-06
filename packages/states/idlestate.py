@@ -64,6 +64,23 @@ class IdleState(AbstractState):
                                                     , reply_markup=telegram.build_keyboard(None))
                     return
 
+                elif text == "/deletedraft2":
+                    user_drafts = []
+                    for post in self.get_context().get_posts(user_id=user_id, status="draft"):
+                        user_drafts.append({"text": post["title"], "callback_data":"/deletedraft " + str(post["post_id"])})
+
+                    if len(user_drafts) > 0:
+                        from packages.states.deletedraftstate import DeleteDraftState
+                        self.get_context().set_user_state(user_id, DeleteDraftState(self.get_context()))
+                        self.get_context().send_message(chat_id, "Which draft do you want to delete?"
+                                                    , parse_mode=ParseMode.MARKDOWN.value
+                                                    , reply_markup=telegram.build_inline_keyboard(user_drafts))
+                    else:
+                        self.get_context().send_message(chat_id, "Sorry, you don't have any drafts left."
+                                                    , parse_mode=ParseMode.MARKDOWN.value
+                                                    , reply_markup=telegram.build_keyboard(None))
+                    return
+
             self.get_context().send_message(chat_id, "Unrecognized command or message!"
                                             + "\r\n" + "Send /help to see available commands."
                                             , parse_mode=ParseMode.MARKDOWN.value

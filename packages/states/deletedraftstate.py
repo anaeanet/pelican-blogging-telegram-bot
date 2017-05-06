@@ -17,7 +17,7 @@ class DeleteDraftState(AbstractState):
 
         if update_type == "message":
             user_id = telegram.get_update_sender_id(update)
-            chat_id = update["message"]["chat"]["id"]
+            chat_id = update[update_type]["chat"]["id"]
             text = update[update_type]["text"].strip(' \t\n\r') if "text" in update[update_type] else None
 
             if text:    # text message
@@ -55,6 +55,19 @@ class DeleteDraftState(AbstractState):
                                             + "\r\n" + "Send /help to see available commands."
                                             , parse_mode=ParseMode.MARKDOWN.value
                                             , reply_markup=telegram.build_keyboard(None))
+
+        if update_type == "callback_query":
+
+            # TODO: still under construction...
+
+            user_id = telegram.get_update_sender_id(update)
+            chat_id = update[update_type]["message"]["chat"]["id"]
+            message_id = update[update_type]["message"]["message_id"]
+
+            self.get_context().answer_callback_query(update[update_type]["id"])
+            #self.get_context().edit_message_text(chat_id, message_id, "testmessage")
+            return
+
 
         else:
             print("un-implemented update type:", update)
