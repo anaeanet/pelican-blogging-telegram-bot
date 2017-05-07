@@ -34,7 +34,7 @@ class CreateDraftState(AbstractState):
             # ----------------------------------------------------------------------------------------------------------
             if text:
                 # for global commands simply run code of IdleState
-                if text in ["/start", "/help", "/createdraft", "/deletedraft"] or text.startswith("/"):
+                if text in ["/start", "/help", "/createdraft", "/updatedraft", "/deletedraft"] or text.startswith("/"):
                     from packages.states.idlestate import IdleState
                     IdleState(self.get_context()).process_update(update)
 

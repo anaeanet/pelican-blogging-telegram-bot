@@ -45,6 +45,10 @@ class IdleState(AbstractState):
                     from packages.states.createdraftstate import CreateDraftState
                     self.get_context().set_user_state(user_id, CreateDraftState(self.get_context(), chat_id=chat_id, user_id=user_id))
 
+                elif text == "/updatedraft":
+                    from packages.states.updatedraft import UpdateDraftState
+                    self.get_context().set_user_state(user_id, UpdateDraftState(self.get_context(), chat_id=chat_id, user_id=user_id))
+
                 elif text == "/deletedraft":
                     from packages.states.deletedraftstate import DeleteDraftState
                     self.get_context().set_user_state(user_id, DeleteDraftState(self.get_context(), chat_id=chat_id, user_id=user_id))
