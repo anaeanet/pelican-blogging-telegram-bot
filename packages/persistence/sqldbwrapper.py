@@ -120,7 +120,7 @@ class SQLDBWrapper:
         args = []
 
         if post_id is not None:
-            stmt += " post_id = ? AND"
+            stmt += " id = ? AND"
             args.append(post_id)
         else:
             stmt += " 1 = 1 AND"
