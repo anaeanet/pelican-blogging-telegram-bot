@@ -10,6 +10,14 @@ class CreateDraftState(AbstractState):
     Concrete state implementation.
     """
 
+    def __init__(self, context, chat_id=None, user_id=None):
+        super().__init__(context)
+
+        if chat_id is not None:
+            self.get_context().send_message(chat_id, "What is the *title* of your new draft?"
+                                            , parse_mode=ParseMode.MARKDOWN.value
+                                            , reply_markup=telegram.build_keyboard(None))
+
     def process_update(self, update):
         print(update)
 

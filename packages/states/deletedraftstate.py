@@ -10,6 +10,23 @@ class DeleteDraftState(AbstractState):
     Concrete state implementation.
     """
 
+    def __init__(self, context, chat_id=None, user_id=None):
+        super().__init__(context)
+
+        if chat_id is not None and user_id is not None:
+            user_drafts = []
+            for post in self.get_context().get_posts(user_id=user_id, status="draft"):
+                user_drafts.append({"text": post["title"], "callback_data": "/deletedraft " + str(post["post_id"])})
+
+            if len(user_drafts) > 0:
+                self.get_context().send_message(chat_id, "Which one of your drafts do you want to delete?"
+                                                , parse_mode=ParseMode.MARKDOWN.value
+                                                , reply_markup=telegram.build_inline_keyboard(user_drafts))
+            else:
+                self.get_context().send_message(chat_id, "There is nothing to delete. You don't have any drafts."
+                                                , parse_mode=ParseMode.MARKDOWN.value
+                                                , reply_markup=telegram.build_keyboard(None))
+
     def process_update(self, update):
         print(update)
 
@@ -67,7 +84,6 @@ class DeleteDraftState(AbstractState):
             self.get_context().answer_callback_query(update[update_type]["id"])
             #self.get_context().edit_message_text(chat_id, message_id, "testmessage")
             return
-
 
         else:
             print("un-implemented update type:", update)
