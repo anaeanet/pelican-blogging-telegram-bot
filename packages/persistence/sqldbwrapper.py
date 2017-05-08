@@ -60,7 +60,7 @@ class SQLDBWrapper:
         :param user_id: only users with given user_id are returned (at most 1 as user_id is primary key)
         :param is_authorized: only users with specified authorization flag (True/False) are returned
         :param state: only users with specified state are returned
-        :return: a list of dicionaries where each dictionary represents one user (user_id, is_authorized, state_class)
+        :return: a list of dictionaries where each dictionary represents one user (user_id, is_authorized, state_class)
         """
 
         stmt = "SELECT * FROM user WHERE"
