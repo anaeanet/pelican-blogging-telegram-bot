@@ -16,10 +16,10 @@ class SQLDBWrapper:
     def setup(self):
 
         # create required tables
-        tbl_stmts = [ "CREATE TABLE IF NOT EXISTS user (id INTEGER NOT NULL PRIMARY KEY"
+        tbl_stmts = [ "CREATE TABLE IF NOT EXISTS user (user_id INTEGER NOT NULL PRIMARY KEY"
                                                         + ", is_authorized INTEGER NOT NULL DEFAULT 0 CHECK (is_authorized == 0 or is_authorized == 1)"
                                                         + ", state TEXT NOT NULL)"
-                    , "CREATE TABLE IF NOT EXISTS post (id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT"
+                    , "CREATE TABLE IF NOT EXISTS post (post_id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT"
                                                         + ", user_id INTEGER NOT NULL"
                                                         + ", title TEXT NOT NULL"
                                                         + ", status TEXT NOT NULL DEFAULT 'draft' CHECK (status == 'draft' or status == 'published')"
@@ -27,7 +27,7 @@ class SQLDBWrapper:
                                                         + ", is_selected INTEGER NOT NULL DEFAULT 0 CHECK (is_selected == 0 or is_selected == 1)"
                                                         + ", content TEXT"
                                                         + ", tmsp_publish TIMESTAMP"
-                                                        + ", FOREIGN KEY(user_id) REFERENCES user(id))"
+                                                        + ", FOREIGN KEY(user_id) REFERENCES user(user_id))"
                     ]
         for stmt in tbl_stmts:
             self.__conn.execute(stmt)
@@ -45,7 +45,7 @@ class SQLDBWrapper:
         klass = state.__class__.__name__
         return ".".join([module, klass])
 
-    def __deserialize_state(self, module_dot_class):
+    def __deserialize_state(module_dot_class):
         module, klass = module_dot_class.rsplit(".", 1)
         return getattr(importlib.import_module(module), klass)
 
@@ -63,111 +63,65 @@ class SQLDBWrapper:
         :return: a list of dictionaries where each dictionary represents one user (user_id, is_authorized, state_class)
         """
 
-        stmt = "SELECT * FROM user WHERE"
+        param_dict = dict({key: value for key, value in locals().items() if key != "self" and value is not None})
+
+        stmt = "SELECT * FROM user"
         args = []
 
-        if user_id is not None:
-            stmt += " id = ? AND"
-            args.append(user_id)
-        else:
-            stmt += " 1 = 1 AND"
+        if len(param_dict) > 0:
+            stmt += " WHERE " + " = ? AND ".join(param_dict.keys()) + " = ?"
+            for key, value in param_dict.items():
+                if key == "is_authorized":
+                    args.append(1 if value else 0)
+                elif key == "state":
+                    args.append(SQLDBWrapper.__serialize_state(value))
+                else:
+                    args.append(value)
 
-        if is_authorized is not None:
-            stmt += " is_authorized = ? AND"
-            args.append(1 if is_authorized else 0)
-        else:
-            stmt += " 1 = 1 AND"
-
-        if state is not None:
-            stmt += " state = ?"
-            args.append(SQLDBWrapper.__serialize_state(state))
-        else:
-            stmt += " 1 = 1"
-
-        args = tuple(args)
         return [dict({"user_id": x[0]
                          , "is_authorized": True if x[1] == 1 else False
-                         , "state_class": self.__deserialize_state(x[2])}) for x in self.__conn.execute(stmt, args)]
+                         , "state_class": SQLDBWrapper.__deserialize_state(x[2])}) for x in self.__conn.execute(stmt, tuple(args))]
 
     def add_user(self, user_id, is_authorized, state):
-        stmt = "INSERT INTO user (id, is_authorized, state) VALUES (?, ?, ?)"
-        args = (user_id, 1 if is_authorized else 0, SQLDBWrapper.__serialize_state(state))
-        self.__conn.execute(stmt, args)
+        stmt = "INSERT INTO user (user_id, is_authorized, state) VALUES (?, ?, ?)"
+        args = [user_id, 1 if is_authorized else 0, SQLDBWrapper.__serialize_state(state)]
+        self.__conn.execute(stmt, tuple(args))
         self.__conn.commit()
 
     def update_user(self, user_id, is_authorized=None, state=None):
-        stmt = "UPDATE user SET id = ?"
-        args = [user_id]
+        param_dict = dict({key: value for key, value in locals().items() if key != "self" and value is not None})
 
-        if is_authorized is not None:
-            stmt += ", is_authorized = ?"
-            args.append(1 if is_authorized else 0)
+        stmt = "UPDATE user SET " + " = ?, ".join(param_dict.keys()) + " = ? WHERE user_id = ?"
+        args = []
 
-        if state is not None:
-            stmt += ", state = ?"
-            args.append(SQLDBWrapper.__serialize_state(state))
-
-        stmt += " WHERE id = ?"
+        for key, value in param_dict.items():
+            if key == "is_authorized":
+                args.append(1 if value else 0)
+            elif key == "state":
+                args.append(SQLDBWrapper.__serialize_state(value))
+            else:
+                args.append(value)
         args.append(user_id)
-        args = tuple(args)
-        self.__conn.execute(stmt, args)
+
+        self.__conn.execute(stmt, tuple(args))
         self.__conn.commit()
 
     # -------------------------------------------------- post ----------------------------------------------------------
 
     def get_posts(self, post_id=None, user_id=None, title=None, status=None, tmsp_create=None, is_selected=None, content=None, tmsp_publish=None):
-        stmt = "SELECT * FROM post WHERE"
+        param_dict = dict({key: value for key, value in locals().items() if key != "self" and value is not None})
+
+        stmt = "SELECT * FROM post"
         args = []
 
-        if post_id is not None:
-            stmt += " id = ? AND"
-            args.append(post_id)
-        else:
-            stmt += " 1 = 1 AND"
+        if len(param_dict) > 0:
+            stmt += " WHERE " + " = ? AND ".join(param_dict.keys()) + " = ?"
+            for key, value in param_dict.items():
+                if key == "is_selected":
+                    args.append(1 if value else 0)
+                else:
+                    args.append(value)
 
-        if user_id is not None:
-            stmt += " user_id = ? AND"
-            args.append(user_id)
-        else:
-            stmt += " 1 = 1 AND"
-
-        if title is not None:
-            stmt += " title = ? AND"
-            args.append(title)
-        else:
-            stmt += " 1 = 1 AND"
-
-        if status is not None:
-            stmt += " status = ? AND"
-            args.append(status)
-        else:
-            stmt += " 1 = 1 AND"
-
-        if tmsp_create is not None:
-            stmt += " tmsp_create = ? AND"
-            args.append(tmsp_create)
-        else:
-            stmt += " 1 = 1 AND"
-
-        if is_selected is not None:
-            stmt += " is_selected = ? AND"
-            args.append(1 if is_selected else 0)
-        else:
-            stmt += " 1 = 1 AND"
-
-        if content is not None:
-            stmt += " content = ? AND"
-            args.append(content)
-        else:
-            stmt += " 1 = 1 AND"
-
-        if tmsp_publish is not None:
-            stmt += " tmsp_publish = ?"
-            args.append(tmsp_publish)
-        else:
-            stmt += " 1 = 1"
-
-        args = tuple(args)
         return [dict({"post_id": x[0]
                          , "user_id": x[1]
                          , "title": x[2]
@@ -175,77 +129,41 @@ class SQLDBWrapper:
                          , "tmsp_create": x[4]
                          , "is_selected": True if x[5] == 1 else False
                          , "content": x[6]
-                         , "tmsp_publish": x[7]}) for x in self.__conn.execute(stmt, args)]
+                         , "tmsp_publish": x[7]}) for x in self.__conn.execute(stmt, tuple(args))]
 
     def add_post(self, user_id, title, status=None, tmsp_create=None, is_selected=None, content=None, tmsp_publish=None):
-        column_list = ["title", "user_id"]
-        args = [title, user_id]
+        param_dict = dict({key: value for key, value in locals().items() if key != "self" and value is not None})
 
-        if status is not None:
-            column_list.append("status")
-            args.append(status)
+        stmt = "INSERT INTO post (" + ",".join(param_dict.keys()) + ") VALUES (" + ",".join(["?" for x in param_dict.keys()]) + ")"
+        args = []
 
-        if tmsp_create is not None:
-            column_list.append("tmsp_create")
-            args.append(tmsp_create)
+        for key, value in param_dict.items():
+            if key == "is_selected":
+                args.append(1 if value else 0)
+            else:
+                args.append(value)
 
-        if is_selected is not None:
-            column_list.append("is_selected")
-            args.append(1 if is_selected else 0)
-
-        if content is not None:
-            column_list.append("content")
-            args.append(content)
-
-        if tmsp_publish is not None:
-            column_list.append("tmsp_publish")
-            args.append(tmsp_publish)
-
-        stmt = "INSERT INTO post (" + ",".join(column_list) + ") VALUES (" + ",".join(["?" for x in column_list]) + ")"
-        args = tuple(args)
-        self.__conn.execute(stmt, args)
+        self.__conn.execute(stmt, tuple(args))
         self.__conn.commit()
 
     def delete_post(self, post_id):
-        stmt = "DELETE FROM post WHERE id = ?"
-        args = (post_id, )
-        self.__conn.execute(stmt, args)
+        stmt = "DELETE FROM post WHERE post_id = ?"
+        args = [post_id]
+        self.__conn.execute(stmt, tuple(args))
         self.__conn.commit()
 
     def update_post(self, post_id, user_id=None, title=None, status=None, tmsp_create=None, is_selected=None, content=None, tmsp_publish=None):
-        stmt = "UPDATE post SET id = ?"
-        args = [post_id]
+        param_dict = dict({key: value for key, value in locals().items() if key != "self" and value is not None})
 
-        if user_id is not None:
-            stmt += ", user_id = ?"
-            args.append(user_id)
+        stmt = "UPDATE post SET " + " = ?, ".join(param_dict.keys()) + " = ? WHERE post_id = ?"
+        args = []
 
-        if title is not None:
-            stmt += ", title = ?"
-            args.append(title)
-
-        if status is not None:
-            stmt += ", status = ?"
-            args.append(status)
-
-        if tmsp_create is not None:
-            stmt += ", tmsp_create = ?"
-            args.append(tmsp_create)
-
-        if is_selected is not None:
-            stmt += ", is_selected = ?"
-            args.append(1 if is_selected else 0)
-
-        if content is not None:
-            stmt += ", content = ?"
-            args.append(content)
-
-        if tmsp_publish is not None:
-            stmt += ", user_id = ?"
-            args.append(tmsp_publish)
-
-        stmt += " WHERE id = ?"
+        for key, value in param_dict.items():
+            if key == "is_selected":
+                args.append(1 if value else 0)
+            else:
+                args.append(value)
         args.append(post_id)
-        args = tuple(args)
-        self.__conn.execute(stmt, args)
+
+        self.__conn.execute(stmt, tuple(args))
         self.__conn.commit()
