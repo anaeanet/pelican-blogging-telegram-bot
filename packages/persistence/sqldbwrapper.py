@@ -7,7 +7,7 @@ __author__ = 'anaeanet'
 class SQLDBWrapper:
     """
     Data Access Module (DAM) providing an interface 
-    to separate bit implementation from specific database implementation.
+    to separate bot implementation from specific database implementation.
     """
 
     def __init__(self, datbase_name):

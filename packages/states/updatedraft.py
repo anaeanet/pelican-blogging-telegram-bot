@@ -10,7 +10,7 @@ class UpdateDraftState(AbstractState):
     Concrete state implementation.
     """
 
-    def __init__(self, context, chat_id=None, user_id=None):
+    def __init__(self, context, chat_id=None, user_id=None, message_id=None):
         super().__init__(context)
 
         if chat_id is not None and user_id is not None:
@@ -19,9 +19,15 @@ class UpdateDraftState(AbstractState):
                 reply_options.append({"text": post["title"], "callback_data": "/updatedraft " + str(post["post_id"])})
 
             if len(reply_options) > 0:
-                self.get_context().send_message(chat_id, "Which one of your drafts do you want to update?"
-                                                , parse_mode=ParseMode.MARKDOWN.value
-                                                , reply_markup=telegram.build_inline_keyboard(reply_options))
+                if message_id is not None:
+                    self.get_context().edit_message_text(chat_id, message_id,
+                                                         "Which one of your drafts do you want to update?"
+                                                        , parse_mode=ParseMode.MARKDOWN.value
+                                                        , reply_markup=telegram.build_inline_keyboard(reply_options))
+                else:
+                    self.get_context().send_message(chat_id, "Which one of your drafts do you want to update?"
+                                                    , parse_mode=ParseMode.MARKDOWN.value
+                                                    , reply_markup=telegram.build_inline_keyboard(reply_options))
             else:
                 self.get_context().send_message(chat_id, "There is nothing to update. You don't have any drafts."
                                                 , parse_mode=ParseMode.MARKDOWN.value)
@@ -70,13 +76,36 @@ class UpdateDraftState(AbstractState):
                 # /updatedraft <post_id> - to-be-updated post_id was chosen
                 # ------------------------------------------------------------------------------------------------------
                 if len(command_array) == 2:
-                    None  # TODO
+                    # TODO add more options: tags, images, ...
+                    reply_options = [{"text": "add text", "callback_data": data + " /addcontent"}
+                                    , {"text": "edit text", "callback_data": data + " /editcontent"}
+                                    , {"text": "<< back to drafts", "callback_data": data + " /back"}]
+                    post_title = None
+                    for post in self.get_context().get_posts(post_id=command_array[1], user_id=user_id, status="draft"):
+                        post_title = post["title"]
+
+                    if post_title is not None:
+                        self.get_context().edit_message_text(chat_id, message_id,
+                                                             "What do you want to do with draft '*" + post_title + "*'?"
+                                                             , parse_mode=ParseMode.MARKDOWN.value
+                                                             , reply_markup=telegram.build_inline_keyboard(reply_options))
+                    else:
+                        self.get_context().edit_message_text(chat_id, message_id,
+                                                             "The selected draft does not exist!"
+                                                             , parse_mode=ParseMode.MARKDOWN.value)
 
                 # ------------------------------------------------------------------------------------------------------
                 # /updatedraft <post_id> <command> - update post_id with command
                 # ------------------------------------------------------------------------------------------------------
                 elif len(command_array) == 3:
-                    None # TODO
+
+                    # go back to let user select draft-to-be-updated once more
+                    if command_array[2] == "/back":
+                        self.get_context().set_user_state(user_id, UpdateDraftState(self.get_context(), chat_id=chat_id, user_id=user_id, message_id=message_id))
+
+                    else:
+                        # TODO
+                        None
 
                 # ------------------------------------------------------------------------------------------------------
                 # /updatedraft ... - update has invalid number of parameters
