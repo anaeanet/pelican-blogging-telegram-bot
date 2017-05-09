@@ -38,5 +38,9 @@ def build_keyboard(items, one_time_keyboard=True, resize_keyboard=True):
 def build_inline_keyboard(items):
     keyboard = [[item] for item in items]
     reply_markup = {"inline_keyboard": keyboard}
-
     return json.dumps(reply_markup)
+
+
+def build_force_reply(selective=False):
+    return json.dumps({"force_reply": True, "selective": selective})
+

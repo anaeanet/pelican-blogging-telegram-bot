@@ -33,6 +33,7 @@ class UpdateDraftState(AbstractState):
                                                 , parse_mode=ParseMode.MARKDOWN.value)
 
     def process_update(self, update):
+        print(update) # TODO delete print once state is finished
         update_type = telegram.get_update_type(update)
 
         # --------------------------------------------------------------------------------------------------------------
@@ -71,18 +72,19 @@ class UpdateDraftState(AbstractState):
             if data.startswith("/updatedraft"):
                 command_array = data.split(" ")
 
-                print(update)   # TODO remove print after code is finished
                 # ------------------------------------------------------------------------------------------------------
                 # /updatedraft <post_id> - to-be-updated post_id was chosen
                 # ------------------------------------------------------------------------------------------------------
                 if len(command_array) == 2:
                     # TODO add more options: tags, images, ...
-                    reply_options = [{"text": "add text", "callback_data": data + " /addcontent"}
-                                    , {"text": "edit text", "callback_data": data + " /editcontent"}
-                                    , {"text": "<< back to drafts", "callback_data": data + " /back"}]
+                    reply_options = []
                     post_title = None
                     for post in self.get_context().get_posts(post_id=command_array[1], user_id=user_id, status="draft"):
                         post_title = post["title"]
+                        if post["content"] is not None:
+                            reply_options.append({"text": "edit content", "callback_data": data + " /editcontent"})
+                        reply_options.append({"text": "add content", "callback_data": data + " /addcontent"})
+                        reply_options.append({"text": "<< back to drafts", "callback_data": data + " /back"})
 
                     if post_title is not None:
                         self.get_context().edit_message_text(chat_id, message_id,
