@@ -66,10 +66,8 @@ class UpdateDraftState(IdleState):
 
             # go back to let user select draft-to-be-updated once more
             if command_array[2] == "/back":
-                self.get_context().set_user_state(user_id,
-                                                  UpdateDraftState(self.get_context(), chat_id=chat_id, user_id=user_id,
-                                                                   message_id=message_id))
-
+                self.get_context().set_user_state(user_id, UpdateDraftState(self.get_context(), chat_id=chat_id
+                                                                            , user_id=user_id, message_id=message_id))
             else:
                 # TODO
                 None

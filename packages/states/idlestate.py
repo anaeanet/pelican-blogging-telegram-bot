@@ -11,6 +11,10 @@ class IdleState(AbstractState):
     This class serves as start state for all users of "PelicanMarkdownBot".
     """
 
+    def get_global_commands(self):
+        # TODO add /previewdraft and /publishdraft
+        return ["/start", "/help", "/createdraft", "/updatedraft", "/deletedraft"]
+
     def notify_invalid_command(self, chat_id):
         self.get_context().send_message(chat_id, "Unrecognized command or message!"
                                         + "\r\n" + "Send /help to see available commands."

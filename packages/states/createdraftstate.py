@@ -21,7 +21,7 @@ class CreateDraftState(IdleState):
     def process_message(self, user_id, chat_id, text):
 
         # global commands
-        if text in ["/start", "/help", "/createdraft", "/updatedraft", "/deletedraft"] or text.startswith("/"):
+        if text in self.get_global_commands() or text.startswith("/"):
             super().process_message(user_id, chat_id, text)
         else:
             self.get_context().add_post(user_id, text)
