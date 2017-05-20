@@ -10,7 +10,7 @@ class DeleteDraftState(IdleState):
     Concrete state implementation.
     """
 
-    def __init__(self, context, chat_id=None, user_id=None):
+    def __init__(self, context, chat_id=None, user_id=None, message_id=None):
         super().__init__(context)
 
         if chat_id is not None and user_id is not None:
@@ -19,9 +19,15 @@ class DeleteDraftState(IdleState):
                 reply_options.append({"text": post["title"], "callback_data": "/deletedraft " + str(post["post_id"])})
 
             if len(reply_options) > 0:
-                self.get_context().send_message(chat_id, "Which one of your drafts do you want to delete?"
-                                                , parse_mode=ParseMode.MARKDOWN.value
-                                                , reply_markup=telegram.build_inline_keyboard(reply_options))
+                if message_id is not None:
+                    self.get_context().edit_message_text(chat_id, message_id,
+                                                         "Which one of your drafts do you want to delete?"
+                                                        , parse_mode=ParseMode.MARKDOWN.value
+                                                        , reply_markup=telegram.build_inline_keyboard(reply_options))
+                else:
+                    self.get_context().send_message(chat_id, "Which one of your drafts do you want to delete?"
+                                                    , parse_mode=ParseMode.MARKDOWN.value
+                                                    , reply_markup=telegram.build_inline_keyboard(reply_options))
             else:
                 self.get_context().send_message(chat_id, "There is nothing to delete. You don't have any drafts."
                                                 , parse_mode=ParseMode.MARKDOWN.value)
@@ -33,17 +39,17 @@ class DeleteDraftState(IdleState):
         # /deletedraft <post_id> - to-be-deleted post_id was chosen
         # ------------------------------------------------------------------------------------------------------
         if len(command_array) == 2:
-            reply_options = [{"text": "No, abort", "callback_data": data + " N"}]
+            reply_options = [{"text": "<< back to drafts", "callback_data": data + " /back"}]
             post_title = None
             for post in self.get_context().get_posts(post_id=command_array[1], user_id=user_id, status="draft"):
-                reply_options.append({"text": "Yes, confirm", "callback_data": data + " Y"})
+                reply_options.append({"text": "Yes, delete", "callback_data": data + " Y"})
                 post_title = post["title"]
 
             if post_title is not None:
                 self.get_context().edit_message_text(chat_id, message_id,
                                                      "Do you really want to delete draft '*" + post_title + "*'?"
                                                      , parse_mode=ParseMode.MARKDOWN.value
-                                                     , reply_markup=telegram.build_inline_keyboard(reply_options))
+                                                     , reply_markup=telegram.build_inline_keyboard(reply_options, columns=2))
             else:
                 self.get_context().edit_message_text(chat_id, message_id,
                                                      "The selected draft does not exist!"
@@ -64,9 +70,8 @@ class DeleteDraftState(IdleState):
                                                          "Successfully deleted draft '*" + post_title + "*'."
                                                          , parse_mode=ParseMode.MARKDOWN.value)
                 else:
-                    self.get_context().edit_message_text(chat_id, message_id,
-                                                         "Deletion of draft '*" + post_title + "*' was aborted."
-                                                         , parse_mode=ParseMode.MARKDOWN.value)
+                    self.get_context().set_user_state(user_id, DeleteDraftState(self.get_context(), chat_id=chat_id
+                                                                                , user_id=user_id, message_id=message_id))
             else:
                 self.get_context().edit_message_text(chat_id, message_id,
                                                      "The selected draft does not exist!"

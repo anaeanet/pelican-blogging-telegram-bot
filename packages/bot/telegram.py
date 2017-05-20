@@ -35,10 +35,16 @@ def build_keyboard(items, one_time_keyboard=True, resize_keyboard=True):
     return json.dumps(reply_markup)
 
 
-def build_inline_keyboard(items):
-    keyboard = [[item] for item in items]
-    reply_markup = {"inline_keyboard": keyboard}
-    return json.dumps(reply_markup)
+def build_inline_keyboard(items, columns=1):
+    pos = 0
+    keyboard = []
+
+    while pos < len(items):
+        keyboard_columns = [items[i] for i in list(range(pos, pos+columns))]
+        pos += columns
+        keyboard.append(keyboard_columns)
+
+    return json.dumps({"inline_keyboard": keyboard})
 
 
 def build_force_reply(selective=False):
