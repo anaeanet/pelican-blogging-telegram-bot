@@ -36,13 +36,17 @@ def build_keyboard(items, one_time_keyboard=True, resize_keyboard=True):
 
 
 def build_inline_keyboard(items, columns=1):
-    pos = 0
     keyboard = []
 
-    while pos < len(items):
-        keyboard_columns = [items[i] for i in list(range(pos, min(pos+columns, len(items))))]
-        pos += columns
+    item_pos = 0
+    while item_pos < len(items):
+        keyboard_columns = []
+        for i in list(range(item_pos, min(item_pos+columns, len(items)))):
+            item = items[i]
+            if item:    # empty/None item indicates a line break
+                keyboard_columns.append(items[i])
         keyboard.append(keyboard_columns)
+        item_pos += columns
 
     return json.dumps({"inline_keyboard": keyboard})
 

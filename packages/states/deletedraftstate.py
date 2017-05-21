@@ -80,8 +80,15 @@ class DeleteDraftState(IdleState):
                     self.get_context().edit_message_text(chat_id, message_id
                                                          , "Successfully deleted draft '*" + post_title + "*'."
                                                          , parse_mode=ParseMode.MARKDOWN.value)
-                    self.get_context().set_user_state(user_id, DeleteDraftState(self.get_context(), user_id
-                                                                                , chat_id=chat_id))
+
+                    # show remaining drafts for deletion
+                    if len(self.get_context().get_posts(user_id=user_id, status="draft")) > 0:
+                        self.get_context().set_user_state(user_id, DeleteDraftState(self.get_context(), user_id
+                                                                                    , chat_id=chat_id))
+                    # no remaining drafts -> automatically go back to main menu
+                    else:
+                        self.get_context().set_user_state(user_id, IdleState(self.get_context(), user_id
+                                                                             , chat_id=chat_id))
 
                 else:
                     # TODO ??? only needed if older message is clicked
