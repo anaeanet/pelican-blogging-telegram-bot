@@ -14,6 +14,11 @@ class IdleState(AbstractState):
     def __init__(self, context, user_id, chat_id=None, message_id=None):
         super().__init__(context)
 
+        # TODO serialize/deserialize in sqldbwrapper
+        self.user_id = user_id
+        self.chat_id = chat_id
+        self.message_id = message_id
+
         if chat_id is not None:
             self.show_menu(user_id, chat_id, message_id=message_id)
 
@@ -37,8 +42,8 @@ class IdleState(AbstractState):
                                             , reply_markup=telegram.build_inline_keyboard(reply_options))
 
     def process_message(self, user_id, chat_id, text):
-
-        if text in ["/start", "/help"]:
+        # welcome message
+        if text in ["/start"]:
             self.get_context().send_message(chat_id,
                                             "Welcome to your mobile blogging bot!"
                                             + "\r\n"
@@ -51,24 +56,31 @@ class IdleState(AbstractState):
         self.get_context().set_user_state(user_id, IdleState(self.get_context(), user_id))
 
     def process_callback_query(self, user_id, chat_id, message_id, data):
-        if data == "/createdraft":
-            from packages.states.createdraftstate import CreateDraftState
-            self.get_context().set_user_state(user_id,
-                                              CreateDraftState(self.get_context(), user_id, chat_id=chat_id, message_id=message_id))
-        elif data == "/updatedraft":
-            from packages.states.updatedraft import UpdateDraftState
-            self.get_context().set_user_state(user_id,
-                                              UpdateDraftState(self.get_context(), user_id, chat_id=chat_id, message_id=message_id))
-        elif data == "/deletedraft":
-            from packages.states.deletedraftstate import DeleteDraftState
-            self.get_context().set_user_state(user_id,
-                                              DeleteDraftState(self.get_context(), user_id, chat_id=chat_id, message_id=message_id))
-        elif data == "/previewdraft":
-            # TODO
-            None
-        elif data == "/publishdraft":
-            # TODO
-            None
+        command_array = data.split(" ")
+
+        if len(command_array) > 0:
+
+            if command_array[0] == "/mainmenu":
+                user_state = IdleState(self.get_context(), user_id, chat_id=chat_id, message_id=message_id)
+                self.get_context().set_user_state(user_id, user_state)
+            elif command_array[0] == "/createdraft":
+                from packages.states.createdraftstate import CreateDraftState
+                user_state = CreateDraftState(self.get_context(), user_id, chat_id=chat_id, message_id=message_id)
+                self.get_context().set_user_state(user_id, user_state)
+            elif command_array[0] == "/updatedraft":
+                from packages.states.updatedraft import UpdateDraftState
+                user_state = UpdateDraftState(self.get_context(), user_id, chat_id=chat_id, message_id=message_id)
+                self.get_context().set_user_state(user_id, user_state)
+            elif command_array[0] == "/deletedraft":
+                from packages.states.deletedraftstate import DeleteDraftState
+                user_state = DeleteDraftState(self.get_context(), user_id, chat_id=chat_id, message_id=message_id)
+                self.get_context().set_user_state(user_id, user_state)
+            elif command_array[0] == "/previewdraft":
+                # TODO
+                None
+            elif command_array[0] == "/publishdraft":
+                # TODO
+                None
 
     def process_update(self, update):
         update_type = telegram.get_update_type(update)
