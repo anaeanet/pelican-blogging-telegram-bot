@@ -40,7 +40,7 @@ def build_inline_keyboard(items, columns=1):
     keyboard = []
 
     while pos < len(items):
-        keyboard_columns = [items[i] for i in list(range(pos, pos+columns))]
+        keyboard_columns = [items[i] for i in list(range(pos, min(pos+columns, len(items))))]
         pos += columns
         keyboard.append(keyboard_columns)
 
