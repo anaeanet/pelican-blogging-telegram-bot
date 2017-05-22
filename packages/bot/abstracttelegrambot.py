@@ -55,7 +55,8 @@ class AbstractTelegramBot:
         if reply_markup is not None:
             result_url += "&reply_markup={}".format(reply_markup)
 
-        AbstractTelegramBot.__get_url_response(result_url)
+        js = AbstractTelegramBot.__get_json_from_url(result_url)
+        return js
 
     def edit_message_text(self, chat_id, message_id, text, disable_web_page_preview=None, parse_mode=None, reply_markup=None):
         result_url = self.__url + "editMessageText?chat_id={}&message_id={}&text={}".format(chat_id, message_id, urllib.parse.quote_plus(text))
@@ -67,7 +68,8 @@ class AbstractTelegramBot:
         if reply_markup is not None:
             result_url += "&reply_markup={}".format(reply_markup)
 
-        AbstractTelegramBot.__get_url_response(result_url)
+        js = AbstractTelegramBot.__get_json_from_url(result_url)
+        return js
 
     def answer_callback_query(self, callback_query_id, text=None, show_alert=None, url=None, cache_time=None):
         result_url = self.__url + "answerCallbackQuery?callback_query_id={}".format(callback_query_id)
@@ -81,7 +83,8 @@ class AbstractTelegramBot:
         if cache_time is not None:
             result_url += "&cache_time={}".format(cache_time)
 
-        AbstractTelegramBot.__get_url_response(result_url)
+        js = AbstractTelegramBot.__get_json_from_url(result_url)
+        return js
 
     def handle_update(self, update):
         raise NotImplementedError("Abstract method! Implement in child class", type(self))
