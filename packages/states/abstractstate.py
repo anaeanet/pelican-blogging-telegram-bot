@@ -12,7 +12,8 @@ class AbstractState:
         if type(self) is AbstractState:
             raise TypeError("Abstract class! Cannot be instantiated.")
 
-    def get_context(self):
+    @property
+    def context(self):
         return self.__context
 
     def process_update(self, update):

@@ -15,11 +15,11 @@ class CreateDraftState(IdleState):
 
         message_text = "Enter the *title* of your new draft:"
         if message_id is not None:
-            self.get_context().edit_message_text(chat_id, message_id, message_text
+            self.context.edit_message_text(chat_id, message_id, message_text
                                                  , parse_mode=ParseMode.MARKDOWN.value
                                                  , reply_markup=telegram.build_inline_keyboard(reply_options))
         else:
-            self.get_context().send_message(chat_id, message_id, message_text
+            self.context.send_message(chat_id, message_id, message_text
                                             , parse_mode=ParseMode.MARKDOWN.value
                                             , reply_markup=telegram.build_inline_keyboard(reply_options))
 
@@ -27,9 +27,9 @@ class CreateDraftState(IdleState):
         if text.startswith("/"):
             super().process_message(user_id, chat_id, text)
         else:
-            self.get_context().add_post(user_id, text)
-            self.get_context().send_message(chat_id
+            self.context.add_post(user_id, text)
+            self.context.send_message(chat_id
                                             , "Successfully created draft '*" + text + "*'"
                                             , parse_mode=ParseMode.MARKDOWN.value)
-            user_state = IdleState(self.get_context(), user_id, chat_id=chat_id)
-            self.get_context().set_user_state(user_id, user_state)
+            user_state = IdleState(self.context, user_id, chat_id=chat_id)
+            self.context.set_user_state(user_id, user_state)

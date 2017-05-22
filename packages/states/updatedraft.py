@@ -12,17 +12,17 @@ class UpdateDraftState(IdleState):
 
     def show_menu(self, user_id, chat_id, message_id=None):
         reply_options = []
-        for post in self.get_context().get_posts(user_id=user_id, status="draft"):
+        for post in self.context.get_posts(user_id=user_id, status="draft"):
             reply_options.append({"text": post["title"], "callback_data": "/updatedraft " + str(post["post_id"])})
         reply_options.append({"text": "<< main menu", "callback_data": "/mainmenu"})
 
         message_text = "Which draft do you want to update?"
         if message_id is not None:
-            self.get_context().edit_message_text(chat_id, message_id, message_text
+            self.context.edit_message_text(chat_id, message_id, message_text
                                                  , parse_mode=ParseMode.MARKDOWN.value
                                                  , reply_markup=telegram.build_inline_keyboard(reply_options))
         else:
-            self.get_context().send_message(chat_id, message_text
+            self.context.send_message(chat_id, message_text
                                             , parse_mode=ParseMode.MARKDOWN.value
                                             , reply_markup=telegram.build_inline_keyboard(reply_options))
 
@@ -35,7 +35,7 @@ class UpdateDraftState(IdleState):
             # draft selected for deletion - /deletedraft <post_id>
             if len(command_array) == 2:
                 post_id = command_array[1]
-                user_drafts = self.get_context().get_posts(post_id=post_id, user_id=user_id, status="draft")
+                user_drafts = self.context.get_posts(post_id=post_id, user_id=user_id, status="draft")
 
                 if len(user_drafts) > 0:
                     post_title = user_drafts[0]["title"]
@@ -44,7 +44,7 @@ class UpdateDraftState(IdleState):
                                      # TODO add more options here
                                      , {"text": "<< main menu", "callback_data": "/mainmenu"}]
 
-                    self.get_context().edit_message_text(chat_id, message_id
+                    self.context.edit_message_text(chat_id, message_id
                                                          , "What do you want to do with draft '*" + post_title + "*'?"
                                                          , parse_mode=ParseMode.MARKDOWN.value
                                                          , reply_markup=telegram.build_inline_keyboard(reply_options

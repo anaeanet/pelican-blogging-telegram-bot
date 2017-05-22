@@ -24,7 +24,7 @@ class IdleState(AbstractState):
 
     def show_menu(self, user_id, chat_id, message_id=None):
         reply_options = [{"text": "CREATE a draft", "callback_data": "/createdraft"}]
-        if len(self.get_context().get_posts(user_id=user_id, status="draft")) > 0:
+        if len(self.context.get_posts(user_id=user_id, status="draft")) > 0:
             reply_options.append({"text": "UPDATE a draft", "callback_data": "/updatedraft"})
             reply_options.append({"text": "DELETE a draft", "callback_data": "/deletedraft"})
             # TODO
@@ -33,18 +33,18 @@ class IdleState(AbstractState):
 
         message_text = "What do you want to do?"
         if message_id is not None:
-            self.get_context().edit_message_text(chat_id, message_id, message_text
+            self.context.edit_message_text(chat_id, message_id, message_text
                                             , parse_mode=ParseMode.MARKDOWN.value
                                             , reply_markup=telegram.build_inline_keyboard(reply_options))
         else:
-            self.get_context().send_message(chat_id, message_text
+            self.context.send_message(chat_id, message_text
                                             , parse_mode=ParseMode.MARKDOWN.value
                                             , reply_markup=telegram.build_inline_keyboard(reply_options))
 
     def process_message(self, user_id, chat_id, text):
         # welcome message
         if text in ["/start"]:
-            self.get_context().send_message(chat_id,
+            self.context.send_message(chat_id,
                                             "Welcome to your mobile blogging bot!"
                                             + "\r\n"
                                             + "\r\n"
@@ -53,7 +53,7 @@ class IdleState(AbstractState):
                                             , parse_mode=ParseMode.MARKDOWN.value)
 
         self.show_menu(user_id, chat_id)
-        self.get_context().set_user_state(user_id, IdleState(self.get_context(), user_id))
+        self.context.set_user_state(user_id, IdleState(self.context, user_id))
 
     def process_callback_query(self, user_id, chat_id, message_id, data):
         command_array = data.split(" ")
@@ -61,20 +61,20 @@ class IdleState(AbstractState):
         if len(command_array) > 0:
 
             if command_array[0] == "/mainmenu":
-                user_state = IdleState(self.get_context(), user_id, chat_id=chat_id, message_id=message_id)
-                self.get_context().set_user_state(user_id, user_state)
+                user_state = IdleState(self.context, user_id, chat_id=chat_id, message_id=message_id)
+                self.context.set_user_state(user_id, user_state)
             elif command_array[0] == "/createdraft":
                 from packages.states.createdraftstate import CreateDraftState
-                user_state = CreateDraftState(self.get_context(), user_id, chat_id=chat_id, message_id=message_id)
-                self.get_context().set_user_state(user_id, user_state)
+                user_state = CreateDraftState(self.context, user_id, chat_id=chat_id, message_id=message_id)
+                self.context.set_user_state(user_id, user_state)
             elif command_array[0] == "/updatedraft":
                 from packages.states.updatedraft import UpdateDraftState
-                user_state = UpdateDraftState(self.get_context(), user_id, chat_id=chat_id, message_id=message_id)
-                self.get_context().set_user_state(user_id, user_state)
+                user_state = UpdateDraftState(self.context, user_id, chat_id=chat_id, message_id=message_id)
+                self.context.set_user_state(user_id, user_state)
             elif command_array[0] == "/deletedraft":
                 from packages.states.deletedraftstate import DeleteDraftState
-                user_state = DeleteDraftState(self.get_context(), user_id, chat_id=chat_id, message_id=message_id)
-                self.get_context().set_user_state(user_id, user_state)
+                user_state = DeleteDraftState(self.context, user_id, chat_id=chat_id, message_id=message_id)
+                self.context.set_user_state(user_id, user_state)
             elif command_array[0] == "/previewdraft":
                 # TODO
                 None
@@ -93,7 +93,7 @@ class IdleState(AbstractState):
             self.process_message(user_id, chat_id, text)
 
         elif update_type == "callback_query":
-            self.get_context().answer_callback_query(update[update_type]["id"])
+            self.context.answer_callback_query(update[update_type]["id"])
 
             user_id = telegram.get_update_sender_id(update)
             chat_id = update[update_type]["message"]["chat"]["id"]

@@ -12,17 +12,17 @@ class DeleteDraftState(IdleState):
 
     def show_menu(self, user_id, chat_id, message_id=None):
         reply_options = []
-        for post in self.get_context().get_posts(user_id=user_id, status="draft"):
+        for post in self.context.get_posts(user_id=user_id, status="draft"):
             reply_options.append({"text": post["title"], "callback_data": "/deletedraft " + str(post["post_id"])})
         reply_options.append({"text": "<< main menu", "callback_data": "/mainmenu"})
 
         message_text = "Which one of your drafts do you want to delete?"
         if message_id is not None:
-            self.get_context().edit_message_text(chat_id, message_id, message_text
+            self.context.edit_message_text(chat_id, message_id, message_text
                                                  , parse_mode=ParseMode.MARKDOWN.value
                                                  , reply_markup=telegram.build_inline_keyboard(reply_options))
         else:
-            self.get_context().send_message(chat_id, message_text
+            self.context.send_message(chat_id, message_text
                                             , parse_mode=ParseMode.MARKDOWN.value
                                             , reply_markup=telegram.build_inline_keyboard(reply_options))
 
@@ -35,7 +35,7 @@ class DeleteDraftState(IdleState):
             # draft selected for deletion - /deletedraft <post_id>
             if len(command_array) == 2:
                 post_id = command_array[1]
-                user_drafts = self.get_context().get_posts(post_id=post_id, user_id=user_id, status="draft")
+                user_drafts = self.context.get_posts(post_id=post_id, user_id=user_id, status="draft")
 
                 if len(user_drafts) > 0:
                     post_title = user_drafts[0]["title"]
@@ -43,7 +43,7 @@ class DeleteDraftState(IdleState):
                                      , {"text": "Yes, delete", "callback_data": data + " /confirm"}
                                      , {"text": "<< main menu", "callback_data": "/mainmenu"}]
 
-                    self.get_context().edit_message_text(chat_id, message_id
+                    self.context.edit_message_text(chat_id, message_id
                                                          , "Do you really want to delete draft '*" + post_title + "*'?"
                                                          , parse_mode=ParseMode.MARKDOWN.value
                                                          , reply_markup=telegram.build_inline_keyboard(reply_options
@@ -56,21 +56,21 @@ class DeleteDraftState(IdleState):
                 # confirmed draft deletion
                 if command_array[2] == "/confirm":
                     post_id = command_array[1]
-                    user_drafts = self.get_context().get_posts(post_id=post_id, user_id=user_id, status="draft")
+                    user_drafts = self.context.get_posts(post_id=post_id, user_id=user_id, status="draft")
 
                     if len(user_drafts) > 0:
                         post_title = user_drafts[0]["title"]
-                        self.get_context().delete_post(command_array[1])
-                        self.get_context().edit_message_text(chat_id, message_id
+                        self.context.delete_post(command_array[1])
+                        self.context.edit_message_text(chat_id, message_id
                                                              , "Successfully deleted draft '*" + post_title + "*'."
                                                              , parse_mode=ParseMode.MARKDOWN.value)
 
                         # show remaining drafts for deletion
-                        if len(self.get_context().get_posts(user_id=user_id, status="draft")) > 0:
-                            user_state = DeleteDraftState(self.get_context(), user_id, chat_id=chat_id)
+                        if len(self.context.get_posts(user_id=user_id, status="draft")) > 0:
+                            user_state = DeleteDraftState(self.context, user_id, chat_id=chat_id)
                         else:   # no remaining drafts -> automatically go back to main menu
-                            user_state = IdleState(self.get_context(), user_id, chat_id=chat_id)
-                        self.get_context().set_user_state(user_id, user_state)
+                            user_state = IdleState(self.context, user_id, chat_id=chat_id)
+                        self.context.set_user_state(user_id, user_state)
 
                     # TODO do something with older message (only way that selected post_id does not exist)
 
