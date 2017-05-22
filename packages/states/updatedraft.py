@@ -16,7 +16,7 @@ class UpdateDraftState(IdleState):
             reply_options.append({"text": post["title"], "callback_data": "/updatedraft " + str(post["post_id"])})
         reply_options.append({"text": "<< main menu", "callback_data": "/mainmenu"})
 
-        message_text = "Which draft do you want to update?"
+        message_text = "Which draft do you want to *update*?"
         if message_id is not None:
             self.context.edit_message_text(chat_id, message_id, message_text
                                                  , parse_mode=ParseMode.MARKDOWN.value

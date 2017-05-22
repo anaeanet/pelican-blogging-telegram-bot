@@ -14,10 +14,8 @@ class IdleState(AbstractState):
     def __init__(self, context, user_id, chat_id=None, message_id=None):
         super().__init__(context)
 
-        # TODO serialize/deserialize in sqldbwrapper
-        self.user_id = user_id
-        self.chat_id = chat_id
-        self.message_id = message_id
+        # TODO are these needed? if yes, serialize/deserialze them in sqldbwrapper
+        self.__message_id = message_id
 
         if chat_id is not None:
             self.show_menu(user_id, chat_id, message_id=message_id)
@@ -53,7 +51,8 @@ class IdleState(AbstractState):
                                             , parse_mode=ParseMode.MARKDOWN.value)
 
         self.show_menu(user_id, chat_id)
-        self.context.set_user_state(user_id, IdleState(self.context, user_id))
+        next_state = IdleState(self.context, user_id)
+        self.context.set_user_state(user_id, next_state)
 
     def process_callback_query(self, user_id, chat_id, message_id, data):
         command_array = data.split(" ")
@@ -61,20 +60,20 @@ class IdleState(AbstractState):
         if len(command_array) > 0:
 
             if command_array[0] == "/mainmenu":
-                user_state = IdleState(self.context, user_id, chat_id=chat_id, message_id=message_id)
-                self.context.set_user_state(user_id, user_state)
+                next_state = IdleState(self.context, user_id, chat_id=chat_id, message_id=message_id)
+                self.context.set_user_state(user_id, next_state)
             elif command_array[0] == "/createdraft":
                 from packages.states.createdraftstate import CreateDraftState
-                user_state = CreateDraftState(self.context, user_id, chat_id=chat_id, message_id=message_id)
-                self.context.set_user_state(user_id, user_state)
+                next_state = CreateDraftState(self.context, user_id, chat_id=chat_id, message_id=message_id)
+                self.context.set_user_state(user_id, next_state)
             elif command_array[0] == "/updatedraft":
                 from packages.states.updatedraft import UpdateDraftState
-                user_state = UpdateDraftState(self.context, user_id, chat_id=chat_id, message_id=message_id)
-                self.context.set_user_state(user_id, user_state)
+                next_state = UpdateDraftState(self.context, user_id, chat_id=chat_id, message_id=message_id)
+                self.context.set_user_state(user_id, next_state)
             elif command_array[0] == "/deletedraft":
                 from packages.states.deletedraftstate import DeleteDraftState
-                user_state = DeleteDraftState(self.context, user_id, chat_id=chat_id, message_id=message_id)
-                self.context.set_user_state(user_id, user_state)
+                next_state = DeleteDraftState(self.context, user_id, chat_id=chat_id, message_id=message_id)
+                self.context.set_user_state(user_id, next_state)
             elif command_array[0] == "/previewdraft":
                 # TODO
                 None

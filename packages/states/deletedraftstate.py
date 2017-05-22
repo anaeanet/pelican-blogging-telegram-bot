@@ -16,7 +16,7 @@ class DeleteDraftState(IdleState):
             reply_options.append({"text": post["title"], "callback_data": "/deletedraft " + str(post["post_id"])})
         reply_options.append({"text": "<< main menu", "callback_data": "/mainmenu"})
 
-        message_text = "Which one of your drafts do you want to delete?"
+        message_text = "Which one of your drafts do you want to *delete*?"
         if message_id is not None:
             self.context.edit_message_text(chat_id, message_id, message_text
                                                  , parse_mode=ParseMode.MARKDOWN.value
@@ -67,10 +67,10 @@ class DeleteDraftState(IdleState):
 
                         # show remaining drafts for deletion
                         if len(self.context.get_posts(user_id=user_id, status="draft")) > 0:
-                            user_state = DeleteDraftState(self.context, user_id, chat_id=chat_id)
+                            next_state = DeleteDraftState(self.context, user_id, chat_id=chat_id)
                         else:   # no remaining drafts -> automatically go back to main menu
-                            user_state = IdleState(self.context, user_id, chat_id=chat_id)
-                        self.context.set_user_state(user_id, user_state)
+                            next_state = IdleState(self.context, user_id, chat_id=chat_id)
+                        self.context.set_user_state(user_id, next_state)
 
                     # TODO do something with older message (only way that selected post_id does not exist)
 

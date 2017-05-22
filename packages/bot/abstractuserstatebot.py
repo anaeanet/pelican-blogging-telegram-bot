@@ -18,21 +18,22 @@ class AbstractUserStateBot(AbstractTelegramBot):
         if type(self) is AbstractUserStateBot:
             raise TypeError("Abstract class! Cannot be instantiated.")
 
-    def get_start_state_class(self):
+    @property
+    def start_state_class(self):
         return self.__start_state_class
+
+    def get_user_state(self, user_id):
+        return self.__user_state_dict[user_id] if user_id in self.__user_state_dict else None
 
     def set_user_state(self, user_id, state):
         result = self.__user_state_dict[user_id] if user_id in self.__user_state_dict else None
         self.__user_state_dict[user_id] = state
         return result
 
-    def get_user_state(self, user_id):
-        return self.__user_state_dict[user_id] if user_id in self.__user_state_dict else None
-
     def handle_update(self, update):
         user_id = telegram.get_update_sender_id(update)
 
         if user_id not in self.__user_state_dict or self.get_user_state(user_id) is None:
-            self.set_user_state(user_id, self.get_start_state_class()(self))
+            self.set_user_state(user_id, self.start_state_class(self))
 
         self.get_user_state(user_id).process_update(update)
