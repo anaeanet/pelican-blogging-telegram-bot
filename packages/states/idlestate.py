@@ -47,7 +47,7 @@ class IdleState(AbstractState):
                                             , parse_mode=ParseMode.MARKDOWN.value
                                             , reply_markup=telegram.build_inline_keyboard(reply_options))
 
-    def process_message(self, user_id, chat_id, message_id, text):
+    def process_message(self, user_id, chat_id, text):
         # welcome message
         if text in ["/start"]:
             self.context.send_message(chat_id,
@@ -94,10 +94,9 @@ class IdleState(AbstractState):
         if update_type == "message":
             user_id = telegram.get_update_sender_id(update)
             chat_id = update[update_type]["chat"]["id"]
-            message_id = update[update_type]["message_id"]
             text = update[update_type]["text"].strip(' \t\n\r') if "text" in update[update_type] else None
 
-            self.process_message(user_id, chat_id, message_id, text)
+            self.process_message(user_id, chat_id, text)
 
         elif update_type == "callback_query":
             self.context.answer_callback_query(update[update_type]["id"])
