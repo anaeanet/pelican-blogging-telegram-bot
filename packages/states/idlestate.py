@@ -14,7 +14,7 @@ class IdleState(AbstractState):
     def __init__(self, context, user_id, chat_id=None, message_id=None):
         super().__init__(context)
 
-        # TODO serialize/deserialze them in sqldbwrapper
+        # TODO serialize/deserialze attribute in sqldbwrapper
         self.__message_id = message_id
 
         if chat_id is not None:
@@ -26,7 +26,7 @@ class IdleState(AbstractState):
 
     @message_id.setter
     def message_id(self, message_id):
-        self.__message_id = max(self.__message_id, message_id)
+        self.__message_id = message_id if self.__message_id is None or message_id > self.__message_id else self.__message_id
 
     def show_menu(self, user_id, chat_id, message_id=None):
         reply_options = [{"text": "CREATE a draft", "callback_data": "/createdraft"}]
@@ -43,11 +43,20 @@ class IdleState(AbstractState):
                                             , parse_mode=ParseMode.MARKDOWN.value
                                             , reply_markup=telegram.build_inline_keyboard(reply_options))
         else:
-            self.context.send_message(chat_id, message_text
+            sent_message = self.context.send_message(chat_id, message_text
                                             , parse_mode=ParseMode.MARKDOWN.value
                                             , reply_markup=telegram.build_inline_keyboard(reply_options))
 
+            # store message_id of sent message to allow later deletion or editing
+            if "result" in sent_message and "message_id" in sent_message["result"]:
+                self.message_id = sent_message["result"]["message_id"]
+
     def process_message(self, user_id, chat_id, text):
+
+        # delete previous bot message (if existing) before sending new ones
+        if self.message_id is not None:
+            self.context.delete_message(chat_id, self.message_id)
+
         # welcome message
         if text in ["/start"]:
             self.context.send_message(chat_id,
