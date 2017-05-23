@@ -23,9 +23,9 @@ class CreateDraftState(IdleState):
                                             , parse_mode=ParseMode.MARKDOWN.value
                                             , reply_markup=telegram.build_inline_keyboard(reply_options))
 
-    def process_message(self, user_id, chat_id, text):
+    def process_message(self, user_id, chat_id, message_id, text):
         if text.startswith("/"):
-            super().process_message(user_id, chat_id, text)
+            super().process_message(user_id, chat_id, message_id, text)
         else:
             self.context.add_post(user_id, text)
             self.context.send_message(chat_id

@@ -86,6 +86,12 @@ class AbstractTelegramBot:
         js = AbstractTelegramBot.__get_json_from_url(result_url)
         return js
 
+    def delete_message(self, chat_id, message_id):
+        result_url = self.__url + "deleteMessage?chat_id={}&message_id={}".format(chat_id, message_id)
+
+        js = AbstractTelegramBot.__get_json_from_url(result_url)
+        return js
+
     def handle_update(self, update):
         raise NotImplementedError("Abstract method! Implement in child class", type(self))
 

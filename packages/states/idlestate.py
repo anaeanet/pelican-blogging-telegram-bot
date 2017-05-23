@@ -14,11 +14,19 @@ class IdleState(AbstractState):
     def __init__(self, context, user_id, chat_id=None, message_id=None):
         super().__init__(context)
 
-        # TODO are these needed? if yes, serialize/deserialze them in sqldbwrapper
+        # TODO serialize/deserialze them in sqldbwrapper
         self.__message_id = message_id
 
         if chat_id is not None:
             self.show_menu(user_id, chat_id, message_id=message_id)
+
+    @property
+    def message_id(self):
+        return self.__message_id
+
+    @message_id.setter
+    def message_id(self, message_id):
+        self.__message_id = max(self.__message_id, message_id)
 
     def show_menu(self, user_id, chat_id, message_id=None):
         reply_options = [{"text": "CREATE a draft", "callback_data": "/createdraft"}]
@@ -39,7 +47,7 @@ class IdleState(AbstractState):
                                             , parse_mode=ParseMode.MARKDOWN.value
                                             , reply_markup=telegram.build_inline_keyboard(reply_options))
 
-    def process_message(self, user_id, chat_id, text):
+    def process_message(self, user_id, chat_id, message_id, text):
         # welcome message
         if text in ["/start"]:
             self.context.send_message(chat_id,
@@ -50,8 +58,7 @@ class IdleState(AbstractState):
                                             + "Just follow the interactive menu!"
                                             , parse_mode=ParseMode.MARKDOWN.value)
 
-        self.show_menu(user_id, chat_id)
-        next_state = IdleState(self.context, user_id)
+        next_state = IdleState(self.context, user_id, chat_id=chat_id)
         self.context.set_user_state(user_id, next_state)
 
     def process_callback_query(self, user_id, chat_id, message_id, data):
@@ -87,9 +94,10 @@ class IdleState(AbstractState):
         if update_type == "message":
             user_id = telegram.get_update_sender_id(update)
             chat_id = update[update_type]["chat"]["id"]
+            message_id = update[update_type]["message_id"]
             text = update[update_type]["text"].strip(' \t\n\r') if "text" in update[update_type] else None
 
-            self.process_message(user_id, chat_id, text)
+            self.process_message(user_id, chat_id, message_id, text)
 
         elif update_type == "callback_query":
             self.context.answer_callback_query(update[update_type]["id"])
