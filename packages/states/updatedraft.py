@@ -10,21 +10,16 @@ class UpdateDraftState(IdleState):
     Concrete state implementation.
     """
 
-    def show_menu(self, user_id, chat_id, message_id=None):
+    @property
+    def init_message(self):
+        return "Which draft do you want to *update*?"
+
+    def get_initial_options(self, user_id):
         reply_options = []
         for post in self.context.get_posts(user_id=user_id, status="draft"):
             reply_options.append({"text": post["title"], "callback_data": "/updatedraft " + str(post["post_id"])})
         reply_options.append({"text": "<< main menu", "callback_data": "/mainmenu"})
-
-        message_text = "Which draft do you want to *update*?"
-        if message_id is not None:
-            self.context.edit_message_text(chat_id, message_id, message_text
-                                                 , parse_mode=ParseMode.MARKDOWN.value
-                                                 , reply_markup=telegram.build_inline_keyboard(reply_options))
-        else:
-            self.context.send_message(chat_id, message_text
-                                            , parse_mode=ParseMode.MARKDOWN.value
-                                            , reply_markup=telegram.build_inline_keyboard(reply_options))
+        return reply_options
 
     def process_callback_query(self, user_id, chat_id, message_id, data):
         command_array = data.split(" ")

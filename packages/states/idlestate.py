@@ -18,7 +18,7 @@ class IdleState(AbstractState):
         self.__message_id = message_id
 
         if chat_id is not None:
-            self.show_menu(user_id, chat_id, message_id=message_id)
+            self.build_state_message(user_id, chat_id, self.init_message, message_id=message_id, reply_options=self.get_initial_options(user_id))
 
     @property
     def message_id(self):
@@ -28,16 +28,21 @@ class IdleState(AbstractState):
     def message_id(self, message_id):
         self.__message_id = message_id if self.__message_id is None or message_id > self.__message_id else self.__message_id
 
-    def show_menu(self, user_id, chat_id, message_id=None):
+    @property
+    def init_message(self):
+        return "What do you want to do?"
+
+    def get_initial_options(self, user_id):
         reply_options = [{"text": "CREATE a draft", "callback_data": "/createdraft"}]
         if len(self.context.get_posts(user_id=user_id, status="draft")) > 0:
             reply_options.append({"text": "UPDATE a draft", "callback_data": "/updatedraft"})
             reply_options.append({"text": "DELETE a draft", "callback_data": "/deletedraft"})
             # TODO
-            #reply_options.append({"text": "PREVIEW a draft", "callback_data": "/previewdraft"})
-            #reply_options.append({"text": "PUBLISH a draft", "callback_data": "/publishdraft"})
+            # reply_options.append({"text": "PREVIEW a draft", "callback_data": "/previewdraft"})
+            # reply_options.append({"text": "PUBLISH a draft", "callback_data": "/publishdraft"})
+        return reply_options
 
-        message_text = "What do you want to do?"
+    def build_state_message(self, chat_id, message_text, message_id=None, reply_options=None):
         if message_id is not None:
             self.context.edit_message_text(chat_id, message_id, message_text
                                             , parse_mode=ParseMode.MARKDOWN.value
@@ -47,7 +52,7 @@ class IdleState(AbstractState):
                                             , parse_mode=ParseMode.MARKDOWN.value
                                             , reply_markup=telegram.build_inline_keyboard(reply_options))
 
-            # store message_id of sent message to allow later deletion or editing
+            # store message_id of sent message to support later deletion or editing
             if "result" in sent_message and "message_id" in sent_message["result"]:
                 self.message_id = sent_message["result"]["message_id"]
 
@@ -104,6 +109,8 @@ class IdleState(AbstractState):
             user_id = telegram.get_update_sender_id(update)
             chat_id = update[update_type]["chat"]["id"]
             text = update[update_type]["text"].strip(' \t\n\r') if "text" in update[update_type] else None
+
+            # TODO treat non-text messages differently
 
             self.process_message(user_id, chat_id, text)
 

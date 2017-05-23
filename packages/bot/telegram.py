@@ -39,7 +39,7 @@ def build_inline_keyboard(items, columns=1):
     keyboard = []
 
     item_pos = 0
-    while item_pos < len(items):
+    while items is not None and item_pos < len(items):
         keyboard_columns = []
         for i in list(range(item_pos, min(item_pos+columns, len(items)))):
             item = items[i]

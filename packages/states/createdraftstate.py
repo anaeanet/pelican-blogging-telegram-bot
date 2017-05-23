@@ -8,25 +8,24 @@ __author__ = "aneanet"
 class CreateDraftState(IdleState):
     """
     Concrete state implementation.
+    Accepts plain text message as draft title and creates new post
     """
 
-    def show_menu(self, user_id, chat_id, message_id=None):
-        reply_options = [{"text": "<< main menu", "callback_data": "/mainmenu"}]
+    @property
+    def init_message(self):
+        return "Enter the *title* of your new draft:"
 
-        message_text = "Enter the *title* of your new draft:"
-        if message_id is not None:
-            self.context.edit_message_text(chat_id, message_id, message_text
-                                                 , parse_mode=ParseMode.MARKDOWN.value
-                                                 , reply_markup=telegram.build_inline_keyboard(reply_options))
-        else:
-            self.context.send_message(chat_id, message_id, message_text
-                                            , parse_mode=ParseMode.MARKDOWN.value
-                                            , reply_markup=telegram.build_inline_keyboard(reply_options))
+    def get_initial_options(self, user_id):
+        reply_options = [{"text": "<< main menu", "callback_data": "/mainmenu"}]
+        return reply_options
 
     def process_message(self, user_id, chat_id, text):
         if text.startswith("/"):
             super().process_message(user_id, chat_id, text)
         else:
+            # remove inline keyboard from latest bot message
+            self.build_state_message(chat_id, self.init_message, message_id=self.message_id)
+
             self.context.add_post(user_id, text)
             self.context.send_message(chat_id
                                             , "Successfully created draft '*" + text + "*'"
