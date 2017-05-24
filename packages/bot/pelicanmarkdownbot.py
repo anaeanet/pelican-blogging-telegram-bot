@@ -29,8 +29,10 @@ class PelicanMarkdownBot(AbstractUserStateBot):
 
         # load all authorized users from database into bot's user-state-dictionary
         for user in self.database.get_users(is_authorized=True):
-            user_state = user["state_class"](self, user["user_id"])
-            super().set_user_state(user["user_id"], user_state)
+            state_class, params = user["state_class"]
+            user_id = user["user_id"]
+            user_state = state_class(self, user_id, message_id=params["message_id"]) # TODO update if deserialize changes
+            super().set_user_state(user_id, user_state)
 
     @property
     def database(self):

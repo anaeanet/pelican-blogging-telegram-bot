@@ -18,7 +18,7 @@ class IdleState(AbstractState):
         self.__message_id = message_id
 
         if chat_id is not None:
-            self.build_state_message(user_id, chat_id, self.init_message, message_id=message_id, reply_options=self.get_initial_options(user_id))
+            self.build_state_message(chat_id, self.init_message, message_id=message_id, reply_options=self.get_initial_options(user_id))
 
     @property
     def message_id(self):
@@ -72,6 +72,15 @@ class IdleState(AbstractState):
                                             + "Just follow the interactive menu!"
                                             , parse_mode=ParseMode.MARKDOWN.value)
 
+        # TODO maybe arbitrary text message shouldn't return to IdleState, but preserve current state?
+        """ 
+            next_state = IdleState(self.context, user_id, chat_id=chat_id)
+            self.context.set_user_state(user_id, next_state)
+        else:
+            self.build_state_message(chat_id, self.init_message, reply_options=self.get_initial_options(user_id))
+        """
+
+        # arbitrary text message sets status back to IdleState
         next_state = IdleState(self.context, user_id, chat_id=chat_id)
         self.context.set_user_state(user_id, next_state)
 
@@ -110,7 +119,7 @@ class IdleState(AbstractState):
             chat_id = update[update_type]["chat"]["id"]
             text = update[update_type]["text"].strip(' \t\n\r') if "text" in update[update_type] else None
 
-            # TODO treat non-text messages differently
+            # TODO treat non-text messages differently, i.e. photo or document
 
             self.process_message(user_id, chat_id, text)
 

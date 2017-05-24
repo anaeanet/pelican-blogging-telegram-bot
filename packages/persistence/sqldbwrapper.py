@@ -41,13 +41,22 @@ class SQLDBWrapper:
         self.__conn.commit()
 
     def __serialize_state(state):
+        """ 
+        Serializes any instance of IdleState through string representation 
+        :return: <module>.<class>__message_id__<message_id_value>
+        """
         module = state.__module__
         klass = state.__class__.__name__
-        return ".".join([module, klass])
+        return ".".join([module, klass]) + "__message_id__"+str(state.message_id)
 
-    def __deserialize_state(module_dot_class):
+    def __deserialize_state(module_class_params):
+        module_dot_class, params = module_class_params.split("__", 1)
+        param_list = params.split("__")
+
         module, klass = module_dot_class.rsplit(".", 1)
-        return getattr(importlib.import_module(module), klass)
+        param_dict = {param_list[i]: param_list[i+1] for i in range(0, len(param_list), 2)}
+
+        return getattr(importlib.import_module(module), klass), param_dict
 
     # -------------------------------------------------- user ----------------------------------------------------------
 

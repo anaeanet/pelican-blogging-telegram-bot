@@ -10,6 +10,8 @@ class UpdateDraftState(IdleState):
     Concrete state implementation.
     """
 
+    # TODO split this state into two: SelectDraftState & SelectUpdateState
+
     @property
     def init_message(self):
         return "Which draft do you want to *update*?"

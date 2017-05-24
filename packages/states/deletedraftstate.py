@@ -10,6 +10,8 @@ class DeleteDraftState(IdleState):
     Concrete state implementation.
     """
 
+    # TODO split this state into two: SelectDraftState & ConfirmDeletionState
+
     @property
     def init_message(self):
         return "Which one of your drafts do you want to *delete*?"
