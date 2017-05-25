@@ -1,5 +1,6 @@
 import sqlite3
 import importlib
+from packages.states.selectupdatestate import SelectUpdateState
 
 __author__ = 'anaeanet'
 
@@ -47,7 +48,12 @@ class SQLDBWrapper:
         """
         module = state.__module__
         klass = state.__class__.__name__
-        return ".".join([module, klass]) + "__message_id__"+str(state.message_id)
+
+        state_string = ".".join([module, klass]) + "__message_id__"+str(state.message_id)
+        if isinstance(state, SelectUpdateState):    # TODO switch to abstract state with post_id
+            state_string += "__post_id__" + str(state.post_id)
+
+        return state_string
 
     def __deserialize_state(module_class_params):
         module_dot_class, params = module_class_params.split("__", 1)

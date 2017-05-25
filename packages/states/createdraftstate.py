@@ -15,7 +15,8 @@ class CreateDraftState(IdleState):
     def init_message(self):
         return "Enter the *title* of your new draft:"
 
-    def get_initial_options(self, user_id):
+    @property
+    def initial_options(self):
         reply_options = [{"text": "<< main menu", "callback_data": "/mainmenu"}]
         return reply_options
 

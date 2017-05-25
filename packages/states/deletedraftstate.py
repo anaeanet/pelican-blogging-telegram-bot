@@ -10,15 +10,16 @@ class DeleteDraftState(IdleState):
     Concrete state implementation.
     """
 
-    # TODO split this state into two: SelectDraftState & ConfirmDeletionState
+    # TODO split this state into two: DeleteDraftState & ConfirmDeletionState
 
     @property
     def init_message(self):
         return "Which one of your drafts do you want to *delete*?"
 
-    def get_initial_options(self, user_id):
+    @property
+    def initial_options(self):
         reply_options = []
-        for post in self.context.get_posts(user_id=user_id, status="draft"):
+        for post in self.context.get_posts(user_id=self.user_id, status="draft"):
             reply_options.append({"text": post["title"], "callback_data": "/deletedraft " + str(post["post_id"])})
         reply_options.append({"text": "<< main menu", "callback_data": "/mainmenu"})
         return reply_options

@@ -12,13 +12,16 @@ class IdleState(AbstractState):
     """
 
     def __init__(self, context, user_id, chat_id=None, message_id=None):
+        self.__user_id = user_id
+        self.__message_id = message_id
         super().__init__(context)
 
-        # TODO serialize/deserialze attribute in sqldbwrapper
-        self.__message_id = message_id
-
         if chat_id is not None:
-            self.build_state_message(chat_id, self.init_message, message_id=message_id, reply_options=self.get_initial_options(user_id))
+            self.build_state_message(chat_id, self.init_message, message_id=message_id, reply_options=self.initial_options)
+
+    @property
+    def user_id(self):
+        return self.__user_id
 
     @property
     def message_id(self):
@@ -32,9 +35,10 @@ class IdleState(AbstractState):
     def init_message(self):
         return "What do you want to do?"
 
-    def get_initial_options(self, user_id):
+    @property
+    def initial_options(self):
         reply_options = [{"text": "CREATE a draft", "callback_data": "/createdraft"}]
-        if len(self.context.get_posts(user_id=user_id, status="draft")) > 0:
+        if len(self.context.get_posts(user_id=self.user_id, status="draft")) > 0:
             reply_options.append({"text": "UPDATE a draft", "callback_data": "/updatedraft"})
             reply_options.append({"text": "DELETE a draft", "callback_data": "/deletedraft"})
             # TODO
@@ -42,15 +46,15 @@ class IdleState(AbstractState):
             # reply_options.append({"text": "PUBLISH a draft", "callback_data": "/publishdraft"})
         return reply_options
 
-    def build_state_message(self, chat_id, message_text, message_id=None, reply_options=None):
+    def build_state_message(self, chat_id, message_text, message_id=None, reply_options=None, keyboard_columns=1):
         if message_id is not None:
             self.context.edit_message_text(chat_id, message_id, message_text
                                             , parse_mode=ParseMode.MARKDOWN.value
-                                            , reply_markup=telegram.build_inline_keyboard(reply_options))
+                                            , reply_markup=telegram.build_inline_keyboard(reply_options, keyboard_columns))
         else:
             sent_message = self.context.send_message(chat_id, message_text
                                             , parse_mode=ParseMode.MARKDOWN.value
-                                            , reply_markup=telegram.build_inline_keyboard(reply_options))
+                                            , reply_markup=telegram.build_inline_keyboard(reply_options, keyboard_columns))
 
             # store message_id of sent message to support later deletion or editing
             if "result" in sent_message and "message_id" in sent_message["result"]:
