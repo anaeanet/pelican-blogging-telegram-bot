@@ -4,15 +4,16 @@ from packages.states.idlestate import IdleState
 __author__ = "aneanet"
 
 
-class SelectUpdateState(AbstractUserPostState, IdleState):
+class SelectDraftUpdateState(AbstractUserPostState, IdleState):
     """
     Concrete state implementation.
+    Lets the user select what to change on a previously chosen draft.
     """
 
     @property
     def init_message(self):
         message = "It seems the draft you selected no longer exists..."
-        user_drafts = self.context.get_posts(post_id=self.post_id, status="draft")
+        user_drafts = self.context.get_posts(post_id=self.post_id, user_id=self.user_id, status="draft")
         if len(user_drafts) > 0:
             post_title = user_drafts[0]["title"]
             message = "What do you want to do with draft '*" + post_title + "*'?"

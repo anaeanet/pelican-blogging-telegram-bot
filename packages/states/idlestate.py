@@ -7,7 +7,8 @@ __author__ = "aneanet"
 class IdleState(AbstractUserState):
     """
     Concrete state implementation.
-    This class serves as start state for all users of "PelicanMarkdownBot".
+    This class serves as start state for all users of "PelicanMarkdownBot" 
+    and provides functionality to process common commands and navigation.
     """
 
     @property

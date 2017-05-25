@@ -6,7 +6,7 @@ __author__ = "aneanet"
 class UpdateDraftState(IdleState):
     """
     Concrete state implementation.
-    Let's the user select a draft for editing.
+    Lets the user select a draft for editing.
     """
 
     @property
@@ -31,8 +31,8 @@ class UpdateDraftState(IdleState):
             if len(command_array) == 2:
                 post_id = command_array[1]
 
-                from packages.states.selectupdatestate import SelectUpdateState
-                next_state = SelectUpdateState(self.context, user_id, post_id, chat_id=chat_id, message_id=message_id)
+                from packages.states.selectdraftupdatestate import SelectDraftUpdateState
+                next_state = SelectDraftUpdateState(self.context, user_id, post_id, chat_id=chat_id, message_id=message_id)
                 self.context.set_user_state(user_id, next_state)
 
         else:

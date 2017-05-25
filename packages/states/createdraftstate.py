@@ -7,7 +7,7 @@ __author__ = "aneanet"
 class CreateDraftState(IdleState):
     """
     Concrete state implementation.
-    Accepts plain text message as draft title and creates new post
+    Accepts plain text message as draft title and creates new post.
     """
 
     @property

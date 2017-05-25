@@ -1,6 +1,4 @@
 from packages.states.idlestate import IdleState
-from packages.bot.parsemode import ParseMode
-import packages.bot.telegram as telegram
 
 __author__ = "aneanet"
 
@@ -8,6 +6,7 @@ __author__ = "aneanet"
 class DeleteDraftState(IdleState):
     """
     Concrete state implementation.
+    Lets the user select a draft for deletion.
     """
 
     # TODO split this state into two: DeleteDraftState & ConfirmDeletionState
@@ -33,44 +32,10 @@ class DeleteDraftState(IdleState):
             # draft selected for deletion - /deletedraft <post_id>
             if len(command_array) == 2:
                 post_id = command_array[1]
-                user_drafts = self.context.get_posts(post_id=post_id, user_id=user_id, status="draft")
 
-                if len(user_drafts) > 0:
-                    post_title = user_drafts[0]["title"]
-                    reply_options = [{"text": "<< drafts", "callback_data": command_array[0]}
-                                     , {"text": "Yes, delete", "callback_data": data + " /confirm"}
-                                     , {"text": "<< main menu", "callback_data": "/mainmenu"}]
-
-                    self.context.edit_message_text(chat_id, message_id
-                                                         , "Do you really want to delete draft '*" + post_title + "*'?"
-                                                         , parse_mode=ParseMode.MARKDOWN.value
-                                                         , reply_markup=telegram.build_inline_keyboard(reply_options
-                                                                                                       , columns=2))
-                # TODO do something with older message (only way that selected post_id does not exist)
-
-            # deletion of draft confirmed or aborted - /deletedraft <post_id> <confirm/back>
-            elif len(command_array) == 3:
-
-                # confirmed draft deletion
-                if command_array[2] == "/confirm":
-                    post_id = command_array[1]
-                    user_drafts = self.context.get_posts(post_id=post_id, user_id=user_id, status="draft")
-
-                    if len(user_drafts) > 0:
-                        post_title = user_drafts[0]["title"]
-                        self.context.delete_post(command_array[1])
-                        self.context.edit_message_text(chat_id, message_id
-                                                             , "Successfully deleted draft '*" + post_title + "*'."
-                                                             , parse_mode=ParseMode.MARKDOWN.value)
-
-                        # show remaining drafts for deletion
-                        if len(self.context.get_posts(user_id=user_id, status="draft")) > 0:
-                            next_state = DeleteDraftState(self.context, user_id, chat_id=chat_id)
-                        else:   # no remaining drafts -> automatically go back to main menu
-                            next_state = IdleState(self.context, user_id, chat_id=chat_id)
-                        self.context.set_user_state(user_id, next_state)
-
-                    # TODO do something with older message (only way that selected post_id does not exist)
+                from packages.states.confirmdraftdeletionstate import ConfirmDraftDeletionState
+                next_state = ConfirmDraftDeletionState(self.context, user_id, post_id, chat_id=chat_id, message_id=message_id)
+                self.context.set_user_state(user_id, next_state)
 
         else:
             super().process_callback_query(user_id, chat_id, message_id, data)
