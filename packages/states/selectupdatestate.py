@@ -1,22 +1,13 @@
+from packages.states.abstractuserpoststate import AbstractUserPostState
 from packages.states.idlestate import IdleState
-from packages.bot.parsemode import ParseMode
-import packages.bot.telegram as telegram
 
 __author__ = "aneanet"
 
 
-class SelectUpdateState(IdleState):
+class SelectUpdateState(AbstractUserPostState, IdleState):
     """
     Concrete state implementation.
     """
-
-    def __init__(self, context, user_id, post_id, chat_id=None, message_id=None):
-        self.__post_id = post_id # TODO serialize this attribute
-        super().__init__(context, user_id, chat_id=chat_id, message_id=message_id)
-
-    @property
-    def post_id(self):
-        return self.__post_id
 
     @property
     def init_message(self):
@@ -38,9 +29,6 @@ class SelectUpdateState(IdleState):
         reply_options.append({"text": "<< main menu", "callback_data": "/mainmenu"})
 
         return reply_options
-
-    def build_state_message(self, chat_id, message_text, message_id=None, reply_options=None, keyboard_columns=2):
-        super().build_state_message(chat_id, message_text, message_id=message_id, reply_options=reply_options, keyboard_columns=keyboard_columns)
 
     def process_callback_query(self, user_id, chat_id, message_id, data):
         command_array = data.split(" ")

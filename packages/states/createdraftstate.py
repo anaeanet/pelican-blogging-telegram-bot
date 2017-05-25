@@ -1,6 +1,5 @@
 from packages.states.idlestate import IdleState
 from packages.bot.parsemode import ParseMode
-import packages.bot.telegram as telegram
 
 __author__ = "aneanet"
 
