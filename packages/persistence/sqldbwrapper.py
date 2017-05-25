@@ -25,10 +25,18 @@ class SQLDBWrapper:
                                                         + ", title TEXT NOT NULL"
                                                         + ", status TEXT NOT NULL DEFAULT 'draft' CHECK (status == 'draft' or status == 'published')"
                                                         + ", tmsp_create TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP"
+                                                        # TODO delete is_selected column
                                                         + ", is_selected INTEGER NOT NULL DEFAULT 0 CHECK (is_selected == 0 or is_selected == 1)"
                                                         + ", content TEXT"
                                                         + ", tmsp_publish TIMESTAMP"
                                                         + ", FOREIGN KEY(user_id) REFERENCES user(user_id))"
+                    , "CREATE TABLE IF NOT EXISTS tag (tag_id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT"
+                                                        + ", name TEXT NOT NULL)"
+                    , "CREATE TABLE IF NOT EXISTS post_tag (post_tag_id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT"
+                                                        + ", post_id INTEGER NOT NULL"
+                                                        + ", tag_id INTEGER NOT NULL"
+                                                        + ", FOREIGN KEY(post_id) REFERENCES post(post_id)"
+                                                        + ", FOREIGN KEY(tag_id) REFERENCES tag(tag_id))"
                     ]
         for stmt in tbl_stmts:
             self.__conn.execute(stmt)
@@ -94,8 +102,8 @@ class SQLDBWrapper:
                     args.append(value)
 
         return [dict({"user_id": x[0]
-                         , "is_authorized": True if x[1] == 1 else False
-                         , "state_class": SQLDBWrapper.__deserialize_state(x[2])}) for x in self.__conn.execute(stmt, tuple(args))]
+                        , "is_authorized": True if x[1] == 1 else False
+                        , "state_class": SQLDBWrapper.__deserialize_state(x[2])}) for x in self.__conn.execute(stmt, tuple(args))]
 
     def add_user(self, user_id, is_authorized, state):
         stmt = "INSERT INTO user (user_id, is_authorized, state) VALUES (?, ?, ?)"
@@ -138,13 +146,13 @@ class SQLDBWrapper:
                     args.append(value)
 
         return [dict({"post_id": x[0]
-                         , "user_id": x[1]
-                         , "title": x[2]
-                         , "status": x[3]
-                         , "tmsp_create": x[4]
-                         , "is_selected": True if x[5] == 1 else False
-                         , "content": x[6]
-                         , "tmsp_publish": x[7]}) for x in self.__conn.execute(stmt, tuple(args))]
+                        , "user_id": x[1]
+                        , "title": x[2]
+                        , "status": x[3]
+                        , "tmsp_create": x[4]
+                        , "is_selected": True if x[5] == 1 else False
+                        , "content": x[6]
+                        , "tmsp_publish": x[7]}) for x in self.__conn.execute(stmt, tuple(args))]
 
     def add_post(self, user_id, title, status=None, tmsp_create=None, is_selected=None, content=None, tmsp_publish=None):
         param_dict = dict({key: value for key, value in locals().items() if key != "self" and value is not None})
@@ -180,5 +188,62 @@ class SQLDBWrapper:
                 args.append(value)
         args.append(post_id)
 
+        self.__conn.execute(stmt, tuple(args))
+        self.__conn.commit()
+
+    # -------------------------------------------------- tag -----------------------------------------------------------
+
+    def get_tag(self, tag_id=None, name=None):
+        param_dict = dict({key: value for key, value in locals().items() if key != "self" and value is not None})
+
+        stmt = "SELECT * FROM tag"
+        args = []
+
+        if len(param_dict) > 0:
+            stmt += " WHERE " + " = ? AND ".join(param_dict.keys()) + " = ?"
+            for key, value in param_dict.items():
+                args.append(value)
+
+        return [dict({"tag_id": x[0]
+                        , "name": x[1]}) for x in self.__conn.execute(stmt, tuple(args))]
+
+    def add_tag(self, name):
+        stmt = "INSERT INTO tag (name) VALUES (?)"
+        args = [name]
+        self.__conn.execute(stmt, tuple(args))
+        self.__conn.commit()
+
+    def delete_tag(self, tag_id):
+        stmt = "DELETE FROM tag WHERE tag_id = ?"
+        args = [tag_id]
+        self.__conn.execute(stmt, tuple(args))
+        self.__conn.commit()
+
+    # -------------------------------------------------- post_tag-------------------------------------------------------
+
+    def get_post_tag(self, post_tag_id=None, post_id=None, tag_id=None):
+        param_dict = dict({key: value for key, value in locals().items() if key != "self" and value is not None})
+
+        stmt = "SELECT * FROM post_tag"
+        args = []
+
+        if len(param_dict) > 0:
+            stmt += " WHERE " + " = ? AND ".join(param_dict.keys()) + " = ?"
+            for key, value in param_dict.items():
+                args.append(value)
+
+        return [dict({"post_tag_id": x[0]
+                        , "post_id": x[1]
+                        , "tag_id": x[2]}) for x in self.__conn.execute(stmt, tuple(args))]
+
+    def add_post_tag(self, post_id, tag_id):
+        stmt = "INSERT INTO post_tag (post_id, tag_id) VALUES (?, ?)"
+        args = [post_id, tag_id]
+        self.__conn.execute(stmt, tuple(args))
+        self.__conn.commit()
+
+    def delete_post_tag(self, post_tag_id):
+        stmt = "DELETE FROM post_tag WHERE post_tag_id = ?"
+        args = [post_tag_id]
         self.__conn.execute(stmt, tuple(args))
         self.__conn.commit()

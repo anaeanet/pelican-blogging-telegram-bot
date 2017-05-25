@@ -26,7 +26,15 @@ class SelectDraftUpdateState(AbstractUserPostState, IdleState):
         user_drafts = self.context.get_posts(post_id=self.post_id, user_id=self.user_id, status="draft")
         if len(user_drafts) > 0:
             reply_options.append({"text": "EDIT content", "callback_data": "/selectupdate /editcontent"})
-            # TODO add more options here
+            reply_options.append({"text": "ADD tag(s)", "callback_data": "/selectupdate /addtag"})
+            # TODO only show this button if post already has tags, otheriwse add empty option
+            reply_options.append({"text": "DELETE tag(s)", "callback_data": "/selectupdate /deletetag"})
+            reply_options.append({"text": "ADD image(s)", "callback_data": "/selectupdate /addimage"})
+            # TODO only show this button if post already has images, otheriwse add empty option
+            reply_options.append({"text": "DELETE image(s)", "callback_data": "/selectupdate /deleteimage"})
+            reply_options.append({"text": "SET title pic", "callback_data": "/selectupdate /settitlepic"})
+            # TODO only show this button if post already has title picture, otheriwse add empty option
+            reply_options.append({"text": "DELETE title pic", "callback_data": "/selectupdate /deletetitlepic"})
         reply_options.append({"text": "<< main menu", "callback_data": "/mainmenu"})
 
         return reply_options
@@ -43,8 +51,24 @@ class SelectDraftUpdateState(AbstractUserPostState, IdleState):
                 if command_array[1] == "/editcontent":
                     # TODO
                     None
-
-                # TODO add other update options
+                elif command_array[1] == "/addtag":
+                    # TODO
+                    None
+                elif command_array[1] == "/deletetag":
+                    # TODO
+                    None
+                elif command_array[1] == "/addimage":
+                    # TODO
+                    None
+                elif command_array[1] == "/deleteimage":
+                    # TODO
+                    None
+                elif command_array[1] == "/settitlepic":
+                    # TODO
+                    None
+                elif command_array[1] == "/deletetitlepic":
+                    # TODO
+                    None
 
         else:
             super().process_callback_query(user_id, chat_id, message_id, data)

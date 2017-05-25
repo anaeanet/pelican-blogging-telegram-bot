@@ -87,3 +87,21 @@ class PelicanMarkdownBot(AbstractUserStateBot):
 
     def delete_post(self, post_id):
         self.database.delete_post(post_id)
+
+    def get_tag(self, tag_id=None, name=None):
+        self.database.get_tag(tag_id=tag_id, name=name)
+
+    def add_tag(self, name):
+        self.database.add_tag(name)
+
+    def delete_tag(self, tag_id):
+        self.database.delete_tag(tag_id)
+
+    def get_post_tag(self, post_tag_id=None, post_id=None, tag_id=None):
+        self.database.get_tag(post_tag_id=post_tag_id, post_id=post_id, tag_id=tag_id)
+
+    def add_post_tag(self, post_id=None, tag_id=None):
+        self.database.add_post_tag(post_id=post_id, tag_id=tag_id)
+
+    def delete_post_tag(self, post_tag_id):
+        self.database.delete_post_tag(post_tag_id)
