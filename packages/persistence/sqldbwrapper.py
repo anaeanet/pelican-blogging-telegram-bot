@@ -25,11 +25,13 @@ class SQLDBWrapper:
                                                         + ", title TEXT NOT NULL"
                                                         + ", status TEXT NOT NULL DEFAULT 'draft' CHECK (status == 'draft' or status == 'published')"
                                                         + ", tmsp_create TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP"
-                                                        # TODO delete is_selected column
-                                                        + ", is_selected INTEGER NOT NULL DEFAULT 0 CHECK (is_selected == 0 or is_selected == 1)"
                                                         + ", content TEXT"
+                                                        + ", title_image INTEGER"
                                                         + ", tmsp_publish TIMESTAMP"
-                                                        + ", FOREIGN KEY(user_id) REFERENCES user(user_id))"
+                                                        + ", original_post_id INTEGER"
+                                                        + ", FOREIGN KEY(user_id) REFERENCES user(user_id)"
+                                                        + ", FOREIGN KEY(title_image) REFERENCES post_image(post_image_id)"
+                                                        + ", FOREIGN KEY(original_post_id) REFERENCES post(post_id))"
                     , "CREATE TABLE IF NOT EXISTS tag (tag_id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT"
                                                         + ", name TEXT NOT NULL)"
                     , "CREATE TABLE IF NOT EXISTS post_tag (post_tag_id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT"
@@ -37,6 +39,12 @@ class SQLDBWrapper:
                                                         + ", tag_id INTEGER NOT NULL"
                                                         + ", FOREIGN KEY(post_id) REFERENCES post(post_id)"
                                                         + ", FOREIGN KEY(tag_id) REFERENCES tag(tag_id))"
+                    , "CREATE TABLE IF NOT EXISTS post_image (post_image_id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT"
+                                                        + ", post_id INTEGER NOT NULL"
+                                                        + ", file_id INTEGER NOT NULL"
+                                                        + ", file_name TEXT NOT NULL"
+                                                        + ", caption TEXT"
+                                                        + ", FOREIGN KEY(post_id) REFERENCES post(post_id))"
                     ]
         for stmt in tbl_stmts:
             self.__conn.execute(stmt)
@@ -131,7 +139,7 @@ class SQLDBWrapper:
 
     # -------------------------------------------------- post ----------------------------------------------------------
 
-    def get_posts(self, post_id=None, user_id=None, title=None, status=None, tmsp_create=None, is_selected=None, content=None, tmsp_publish=None):
+    def get_posts(self, post_id=None, user_id=None, title=None, status=None, tmsp_create=None, content=None, title_image=None, tmsp_publish=None, original_post_id=None):
         param_dict = dict({key: value for key, value in locals().items() if key != "self" and value is not None})
 
         stmt = "SELECT * FROM post"
@@ -140,10 +148,7 @@ class SQLDBWrapper:
         if len(param_dict) > 0:
             stmt += " WHERE " + " = ? AND ".join(param_dict.keys()) + " = ?"
             for key, value in param_dict.items():
-                if key == "is_selected":
-                    args.append(1 if value else 0)
-                else:
-                    args.append(value)
+                args.append(value)
 
         return [dict({"post_id": x[0]
                         , "user_id": x[1]
@@ -154,17 +159,14 @@ class SQLDBWrapper:
                         , "content": x[6]
                         , "tmsp_publish": x[7]}) for x in self.__conn.execute(stmt, tuple(args))]
 
-    def add_post(self, user_id, title, status=None, tmsp_create=None, is_selected=None, content=None, tmsp_publish=None):
+    def add_post(self, user_id, title, status=None, tmsp_create=None, content=None, title_image=None, tmsp_publish=None, original_post_id=None):
         param_dict = dict({key: value for key, value in locals().items() if key != "self" and value is not None})
 
         stmt = "INSERT INTO post (" + ",".join(param_dict.keys()) + ") VALUES (" + ",".join(["?" for x in param_dict.keys()]) + ")"
         args = []
 
         for key, value in param_dict.items():
-            if key == "is_selected":
-                args.append(1 if value else 0)
-            else:
-                args.append(value)
+            args.append(value)
 
         self.__conn.execute(stmt, tuple(args))
         self.__conn.commit()
@@ -175,17 +177,14 @@ class SQLDBWrapper:
         self.__conn.execute(stmt, tuple(args))
         self.__conn.commit()
 
-    def update_post(self, post_id, user_id=None, title=None, status=None, tmsp_create=None, is_selected=None, content=None, tmsp_publish=None):
+    def update_post(self, post_id, user_id=None, title=None, status=None, tmsp_create=None, content=None, title_image=None, tmsp_publish=None, original_post_id=None):
         param_dict = dict({key: value for key, value in locals().items() if key != "self" and value is not None})
 
         stmt = "UPDATE post SET " + " = ?, ".join(param_dict.keys()) + " = ? WHERE post_id = ?"
         args = []
 
         for key, value in param_dict.items():
-            if key == "is_selected":
-                args.append(1 if value else 0)
-            else:
-                args.append(value)
+            args.append(value)
         args.append(post_id)
 
         self.__conn.execute(stmt, tuple(args))
@@ -219,7 +218,7 @@ class SQLDBWrapper:
         self.__conn.execute(stmt, tuple(args))
         self.__conn.commit()
 
-    # -------------------------------------------------- post_tag-------------------------------------------------------
+    # -------------------------------------------------- post_tag ------------------------------------------------------
 
     def get_post_tag(self, post_tag_id=None, post_id=None, tag_id=None):
         param_dict = dict({key: value for key, value in locals().items() if key != "self" and value is not None})
@@ -245,5 +244,42 @@ class SQLDBWrapper:
     def delete_post_tag(self, post_tag_id):
         stmt = "DELETE FROM post_tag WHERE post_tag_id = ?"
         args = [post_tag_id]
+        self.__conn.execute(stmt, tuple(args))
+        self.__conn.commit()
+
+    # -------------------------------------------------- post_image ----------------------------------------------------
+
+    def get_post_image(self, post_image_id=None, post_id=None, file_id=None, file_name=None, caption=None):
+        param_dict = dict({key: value for key, value in locals().items() if key != "self" and value is not None})
+
+        stmt = "SELECT * FROM post_image"
+        args = []
+
+        if len(param_dict) > 0:
+            stmt += " WHERE " + " = ? AND ".join(param_dict.keys()) + " = ?"
+            for key, value in param_dict.items():
+                args.append(value)
+
+        return [dict({"post_image_id": x[0]
+                        , "post_id": x[1]
+                        , "file_id": x[2]
+                        , "file_name": x[3]
+                        , "caption": x[4]}) for x in self.__conn.execute(stmt, tuple(args))]
+
+    def add_post_image(self, post_id, file_id, file_name, caption=None):
+        param_dict = dict({key: value for key, value in locals().items() if key != "self" and value is not None})
+
+        stmt = "INSERT INTO post_image (" + ",".join(param_dict.keys()) + ") VALUES (" + ",".join(["?" for x in param_dict.keys()]) + ")"
+        args = []
+
+        for key, value in param_dict.items():
+            args.append(value)
+
+        self.__conn.execute(stmt, tuple(args))
+        self.__conn.commit()
+
+    def delete_post_tag(self, post_image_id):
+        stmt = "DELETE FROM post_image WHERE post_image_id = ?"
+        args = [post_image_id]
         self.__conn.execute(stmt, tuple(args))
         self.__conn.commit()

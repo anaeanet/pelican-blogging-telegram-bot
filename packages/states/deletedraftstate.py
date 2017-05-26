@@ -9,8 +9,6 @@ class DeleteDraftState(IdleState):
     Lets the user select a draft for deletion.
     """
 
-    # TODO split this state into two: DeleteDraftState & ConfirmDeletionState
-
     @property
     def init_message(self):
         return "Which one of your drafts do you want to *delete*?"

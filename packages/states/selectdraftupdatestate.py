@@ -26,17 +26,29 @@ class SelectDraftUpdateState(AbstractUserPostState, IdleState):
         user_drafts = self.context.get_posts(post_id=self.post_id, user_id=self.user_id, status="draft")
         if len(user_drafts) > 0:
             reply_options.append({"text": "EDIT content", "callback_data": "/selectupdate /editcontent"})
-            reply_options.append({"text": "ADD tag(s)", "callback_data": "/selectupdate /addtag"})
-            # TODO only show this button if post already has tags, otheriwse add empty option
-            reply_options.append({"text": "DELETE tag(s)", "callback_data": "/selectupdate /deletetag"})
-            reply_options.append({"text": "ADD image(s)", "callback_data": "/selectupdate /addimage"})
-            # TODO only show this button if post already has images, otheriwse add empty option
-            reply_options.append({"text": "DELETE image(s)", "callback_data": "/selectupdate /deleteimage"})
-            reply_options.append({"text": "SET title pic", "callback_data": "/selectupdate /settitlepic"})
-            # TODO only show this button if post already has title picture, otheriwse add empty option
-            reply_options.append({"text": "DELETE title pic", "callback_data": "/selectupdate /deletetitlepic"})
-        reply_options.append({"text": "<< main menu", "callback_data": "/mainmenu"})
 
+            reply_options.append({"text": "ADD tag(s)", "callback_data": "/selectupdate /addtag"})
+            # only show option to delete tags if post already has tags
+            if len(self.context.get_post_tag(post_id=self.post_id)) > 0:
+                reply_options.append({"text": "DELETE tag(s)", "callback_data": "/selectupdate /deletetag"})
+            else:
+                reply_options.append([])
+
+            reply_options.append({"text": "ADD image(s)", "callback_data": "/selectupdate /addimage"})
+            # only show option to delete images if post already has images
+            if len(self.context.get_post_tag(post_id=self.post_id)) > 0:
+                reply_options.append({"text": "DELETE image(s)", "callback_data": "/selectupdate /deleteimage"})
+            else:
+                reply_options.append([])
+
+            reply_options.append({"text": "SET title image", "callback_data": "/selectupdate /settitleimage"})
+            # only show option to delete title image if post already has a title image
+            if len(self.context.get_post_tag(post_id=self.post_id)) > 0:
+                reply_options.append({"text": "DELETE title image", "callback_data": "/selectupdate /deletetitleimage"})
+            else:
+                reply_options.append([])
+
+        reply_options.append({"text": "<< main menu", "callback_data": "/mainmenu"})
         return reply_options
 
     def process_callback_query(self, user_id, chat_id, message_id, data):
@@ -63,10 +75,10 @@ class SelectDraftUpdateState(AbstractUserPostState, IdleState):
                 elif command_array[1] == "/deleteimage":
                     # TODO
                     None
-                elif command_array[1] == "/settitlepic":
+                elif command_array[1] == "/settitleimage":
                     # TODO
                     None
-                elif command_array[1] == "/deletetitlepic":
+                elif command_array[1] == "/deletetitleimage":
                     # TODO
                     None
 

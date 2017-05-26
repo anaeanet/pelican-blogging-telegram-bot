@@ -64,26 +64,14 @@ class PelicanMarkdownBot(AbstractUserStateBot):
             # TODO: maybe do something with updates from unauthorized users?
             None
 
-    def get_posts(self, post_id=None, user_id=None, title=None, status=None, tmsp_create=None, is_selected=None, content=None, tmsp_publish=None):
-        return self.database.get_posts(post_id=post_id, user_id=user_id, title=title, status=status, tmsp_create=tmsp_create, is_selected=is_selected, content=content, tmsp_publish=tmsp_publish)
+    def get_posts(self, post_id=None, user_id=None, title=None, status=None, tmsp_create=None, content=None, title_image=None, tmsp_publish=None, original_post_id=None):
+        return self.database.get_posts(post_id=post_id, user_id=user_id, title=title, status=status, tmsp_create=tmsp_create, content=content, title_image=title_image, tmsp_publish=tmsp_publish, original_post_id=original_post_id)
 
-    def deselect_user_posts(self, user_id):
-        for post in self.get_posts(user_id=user_id, is_selected=True):
-            self.update_post(post["post_id"], is_selected=False)
+    def add_post(self, user_id, title, status=None, tmsp_create=None, content=None, title_image=None, tmsp_publish=None, original_post_id=None):
+        self.database.add_post(user_id, title, status=status, tmsp_create=tmsp_create, content=content, title_image=title_image, tmsp_publish=tmsp_publish, original_post_id=original_post_id)
 
-    def add_post(self, user_id, title, status=None, tmsp_create=None, is_selected=None, content=None, tmsp_publish=None):
-        # if new post gets positive selection flag, deselect all other posts of same user
-        if is_selected:
-            self.deselect_user_posts(user_id)
-        self.database.add_post(user_id, title, status=status, tmsp_create=tmsp_create, is_selected=is_selected, content=content, tmsp_publish=tmsp_publish)
-
-    def update_post(self, post_id, user_id=None, title=None, status=None, tmsp_create=None, is_selected=None, content=None, tmsp_publish=None):
-        # if current post gets updated with positive selection flag, deselect all other posts of same user
-        if is_selected:
-            for post in self.get_posts(post_id=post_id):
-                self.deselect_user_posts(post["user_id"])
-                break
-        self.database.update_post(post_id, user_id=user_id, title=title, status=status, tmsp_create=tmsp_create, is_selected=is_selected, content=content, tmsp_publish=tmsp_publish)
+    def update_post(self, post_id, user_id=None, title=None, status=None, tmsp_create=None, content=None, title_image=None, tmsp_publish=None, original_post_id=None):
+        self.database.update_post(post_id, user_id=user_id, title=title, status=status, tmsp_create=tmsp_create, content=content, title_image=title_image, tmsp_publish=tmsp_publish, original_post_id=original_post_id)
 
     def delete_post(self, post_id):
         self.database.delete_post(post_id)
@@ -98,10 +86,19 @@ class PelicanMarkdownBot(AbstractUserStateBot):
         self.database.delete_tag(tag_id)
 
     def get_post_tag(self, post_tag_id=None, post_id=None, tag_id=None):
-        self.database.get_tag(post_tag_id=post_tag_id, post_id=post_id, tag_id=tag_id)
+        return self.database.get_post_tag(post_tag_id=post_tag_id, post_id=post_id, tag_id=tag_id)
 
-    def add_post_tag(self, post_id=None, tag_id=None):
-        self.database.add_post_tag(post_id=post_id, tag_id=tag_id)
+    def add_post_tag(self, post_id, tag_id):
+        self.database.add_post_tag(post_id, tag_id)
 
     def delete_post_tag(self, post_tag_id):
         self.database.delete_post_tag(post_tag_id)
+
+    def get_post_image(self, post_image_id=None, post_id=None, file_id=None, file_name=None, caption=None):
+        return self.database.get_post_image(post_image_id=post_image_id, post_id=post_id, file_id=file_id, file_name=file_name, caption=caption)
+
+    def add_post_image(self, post_id=None, file_id=None, file_name=None, caption=None):
+        self.database.get_post_image(post_id=post_id, file_id=file_id, file_name=file_name, caption=caption)
+
+    def delete_post_image(self, post_image_id=None):
+        self.database.get_post_image(post_image_id=post_image_id)
