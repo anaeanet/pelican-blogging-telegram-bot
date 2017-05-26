@@ -1,0 +1,59 @@
+from packages.states.selectdraftupdatestate import SelectDraftUpdateState
+from packages.bot.parsemode import ParseMode
+
+__author__ = "aneanet"
+
+
+class EditContentState(SelectDraftUpdateState):
+    """
+    Concrete state implementation.
+    Accepts plain text message as new content of draft/post.
+    """
+
+    @property
+    def init_message(self):
+        message = "It seems the draft you selected no longer exists..."
+
+        user_drafts = self.context.get_posts(post_id=self.post_id, user_id=self.user_id)
+        if len(user_drafts) > 0:
+            post_title = user_drafts[0]["title"]
+            post_content = user_drafts[0]["content"]
+
+            if post_content is not None and len(post_content) > 0:
+                message = "Just type away to replace the current content of draft '*" + post_title + "*' or copy from above and edit."
+            else:
+                message = "Draft '*" + post_title + "*' does not have any content yet. Just type away to add new content."
+
+        return message
+
+    @property
+    def initial_options(self):
+        reply_options = [{"text": "<< update options", "callback_data": "/selectupdate"}
+                        , {"text": "<< drafts", "callback_data": "/updatedraft"}
+                        , {"text": "<< main menu", "callback_data": "/mainmenu"}]
+        return reply_options
+
+    def process_message(self, user_id, chat_id, text):
+        if text.startswith("/"):
+            super().process_message(user_id, chat_id, text)
+        else:
+            # remove inline keyboard from latest bot message (by leaving out reply_options parameter)
+            self.build_state_message(chat_id, self.init_message, message_id=self.message_id)
+
+            user_drafts = self.context.get_posts(post_id=self.post_id, user_id=self.user_id)
+            if len(user_drafts) > 0:
+                post_title = user_drafts[0]["title"]
+                self.context.update_post(self.post_id, content=text)
+                self.context.send_message(chat_id, "Content of draft '*" + post_title + "*' updated successfully."
+                                          , parse_mode=ParseMode.MARKDOWN.value)
+                next_state = SelectDraftUpdateState(self.context, user_id, self.post_id, chat_id=chat_id)
+
+            else:
+                # TODO test this
+                self.context.send_message(chat_id
+                                          , "It seems the draft you selected no longer exists..."
+                                          , parse_mode=ParseMode.MARKDOWN.value)
+                from packages.states.updatedraftstate import UpdateDraftState
+                next_state = UpdateDraftState(self.context, user_id, chat_id=chat_id)
+
+            self.context.set_user_state(user_id, next_state)

@@ -1,5 +1,6 @@
 from packages.states.abstractuserpoststate import AbstractUserPostState
 from packages.states.idlestate import IdleState
+from packages.bot.parsemode import ParseMode
 
 __author__ = "aneanet"
 
@@ -13,7 +14,7 @@ class SelectDraftUpdateState(AbstractUserPostState, IdleState):
     @property
     def init_message(self):
         message = "It seems the draft you selected no longer exists..."
-        user_drafts = self.context.get_posts(post_id=self.post_id, user_id=self.user_id, status="draft")
+        user_drafts = self.context.get_posts(post_id=self.post_id, user_id=self.user_id)
         if len(user_drafts) > 0:
             post_title = user_drafts[0]["title"]
             message = "What do you want to do with draft '*" + post_title + "*'?"
@@ -23,7 +24,7 @@ class SelectDraftUpdateState(AbstractUserPostState, IdleState):
     def initial_options(self):
         reply_options = [{"text": "<< drafts", "callback_data": "/updatedraft"}]
 
-        user_drafts = self.context.get_posts(post_id=self.post_id, user_id=self.user_id, status="draft")
+        user_drafts = self.context.get_posts(post_id=self.post_id, user_id=self.user_id)
         if len(user_drafts) > 0:
             reply_options.append({"text": "EDIT content", "callback_data": "/selectupdate /editcontent"})
 
@@ -54,15 +55,53 @@ class SelectDraftUpdateState(AbstractUserPostState, IdleState):
     def process_callback_query(self, user_id, chat_id, message_id, data):
         command_array = data.split(" ")
 
+        # only accept "/selectupdate ..." callback query from any selected update option state
+        if len(command_array) == 1:
+            if command_array[0] == "/selectupdate":
+                next_state = SelectDraftUpdateState(self.context, user_id, self.post_id, chat_id=chat_id, message_id=message_id)
+                self.context.set_user_state(user_id, next_state)
+
         # only accept "/selectupdate ..." callback queries, have super() handle everything else
         if len(command_array) > 1 and command_array[0] == "/selectupdate":
 
             # update-option was chosen for selected draft - /selectupdate <update-option>
             if len(command_array) == 2:
 
+                # user attempts to update the selected draft's content
                 if command_array[1] == "/editcontent":
-                    # TODO
-                    None
+
+                    # remove inline keyboard from latest bot message (by leaving out reply_options parameter)
+                    self.build_state_message(chat_id, self.init_message, message_id=self.message_id)
+
+                    user_drafts = self.context.get_posts(post_id=self.post_id, user_id=self.user_id)
+                    if len(user_drafts) > 0:
+                        post_title = user_drafts[0]["title"]
+                        post_content = user_drafts[0]["content"]
+
+                        if post_content is not None and len(post_content) > 0:
+                            self.context.edit_message_text(chat_id, self.message_id
+                                                      , "Draft '*" + post_title + "*' currently has the following content:"
+                                                      , parse_mode=ParseMode.MARKDOWN.value)
+                            self.context.send_message(chat_id
+                                                      , post_content
+                                                      , parse_mode=ParseMode.MARKDOWN.value)
+                            from packages.states.editcontentstate import EditContentState
+                            next_state = EditContentState(self.context, user_id, self.post_id, chat_id=chat_id)
+
+                        else:
+                            from packages.states.editcontentstate import EditContentState
+                            next_state = EditContentState(self.context, user_id, self.post_id, chat_id=chat_id, message_id=self.message_id)
+
+                    else:
+                        # TODO test this
+                        self.context.send_message(chat_id
+                                                  , "It seems the draft you selected no longer exists..."
+                                                  , parse_mode=ParseMode.MARKDOWN.value)
+                        from packages.states.updatedraftstate import UpdateDraftState
+                        next_state = UpdateDraftState(self.context, user_id, chat_id=chat_id)
+
+                    self.context.set_user_state(user_id, next_state)
+
                 elif command_array[1] == "/addtag":
                     # TODO
                     None

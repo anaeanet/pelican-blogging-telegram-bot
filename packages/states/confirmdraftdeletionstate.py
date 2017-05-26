@@ -14,7 +14,7 @@ class ConfirmDraftDeletionState(AbstractUserPostState, IdleState):
     @property
     def init_message(self):
         message = "It seems the draft you selected no longer exists..."
-        user_drafts = self.context.get_posts(post_id=self.post_id, user_id=self.user_id, status="draft")
+        user_drafts = self.context.get_posts(post_id=self.post_id, user_id=self.user_id)
         if len(user_drafts) > 0:
             post_title = user_drafts[0]["title"]
             message = "Do you really want to delete draft '*" + post_title + "*'?"
@@ -24,7 +24,7 @@ class ConfirmDraftDeletionState(AbstractUserPostState, IdleState):
     def initial_options(self):
         reply_options = [{"text": "<< drafts", "callback_data": "/deletedraft"}]
 
-        user_drafts = self.context.get_posts(post_id=self.post_id, user_id=self.user_id, status="draft")
+        user_drafts = self.context.get_posts(post_id=self.post_id, user_id=self.user_id)
         if len(user_drafts) > 0:
             reply_options.append({"text": "Yes, delete", "callback_data": "/confirmdraftdeletion /confirm"})
         reply_options.append({"text": "<< main menu", "callback_data": "/mainmenu"})
@@ -42,7 +42,7 @@ class ConfirmDraftDeletionState(AbstractUserPostState, IdleState):
 
                 # confirmed draft deletion
                 if command_array[1] == "/confirm":
-                    user_drafts = self.context.get_posts(post_id=self.post_id, user_id=user_id, status="draft")
+                    user_drafts = self.context.get_posts(post_id=self.post_id, user_id=user_id)
 
                     if len(user_drafts) > 0:
                         post_title = user_drafts[0]["title"]

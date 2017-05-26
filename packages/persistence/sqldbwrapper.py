@@ -65,7 +65,7 @@ class SQLDBWrapper:
         module = state.__module__
         klass = state.__class__.__name__
 
-        state_string = ".".join([module, klass]) + "__message_id__"+str(state.message_id)
+        state_string = ".".join([module, klass]) + "__message_id__" + str(state.message_id)
         if isinstance(state, AbstractUserPostState):
             state_string += "__post_id__" + str(state.post_id)
 
@@ -155,9 +155,10 @@ class SQLDBWrapper:
                         , "title": x[2]
                         , "status": x[3]
                         , "tmsp_create": x[4]
-                        , "is_selected": True if x[5] == 1 else False
-                        , "content": x[6]
-                        , "tmsp_publish": x[7]}) for x in self.__conn.execute(stmt, tuple(args))]
+                        , "content": x[5]
+                        , "title_image": x[6]
+                        , "tmsp_publish": x[7]
+                        , "original_post_id": x[8]}) for x in self.__conn.execute(stmt, tuple(args))]
 
     def add_post(self, user_id, title, status=None, tmsp_create=None, content=None, title_image=None, tmsp_publish=None, original_post_id=None):
         param_dict = dict({key: value for key, value in locals().items() if key != "self" and value is not None})

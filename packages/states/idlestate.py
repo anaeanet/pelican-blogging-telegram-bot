@@ -18,7 +18,8 @@ class IdleState(AbstractUserState):
     @property
     def initial_options(self):
         reply_options = [{"text": "CREATE a draft", "callback_data": "/createdraft"}]
-        if len(self.context.get_posts(user_id=self.user_id, status="draft")) > 0:
+        user_drafts = self.context.get_posts(user_id=self.user_id, status="draft")
+        if len(user_drafts) > 0:
             reply_options.append({"text": "UPDATE a draft", "callback_data": "/updatedraft"})
             reply_options.append({"text": "DELETE a draft", "callback_data": "/deletedraft"})
             # TODO
@@ -67,7 +68,7 @@ class IdleState(AbstractUserState):
                 next_state = CreateDraftState(self.context, user_id, chat_id=chat_id, message_id=message_id)
                 self.context.set_user_state(user_id, next_state)
             elif command_array[0] == "/updatedraft":
-                from packages.states.updatedraft import UpdateDraftState
+                from packages.states.updatedraftstate import UpdateDraftState
                 next_state = UpdateDraftState(self.context, user_id, chat_id=chat_id, message_id=message_id)
                 self.context.set_user_state(user_id, next_state)
             elif command_array[0] == "/deletedraft":
