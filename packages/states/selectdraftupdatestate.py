@@ -70,9 +70,6 @@ class SelectDraftUpdateState(AbstractUserPostState, IdleState):
                 # user attempts to update the selected draft's content
                 if command_array[1] == "/editcontent":
 
-                    # remove inline keyboard from latest bot message (by leaving out reply_options parameter)
-                    self.build_state_message(chat_id, self.init_message, message_id=self.message_id)
-
                     user_drafts = self.context.get_posts(post_id=self.post_id, user_id=self.user_id)
                     if len(user_drafts) > 0:
                         post_title = user_drafts[0]["title"]
@@ -93,8 +90,8 @@ class SelectDraftUpdateState(AbstractUserPostState, IdleState):
                             next_state = EditContentState(self.context, user_id, self.post_id, chat_id=chat_id, message_id=self.message_id)
 
                     else:
-                        # TODO test this
-                        self.context.send_message(chat_id
+                        # TODO test this, probably don't hide reply_options but edit_message_text below...
+                        self.context.edit_message_text(chat_id, self.message_id
                                                   , "It seems the draft you selected no longer exists..."
                                                   , parse_mode=ParseMode.MARKDOWN.value)
                         from packages.states.updatedraftstate import UpdateDraftState
