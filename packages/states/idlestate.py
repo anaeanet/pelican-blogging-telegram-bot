@@ -43,17 +43,13 @@ class IdleState(AbstractUserState):
                                             + "Just follow the interactive menu!"
                                             , parse_mode=ParseMode.MARKDOWN.value)
 
-        # TODO maybe arbitrary text message shouldn't return to IdleState, but preserve current state?
-        """ 
+            # reset to start state
             next_state = IdleState(self.context, user_id, chat_id=chat_id)
             self.context.set_user_state(user_id, next_state)
+
+        # simply ignore arbitrary text message, remain in current state
         else:
             self.build_state_message(chat_id, self.init_message, reply_options=self.initial_options)
-        """
-
-        # arbitrary text message sets status back to IdleState
-        next_state = IdleState(self.context, user_id, chat_id=chat_id)
-        self.context.set_user_state(user_id, next_state)
 
     def process_callback_query(self, user_id, chat_id, message_id, data):
         command_array = data.split(" ")
