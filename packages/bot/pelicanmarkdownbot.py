@@ -77,7 +77,7 @@ class PelicanMarkdownBot(AbstractUserStateBot):
         self.database.delete_post(post_id)
 
     def get_tag(self, tag_id=None, name=None):
-        self.database.get_tag(tag_id=tag_id, name=name)
+        return self.database.get_tag(tag_id=tag_id, name=name)
 
     def add_tag(self, name):
         self.database.add_tag(name)
@@ -85,11 +85,33 @@ class PelicanMarkdownBot(AbstractUserStateBot):
     def delete_tag(self, tag_id):
         self.database.delete_tag(tag_id)
 
-    def get_post_tag(self, post_tag_id=None, post_id=None, tag_id=None):
-        return self.database.get_post_tag(post_tag_id=post_tag_id, post_id=post_id, tag_id=tag_id)
+    def get_post_tag(self, post_id, name=None):
+        post_tags = []
 
-    def add_post_tag(self, post_id, tag_id):
-        self.database.add_post_tag(post_id, tag_id)
+        # consider optional name-filter
+        tag_id = None
+        if name is not None:
+            name_tags = self.get_tag(name=name)
+            if len(name_tags) > 0:
+                tag_id = name_tags[0]["tag_id"]
+
+        post_tag_ids = [x["tag_id"] for x in self.database.get_post_tag(post_id=post_id, tag_id=tag_id)]
+        for tag_id in post_tag_ids:
+            post_tags += self.get_tag(tag_id=tag_id)
+
+        return post_tags
+
+    def add_post_tag(self, post_id, name):
+        # add tag if if does not exist yet
+        if name not in self.get_tag(name=name):
+            self.add_tag(name)
+
+        # add tag to post if not already done
+        if name not in [x["name"] for x in self.get_post_tag(post_id)]:
+            tags = self.get_tag(name=name)
+            if len(tags) > 0:
+                tag_id = tags[0]["tag_id"]
+                self.database.add_post_tag(post_id, tag_id)
 
     def delete_post_tag(self, post_tag_id):
         self.database.delete_post_tag(post_tag_id)

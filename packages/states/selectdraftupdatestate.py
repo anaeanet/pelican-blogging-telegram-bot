@@ -105,8 +105,9 @@ class SelectDraftUpdateState(AbstractUserPostState, IdleState):
                     self.context.set_user_state(user_id, next_state)
 
                 elif command_array[1] == "/addtag":
-                    # TODO
-                    None
+                    from packages.states.addtagstate import AddTagState
+                    next_state = AddTagState(self.context, user_id, self.post_id, chat_id=chat_id, message_id=self.message_id)
+                    self.context.set_user_state(user_id, next_state)
                 elif command_array[1] == "/deletetag":
                     # TODO
                     None

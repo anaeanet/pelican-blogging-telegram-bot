@@ -33,7 +33,7 @@ class SQLDBWrapper:
                                                         + ", FOREIGN KEY(title_image) REFERENCES post_image(post_image_id)"
                                                         + ", FOREIGN KEY(original_post_id) REFERENCES post(post_id))"
                     , "CREATE TABLE IF NOT EXISTS tag (tag_id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT"
-                                                        + ", name TEXT NOT NULL)"
+                                                        + ", name TEXT NOT NULL UNIQUE)"
                     , "CREATE TABLE IF NOT EXISTS post_tag (post_tag_id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT"
                                                         + ", post_id INTEGER NOT NULL"
                                                         + ", tag_id INTEGER NOT NULL"
