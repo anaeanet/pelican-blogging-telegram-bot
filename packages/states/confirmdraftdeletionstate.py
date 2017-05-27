@@ -42,8 +42,8 @@ class ConfirmDraftDeletionState(AbstractUserPostState, IdleState):
 
                 # confirmed draft deletion
                 if command_array[1] == "/confirm":
-                    user_drafts = self.context.get_posts(post_id=self.post_id, user_id=user_id)
 
+                    user_drafts = self.context.get_posts(post_id=self.post_id, user_id=user_id)
                     if len(user_drafts) > 0:
                         post_title = user_drafts[0]["title"]
                         self.context.delete_post(self.post_id)
@@ -51,16 +51,20 @@ class ConfirmDraftDeletionState(AbstractUserPostState, IdleState):
                                                              , "Successfully deleted draft '*" + post_title + "*'."
                                                              , parse_mode=ParseMode.MARKDOWN.value)
 
-                        # show remaining drafts for deletion
-                        if len(self.context.get_posts(user_id=user_id, status="draft")) > 0:
-                            from packages.states.deletedraftstate import DeleteDraftState
-                            next_state = DeleteDraftState(self.context, user_id, chat_id=chat_id)
+                    else:
+                        self.context.edit_message_text(chat_id, self.message_id
+                                                  , "It seems the draft you selected no longer exists..."
+                                                  , parse_mode=ParseMode.MARKDOWN.value)
 
-                        # no remaining drafts -> automatically go back to main menu
-                        else:
-                            next_state = IdleState(self.context, user_id, chat_id=chat_id)
+                    # show remaining drafts for deletion
+                    if len(self.context.get_posts(user_id=user_id, status="draft")) > 0:
+                        from packages.states.deletedraftstate import DeleteDraftState
+                        next_state = DeleteDraftState(self.context, user_id, chat_id=chat_id)
+                    # no remaining drafts -> automatically go back to main menu
+                    else:
+                        next_state = IdleState(self.context, user_id, chat_id=chat_id)
 
-                        self.context.set_user_state(user_id, next_state)
+                    self.context.set_user_state(user_id, next_state)
 
         else:
             super().process_callback_query(user_id, chat_id, message_id, data)

@@ -90,12 +90,17 @@ class SelectDraftUpdateState(AbstractUserPostState, IdleState):
                             next_state = EditContentState(self.context, user_id, self.post_id, chat_id=chat_id, message_id=self.message_id)
 
                     else:
-                        # TODO test this, probably don't hide reply_options but edit_message_text below...
                         self.context.edit_message_text(chat_id, self.message_id
                                                   , "It seems the draft you selected no longer exists..."
                                                   , parse_mode=ParseMode.MARKDOWN.value)
-                        from packages.states.updatedraftstate import UpdateDraftState
-                        next_state = UpdateDraftState(self.context, user_id, chat_id=chat_id)
+
+                        # show remaining drafts for updating
+                        if len(self.context.get_posts(user_id=user_id, status="draft")) > 0:
+                            from packages.states.updatedraftstate import UpdateDraftState
+                            next_state = UpdateDraftState(self.context, user_id, chat_id=chat_id)
+                        # no remaining drafts -> automatically go back to main menu
+                        else:
+                            next_state = IdleState(self.context, user_id, chat_id=chat_id)
 
                     self.context.set_user_state(user_id, next_state)
 
