@@ -42,14 +42,22 @@ class IdleState(AbstractUserState):
                                             + "I am here to help you create new blog posts or manage existing ones. "
                                             + "Just follow the interactive menu!"
                                             , parse_mode=ParseMode.MARKDOWN.value)
-
             # reset to start state
             next_state = IdleState(self.context, user_id, chat_id=chat_id)
             self.context.set_user_state(user_id, next_state)
 
-        # simply ignore arbitrary text message, remain in current state
+        # simply ignore arbitrary text message by moving current bot message underneath latest user message
         else:
             self.build_state_message(chat_id, self.init_message, reply_options=self.initial_options)
+
+    def process_photo_message(self, user_id, chat_id, file_name, file_id, thumb_file_id=None, caption=None):
+
+        # delete previous bot message (if existing) before sending new ones
+        if self.message_id is not None:
+            self.context.delete_message(chat_id, self.message_id)
+
+        # simply ignore arbitrary photo message by moving current bot message underneath latest user message
+        self.build_state_message(chat_id, self.init_message, reply_options=self.initial_options)
 
     def process_callback_query(self, user_id, chat_id, message_id, data):
         command_array = data.split(" ")

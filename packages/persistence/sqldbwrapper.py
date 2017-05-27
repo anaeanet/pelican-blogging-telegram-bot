@@ -41,9 +41,11 @@ class SQLDBWrapper:
                                                         + ", FOREIGN KEY(tag_id) REFERENCES tag(tag_id))"
                     , "CREATE TABLE IF NOT EXISTS post_image (post_image_id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT"
                                                         + ", post_id INTEGER NOT NULL"
-                                                        + ", file_id INTEGER NOT NULL"
                                                         + ", file_name TEXT NOT NULL"
+                                                        + ", file_id INTEGER NOT NULL"
                                                         + ", file BLOB NOT NULL"
+                                                        + ", thumb_file_id INTEGER"
+                                                        + ", thumb_file BLOB"
                                                         + ", caption TEXT"
                                                         + ", FOREIGN KEY(post_id) REFERENCES post(post_id))"
                     ]
@@ -255,7 +257,7 @@ class SQLDBWrapper:
 
     # -------------------------------------------------- post_image ----------------------------------------------------
 
-    def get_post_images(self, post_image_id=None, post_id=None, file_id=None, file_name=None, file=None, caption=None):
+    def get_post_images(self, post_image_id=None, post_id=None, file_name=None, file_id=None, file=None, thumb_file_id=None, thumb_file=None, caption=None):
         param_dict = dict({key: value for key, value in locals().items() if key != "self" and value is not None})
 
         stmt = "SELECT * FROM post_image"
@@ -268,12 +270,14 @@ class SQLDBWrapper:
 
         return [dict({"post_image_id": x[0]
                         , "post_id": x[1]
-                        , "file_id": x[2]
-                        , "file_name": x[3]
+                        , "file_name": x[2]
+                        , "file_id": x[3]
                         , "file": x[4]
-                        , "caption": x[5]}) for x in self.__conn.execute(stmt, tuple(args))]
+                        , "thumb_file_id": x[5]
+                        , "thumb_file": x[6]
+                        , "caption": x[7]}) for x in self.__conn.execute(stmt, tuple(args))]
 
-    def add_post_image(self, post_id, file_id, file_name, file, caption=None):
+    def add_post_image(self, post_id, file_name, file_id, file, thumb_file_id=None, thumb_file=None, caption=None):
         param_dict = dict({key: value for key, value in locals().items() if key != "self" and value is not None})
 
         stmt = "INSERT INTO post_image (" + ",".join(param_dict.keys()) + ") VALUES (" + ",".join(["?" for x in param_dict.keys()]) + ")"

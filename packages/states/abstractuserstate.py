@@ -34,7 +34,10 @@ class AbstractUserState(AbstractState):
     # TODO remove if not used by any child class
     @message_id.setter
     def message_id(self, message_id):
-        self.__message_id = message_id if self.__message_id is None or message_id > self.__message_id else self.__message_id
+        if self.__message_id is None:
+            self.__message_id = message_id
+        else:
+            self.__message_id = max(message_id, self.__message_id)
 
     @property
     def init_message(self):
@@ -61,6 +64,9 @@ class AbstractUserState(AbstractState):
     def process_message(self, user_id, chat_id, text):
         raise NotImplementedError("Abstract method! Implement in child class", type(self))
 
+    def process_photo_message(self, user_id, chat_id, file_name, file_id, thumb_file_id=None, caption=None):
+        raise NotImplementedError("Abstract method! Implement in child class", type(self))
+
     def process_callback_query(self, user_id, chat_id, message_id, data):
         raise NotImplementedError("Abstract method! Implement in child class", type(self))
 
@@ -71,10 +77,32 @@ class AbstractUserState(AbstractState):
             user_id = telegram.get_update_sender_id(update)
             chat_id = update[update_type]["chat"]["id"]
             text = update[update_type]["text"].strip(' \t\n\r') if "text" in update[update_type] else None
+            document = update[update_type]["document"] if "document" in update[update_type] else None
+            photo = update[update_type]["photo"] if "photo" in update[update_type] else None
 
-            # TODO treat non-text messages differently, i.e. photo or document
+            # text message
+            if text is not None:
+                self.process_message(user_id, chat_id, text)
 
-            self.process_message(user_id, chat_id, text)
+            # photo/document message
+            elif document is not None or photo is not None:
+                file_name = "IMG_" + str(update[update_type]["message_id"]) + "_" + str(update[update_type]["date"])
+                caption = update[update_type]["caption"] if "caption" in update[update_type] else None
+
+                # picture was sent as document
+                if document is not None:
+                    file_id = document["file_id"]
+                    thumb_file_id = document["thumb"]["file_id"] if "thumb" in document["thumb"] else None
+                # picture was sent as photo
+                else:
+                    # sort photos by width
+                    photo.sort(key=lambda x: x["width"])
+
+                    file_id = photo[len(photo)-1]["file_id"]    # image with greatest size
+                    thumb_file_id = photo[0]["file_id"]         # image with smallest size
+
+                if file_id is not None and file_name is not None:
+                    self.process_photo_message(user_id, chat_id, file_id, file_name, thumb_file_id=thumb_file_id, caption=caption)
 
         elif update_type == "callback_query":
             self.context.answer_callback_query(update[update_type]["id"])

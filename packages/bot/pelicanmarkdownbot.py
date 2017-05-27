@@ -32,10 +32,24 @@ class PelicanMarkdownBot(AbstractUserStateBot):
             state_class, params = user["state_class"]
             user_id = user["user_id"]
 
-            if "post_id" in params:
-                user_state = state_class(self, user_id, params["post_id"], message_id=params["message_id"])
+            # load message_id from serialized param dict
+            value = params["message_id"]
+            if value != "None":
+                message_id = int(value)
             else:
-                user_state = state_class(self, user_id, message_id=params["message_id"])
+                message_id = None
+
+            if "post_id" in params:
+                # load post_id from serialized param dict
+                value = params["post_id"]
+                if value != "None":
+                    post_id = int(value)
+                else:
+                    post_id = None
+
+                user_state = state_class(self, user_id, post_id, message_id=message_id)
+            else:
+                user_state = state_class(self, user_id, message_id=message_id)
 
             super().set_user_state(user_id, user_state)
 
@@ -103,11 +117,11 @@ class PelicanMarkdownBot(AbstractUserStateBot):
     def delete_post_tag(self, post_tag_id):
         self.database.delete_post_tag(post_tag_id)
 
-    def get_post_images(self, post_image_id=None, post_id=None, file_id=None, file_name=None, file=None, caption=None):
-        return self.database.get_post_images(post_image_id=post_image_id, post_id=post_id, file_id=file_id, file_name=file_name, file=file, caption=caption)
+    def get_post_images(self, post_image_id=None, post_id=None, file_name=None, file_id=None, file=None, thumb_file_id=None, thumb_file=None, caption=None):
+        return self.database.get_post_images(post_image_id=post_image_id, post_id=post_id, file_name=file_name, file_id=file_id, file=file, thumb_file_id=thumb_file_id, thumb_file=thumb_file, caption=caption)
 
-    def add_post_image(self, post_id, file_id, file_name, file, caption=None):
-        self.database.add_post_image(post_id, file_id, file_name, file, caption=caption)
+    def add_post_image(self, post_id, file_name, file_id, file, thumb_file_id=None, thumb_file=None, caption=None):
+        self.database.add_post_image(post_id, file_name, file_id, file, thumb_file_id=thumb_file_id, thumb_file=thumb_file, caption=caption)
 
     def delete_post_image(self, post_image_id):
         # delete any reference to image as post's title image
