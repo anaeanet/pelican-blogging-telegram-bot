@@ -9,7 +9,7 @@ class AbstractUserState(AbstractState):
     """
     Abstract state class.
     Adds attributes user_id and message_id.
-    Implements mandatory process_update and provides more specialized methods to proces certain update types.
+    Implements mandatory process_update and provides more specialized methods to process certain update types.
     """
 
     def __init__(self, context, user_id, chat_id=None, message_id=None):
@@ -31,14 +31,6 @@ class AbstractUserState(AbstractState):
     def message_id(self):
         return self.__message_id
 
-    # TODO remove if not used by any child class
-    @message_id.setter
-    def message_id(self, message_id):
-        if self.__message_id is None:
-            self.__message_id = message_id
-        else:
-            self.__message_id = max(message_id, self.__message_id)
-
     @property
     def init_message(self):
         raise NotImplementedError("Abstract method! Implement in child class", type(self))
@@ -59,7 +51,10 @@ class AbstractUserState(AbstractState):
 
             # store message_id of sent message to support later deletion or editing
             if "result" in sent_message and "message_id" in sent_message["result"]:
-                self.message_id = sent_message["result"]["message_id"]
+                if self.__message_id is None:
+                    self.__message_id = sent_message["result"]["message_id"]
+                else:
+                    self.__message_id = max(sent_message["result"]["message_id"], self.__message_id)
 
     def process_message(self, user_id, chat_id, text):
         raise NotImplementedError("Abstract method! Implement in child class", type(self))
@@ -76,9 +71,23 @@ class AbstractUserState(AbstractState):
         if update_type == "message":
             user_id = telegram.get_update_sender_id(update)
             chat_id = update[update_type]["chat"]["id"]
-            text = update[update_type]["text"].strip(' \t\n\r') if "text" in update[update_type] else None
-            document = update[update_type]["document"] if "document" in update[update_type] else None
-            photo = update[update_type]["photo"] if "photo" in update[update_type] else None
+
+            # check if user sent text message
+            text = None
+            if "text" in update[update_type]:
+                text = update[update_type]["text"].strip(' \t\n\r')
+
+            # check if user sent photo as a document (yes, if there is a thumbnail)
+            document = None
+            if "document" in update[update_type] and "thumb" in update[update_type]["document"]:
+                document = update[update_type]["document"]
+
+            # check if user sent photo message
+            photo = None
+            if "photo" in update[update_type]:
+                photo = update[update_type]["photo"]
+
+            # --- process specific message type ---
 
             # text message
             if text is not None:
