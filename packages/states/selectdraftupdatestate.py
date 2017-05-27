@@ -30,22 +30,22 @@ class SelectDraftUpdateState(AbstractUserPostState, IdleState):
 
             reply_options.append({"text": "ADD tag(s)", "callback_data": "/selectupdate /addtag"})
             # only show option to delete tags if post already has tags
-            if len(self.context.get_post_tag(post_id=self.post_id)) > 0:
+            if len(self.context.get_post_tags(post_id=self.post_id)) > 0:
                 reply_options.append({"text": "DELETE tag(s)", "callback_data": "/selectupdate /deletetag"})
             else:
                 reply_options.append([])
 
             reply_options.append({"text": "ADD image(s)", "callback_data": "/selectupdate /addimage"})
             # only show option to delete images if post already has images
-            if len(self.context.get_post_image(post_id=self.post_id)) > 0:
+            if len(self.context.get_post_images(post_id=self.post_id)) > 0:
                 reply_options.append({"text": "DELETE image(s)", "callback_data": "/selectupdate /deleteimage"})
             else:
                 reply_options.append([])
 
             reply_options.append({"text": "SET title image", "callback_data": "/selectupdate /settitleimage"})
             # only show option to delete title image if post already has a title image
-            # TODO
-            if len(self.context.get_post_tag(post_id=self.post_id)) > 0:
+            user_posts = self.context.get_posts(post_id=self.post_id)
+            if len(user_posts) > 0 and user_posts[0]["title_image"] is not None:
                 reply_options.append({"text": "DELETE title image", "callback_data": "/selectupdate /deletetitleimage"})
             else:
                 reply_options.append([])

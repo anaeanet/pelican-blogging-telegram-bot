@@ -27,8 +27,8 @@ class DeleteTagState(SelectDraftUpdateState):
                         , {"text": "<< drafts", "callback_data": "/updatedraft"}]
 
         # show deletion button for every tag currently assigned to draft
-        for post_tag in self.context.get_post_tag(post_id=self.post_id):
-            tags = self.context.get_tag(tag_id=post_tag["tag_id"])
+        for post_tag in self.context.get_post_tags(post_id=self.post_id):
+            tags = self.context.get_tags(tag_id=post_tag["tag_id"])
             for tag in tags:
                 reply_options.append({"text": tag["name"], "callback_data": "/deleteposttag " + str(tag["tag_id"])})
 
@@ -53,8 +53,8 @@ class DeleteTagState(SelectDraftUpdateState):
                 if len(user_drafts) > 0:
                     post_title = user_drafts[0]["title"]
 
-                    tags = self.context.get_tag(tag_id=tag_id)
-                    post_tags = self.context.get_post_tag(post_id=self.post_id, tag_id=tag_id)
+                    tags = self.context.get_tags(tag_id=tag_id)
+                    post_tags = self.context.get_post_tags(post_id=self.post_id, tag_id=tag_id)
                     if len(tags) > 0 and len(post_tags) > 0:
                         post_tag_id = post_tags[0]["post_tag_id"]
                         tag_name = tags[0]["name"]
@@ -71,7 +71,7 @@ class DeleteTagState(SelectDraftUpdateState):
                                                        , parse_mode=ParseMode.MARKDOWN.value)
 
                     # show remaining tags for deletion
-                    if len(self.context.get_post_tag(post_id=self.post_id)) > 0:
+                    if len(self.context.get_post_tags(post_id=self.post_id)) > 0:
                         next_state = DeleteTagState(self.context, user_id, self.post_id, chat_id=chat_id)
                     # no remaining tags -> automatically go back to update option menu
                     else:

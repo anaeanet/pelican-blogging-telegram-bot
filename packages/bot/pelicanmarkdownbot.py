@@ -32,7 +32,6 @@ class PelicanMarkdownBot(AbstractUserStateBot):
             state_class, params = user["state_class"]
             user_id = user["user_id"]
 
-            # TODO update if deserialize changes
             if "post_id" in params:
                 user_state = state_class(self, user_id, params["post_id"], message_id=params["message_id"])
             else:
@@ -75,18 +74,19 @@ class PelicanMarkdownBot(AbstractUserStateBot):
 
     def delete_post(self, post_id):
         # delete any existing tags from post
-        post_tags = self.database.get_post_tag(post_id=post_id)
+        post_tags = self.database.get_post_tags(post_id=post_id)
         for post_tag in post_tags:
-            post_tag_id = post_tag["post_tag_id"]
-            self.delete_post_tag(post_tag_id)
+            self.delete_post_tag(post_tag["post_tag_id"])
 
-        # TODO
         # delete any existing images from post
+        post_images = self.database.get_post_images(post_id=post_id)
+        for post_image in post_images:
+            self.delete_post_image(post_image["post_image_id"])
 
         self.database.delete_post(post_id)
 
-    def get_tag(self, tag_id=None, name=None):
-        return self.database.get_tag(tag_id=tag_id, name=name)
+    def get_tags(self, tag_id=None, name=None):
+        return self.database.get_tags(tag_id=tag_id, name=name)
 
     def add_tag(self, name):
         self.database.add_tag(name)
@@ -94,8 +94,8 @@ class PelicanMarkdownBot(AbstractUserStateBot):
     def delete_tag(self, tag_id):
         self.database.delete_tag(tag_id)
 
-    def get_post_tag(self, post_tag_id=None, post_id=None, tag_id=None):
-        return self.database.get_post_tag(post_tag_id=post_tag_id, post_id=post_id, tag_id=tag_id)
+    def get_post_tags(self, post_tag_id=None, post_id=None, tag_id=None):
+        return self.database.get_post_tags(post_tag_id=post_tag_id, post_id=post_id, tag_id=tag_id)
 
     def add_post_tag(self, post_id, tag_id):
         self.database.add_post_tag(post_id, tag_id)
@@ -103,11 +103,16 @@ class PelicanMarkdownBot(AbstractUserStateBot):
     def delete_post_tag(self, post_tag_id):
         self.database.delete_post_tag(post_tag_id)
 
-    def get_post_image(self, post_image_id=None, post_id=None, file_id=None, file_name=None, caption=None):
-        return self.database.get_post_image(post_image_id=post_image_id, post_id=post_id, file_id=file_id, file_name=file_name, caption=caption)
+    def get_post_images(self, post_image_id=None, post_id=None, file_id=None, file_name=None, file=None, caption=None):
+        return self.database.get_post_images(post_image_id=post_image_id, post_id=post_id, file_id=file_id, file_name=file_name, file=file, caption=caption)
 
-    def add_post_image(self, post_id=None, file_id=None, file_name=None, caption=None):
-        self.database.get_post_image(post_id=post_id, file_id=file_id, file_name=file_name, caption=caption)
+    def add_post_image(self, post_id, file_id, file_name, file, caption=None):
+        self.database.add_post_image(post_id, file_id, file_name, file, caption=caption)
 
-    def delete_post_image(self, post_image_id=None):
-        self.database.get_post_image(post_image_id=post_image_id)
+    def delete_post_image(self, post_image_id):
+        # delete any reference to image as post's title image
+        posts = self.get_posts(title_image=post_image_id)
+        for post in posts:
+            self.update_post(post["post_id"], title_image="NULL")
+
+        self.database.delete_post_image(post_image_id)

@@ -43,6 +43,7 @@ class SQLDBWrapper:
                                                         + ", post_id INTEGER NOT NULL"
                                                         + ", file_id INTEGER NOT NULL"
                                                         + ", file_name TEXT NOT NULL"
+                                                        + ", file BLOB NOT NULL"
                                                         + ", caption TEXT"
                                                         + ", FOREIGN KEY(post_id) REFERENCES post(post_id))"
                     ]
@@ -197,7 +198,7 @@ class SQLDBWrapper:
 
     # -------------------------------------------------- tag -----------------------------------------------------------
 
-    def get_tag(self, tag_id=None, name=None):
+    def get_tags(self, tag_id=None, name=None):
         param_dict = dict({key: value for key, value in locals().items() if key != "self" and value is not None})
 
         stmt = "SELECT * FROM tag"
@@ -225,7 +226,7 @@ class SQLDBWrapper:
 
     # -------------------------------------------------- post_tag ------------------------------------------------------
 
-    def get_post_tag(self, post_tag_id=None, post_id=None, tag_id=None):
+    def get_post_tags(self, post_tag_id=None, post_id=None, tag_id=None):
         param_dict = dict({key: value for key, value in locals().items() if key != "self" and value is not None})
 
         stmt = "SELECT * FROM post_tag"
@@ -254,7 +255,7 @@ class SQLDBWrapper:
 
     # -------------------------------------------------- post_image ----------------------------------------------------
 
-    def get_post_image(self, post_image_id=None, post_id=None, file_id=None, file_name=None, caption=None):
+    def get_post_images(self, post_image_id=None, post_id=None, file_id=None, file_name=None, file=None, caption=None):
         param_dict = dict({key: value for key, value in locals().items() if key != "self" and value is not None})
 
         stmt = "SELECT * FROM post_image"
@@ -269,9 +270,10 @@ class SQLDBWrapper:
                         , "post_id": x[1]
                         , "file_id": x[2]
                         , "file_name": x[3]
-                        , "caption": x[4]}) for x in self.__conn.execute(stmt, tuple(args))]
+                        , "file": x[4]
+                        , "caption": x[5]}) for x in self.__conn.execute(stmt, tuple(args))]
 
-    def add_post_image(self, post_id, file_id, file_name, caption=None):
+    def add_post_image(self, post_id, file_id, file_name, file, caption=None):
         param_dict = dict({key: value for key, value in locals().items() if key != "self" and value is not None})
 
         stmt = "INSERT INTO post_image (" + ",".join(param_dict.keys()) + ") VALUES (" + ",".join(["?" for x in param_dict.keys()]) + ")"

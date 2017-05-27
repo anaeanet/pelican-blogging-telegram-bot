@@ -23,10 +23,10 @@ class AddTagState(SelectDraftUpdateState):
 
             # add current post_tags to init_message
             tags = []
-            post_tags = self.context.get_post_tag(post_id=self.post_id)
+            post_tags = self.context.get_post_tags(post_id=self.post_id)
             for post_tag in post_tags:
                 tag_id = post_tag["tag_id"]
-                for tag in self.context.get_tag(tag_id=tag_id):
+                for tag in self.context.get_tags(tag_id=tag_id):
                     tags.append(tag["name"])
 
             if len(tags) > 0:
@@ -57,17 +57,17 @@ class AddTagState(SelectDraftUpdateState):
                 for new_tag_name in [x.strip(' \t\n\r') for x in re.split("[,\t\n\r]", text)]:
 
                     # add tag if it does not exist yet
-                    tags = self.context.get_tag(name=new_tag_name)
+                    tags = self.context.get_tags(name=new_tag_name)
                     if new_tag_name not in [tag["name"] for tag in tags]:
                         self.context.add_tag(new_tag_name)
 
                     # fetch newly added tag
-                    tags = self.context.get_tag(name=new_tag_name)
+                    tags = self.context.get_tags(name=new_tag_name)
                     if len(tags) > 0:
                         tag_id = tags[0]["tag_id"]
 
                         # if post does not have tag yet, add it
-                        post_tags = self.context.get_post_tag(post_id=self.post_id, tag_id=tag_id)
+                        post_tags = self.context.get_post_tags(post_id=self.post_id, tag_id=tag_id)
                         if len(post_tags) == 0:
                             self.context.add_post_tag(self.post_id, tag_id)
                             new_tag_names.append(new_tag_name)
