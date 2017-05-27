@@ -11,7 +11,7 @@ class DeleteDraftState(IdleState):
 
     @property
     def init_message(self):
-        return "Which one of your drafts do you want to *delete*?"
+        return "Which *draft* do you want to *delete*?"
 
     @property
     def initial_options(self):

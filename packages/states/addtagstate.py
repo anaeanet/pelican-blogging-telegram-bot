@@ -21,10 +21,16 @@ class AddTagState(SelectDraftUpdateState):
             message = "What *tag(s)* do you want to add to draft *" + post_title + "*? " \
                       + "(comma-separate multiple tags)"
 
-            # add current post_tags to init_messaage
-            current_tags = self.context.get_post_tag(self.post_id)
-            if len(current_tags) > 0:
-                message += "\r\n\r\n" + "*Current tags*\r\n" + ", ".join([tag["name"] for tag in current_tags])
+            # add current post_tags to init_message
+            tags = []
+            post_tags = self.context.get_post_tag(post_id=self.post_id)
+            for post_tag in post_tags:
+                tag_id = post_tag["tag_id"]
+                for tag in self.context.get_tag(tag_id=tag_id):
+                    tags.append(tag["name"])
+
+            if len(tags) > 0:
+                message += "\r\n\r\n" + "*Current tags*\r\n" + ", ".join(tags)
 
         return message
 
@@ -47,19 +53,33 @@ class AddTagState(SelectDraftUpdateState):
             if len(user_drafts) > 0:
                 post_title = user_drafts[0]["title"]
 
+                new_tag_names = []
+                for new_tag_name in [x.strip(' \t\n\r') for x in re.split("[,\t\n\r]", text)]:
 
-                new_tags = []
-                for tag in [x.strip(' \t\n\r') for x in re.split("[,\t\n\r]", text)]:
+                    # add tag if it does not exist yet
+                    tags = self.context.get_tag(name=new_tag_name)
+                    if new_tag_name not in [tag["name"] for tag in tags]:
+                        self.context.add_tag(new_tag_name)
 
-                    # make sure only new tags are added, i.e. existing ones are ignored
-                    current_post_tags = self.context.get_post_tag(self.post_id, name=tag)
-                    if tag not in current_post_tags:
-                        new_tags.append(tag.strip(' \t\n\r'))
-                        self.context.add_post_tag(self.post_id, tag)
+                    # fetch newly added tag
+                    tags = self.context.get_tag(name=new_tag_name)
+                    if len(tags) > 0:
+                        tag_id = tags[0]["tag_id"]
 
-                self.context.send_message(chat_id
-                                          , "Tag(s) *" + ", ".join(new_tags) + "* successfully added to draft *" + post_title + "*."
-                                          , parse_mode=ParseMode.MARKDOWN.value)
+                        # if post does not have tag yet, add it
+                        post_tags = self.context.get_post_tag(post_id=self.post_id, tag_id=tag_id)
+                        if len(post_tags) == 0:
+                            self.context.add_post_tag(self.post_id, tag_id)
+                            new_tag_names.append(new_tag_name)
+
+                if len(new_tag_names) > 0:
+                    self.context.send_message(chat_id
+                                              , "Tag(s) *" + ", ".join(new_tag_names) + "* successfully added to draft *" + post_title + "*."
+                                              , parse_mode=ParseMode.MARKDOWN.value)
+                else:
+                    self.context.send_message(chat_id
+                                              , "The specified tag(s) were already assigned to draft *" + post_title + "*."
+                                              , parse_mode=ParseMode.MARKDOWN.value)
 
                 next_state = SelectDraftUpdateState(self.context, user_id, self.post_id, chat_id=chat_id)
 
