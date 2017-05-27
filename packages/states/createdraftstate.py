@@ -12,7 +12,7 @@ class CreateDraftState(IdleState):
 
     @property
     def init_message(self):
-        return "Enter the *title* of your new draft:"
+        return "Enter the *title* of your *new draft*:"
 
     @property
     def initial_options(self):
@@ -28,7 +28,7 @@ class CreateDraftState(IdleState):
 
             self.context.add_post(user_id, text)
             self.context.send_message(chat_id
-                                            , "Successfully created draft '*" + text + "*'"
+                                            , "Successfully created draft *" + text + "*"
                                             , parse_mode=ParseMode.MARKDOWN.value)
             next_state = IdleState(self.context, user_id, chat_id=chat_id)
             self.context.set_user_state(user_id, next_state)

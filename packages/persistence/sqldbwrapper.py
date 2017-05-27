@@ -55,6 +55,10 @@ class SQLDBWrapper:
         for stmt in idx_stmts:
             self.__conn.execute(stmt)
 
+        # make sure foreign keys are enforced
+        fk_stmt = "PRAGMA foreign_keys = ON"
+        self.__conn.execute(fk_stmt)
+
         self.__conn.commit()
 
     def __serialize_state(state):
@@ -279,7 +283,7 @@ class SQLDBWrapper:
         self.__conn.execute(stmt, tuple(args))
         self.__conn.commit()
 
-    def delete_post_tag(self, post_image_id):
+    def delete_post_image(self, post_image_id):
         stmt = "DELETE FROM post_image WHERE post_image_id = ?"
         args = [post_image_id]
         self.__conn.execute(stmt, tuple(args))

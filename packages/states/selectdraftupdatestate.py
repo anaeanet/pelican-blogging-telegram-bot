@@ -14,17 +14,17 @@ class SelectDraftUpdateState(AbstractUserPostState, IdleState):
     @property
     def init_message(self):
         message = "It seems the draft you selected no longer exists..."
-        user_drafts = self.context.get_posts(post_id=self.post_id, user_id=self.user_id)
+        user_drafts = self.context.get_posts(post_id=self.post_id)
         if len(user_drafts) > 0:
             post_title = user_drafts[0]["title"]
-            message = "What do you want to do with draft '*" + post_title + "*'?"
+            message = "What do you want to do with draft *" + post_title + "*?"
         return message
 
     @property
     def initial_options(self):
         reply_options = [{"text": "<< drafts", "callback_data": "/updatedraft"}]
 
-        user_drafts = self.context.get_posts(post_id=self.post_id, user_id=self.user_id)
+        user_drafts = self.context.get_posts(post_id=self.post_id)
         if len(user_drafts) > 0:
             reply_options.append({"text": "EDIT content", "callback_data": "/selectupdate /editcontent"})
 
@@ -37,13 +37,14 @@ class SelectDraftUpdateState(AbstractUserPostState, IdleState):
 
             reply_options.append({"text": "ADD image(s)", "callback_data": "/selectupdate /addimage"})
             # only show option to delete images if post already has images
-            if len(self.context.get_post_tag(post_id=self.post_id)) > 0:
+            if len(self.context.get_post_image(post_id=self.post_id)) > 0:
                 reply_options.append({"text": "DELETE image(s)", "callback_data": "/selectupdate /deleteimage"})
             else:
                 reply_options.append([])
 
             reply_options.append({"text": "SET title image", "callback_data": "/selectupdate /settitleimage"})
             # only show option to delete title image if post already has a title image
+            # TODO
             if len(self.context.get_post_tag(post_id=self.post_id)) > 0:
                 reply_options.append({"text": "DELETE title image", "callback_data": "/selectupdate /deletetitleimage"})
             else:
@@ -70,14 +71,14 @@ class SelectDraftUpdateState(AbstractUserPostState, IdleState):
                 # user attempts to update the selected draft's content
                 if command_array[1] == "/editcontent":
 
-                    user_drafts = self.context.get_posts(post_id=self.post_id, user_id=self.user_id)
+                    user_drafts = self.context.get_posts(post_id=self.post_id,)
                     if len(user_drafts) > 0:
                         post_title = user_drafts[0]["title"]
                         post_content = user_drafts[0]["content"]
 
                         if post_content is not None and len(post_content) > 0:
                             self.context.edit_message_text(chat_id, self.message_id
-                                                      , "Draft '*" + post_title + "*' currently has the following content:"
+                                                      , "Draft *" + post_title + "* currently has the following content:"
                                                       , parse_mode=ParseMode.MARKDOWN.value)
                             self.context.send_message(chat_id
                                                       , post_content
@@ -111,6 +112,11 @@ class SelectDraftUpdateState(AbstractUserPostState, IdleState):
                 elif command_array[1] == "/deletetag":
                     # TODO
                     None
+                    """
+                    from packages.states.deletetagstate import DeleteTagState
+                    next_state = DeleteTagState(self.context, user_id, self.post_id, chat_id=chat_id, message_id=self.message_id)
+                    self.context.set_user_state(user_id, next_state)
+                    """
                 elif command_array[1] == "/addimage":
                     # TODO
                     None

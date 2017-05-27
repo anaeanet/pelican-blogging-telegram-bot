@@ -15,10 +15,10 @@ class AddTagState(SelectDraftUpdateState):
     def init_message(self):
         message = "It seems the draft you selected no longer exists..."
 
-        user_drafts = self.context.get_posts(post_id=self.post_id, user_id=self.user_id)
+        user_drafts = self.context.get_posts(post_id=self.post_id)
         if len(user_drafts) > 0:
             post_title = user_drafts[0]["title"]
-            message = "What tag(s) do you want to add to draft *" + post_title + "*? " \
+            message = "What *tag(s)* do you want to add to draft *" + post_title + "*? " \
                       + "(comma-separate multiple tags)"
 
             # add current post_tags to init_messaage
@@ -43,7 +43,7 @@ class AddTagState(SelectDraftUpdateState):
             # remove inline keyboard from latest bot message (by leaving out reply_options parameter)
             self.build_state_message(chat_id, self.init_message, message_id=self.message_id)
 
-            user_drafts = self.context.get_posts(post_id=self.post_id, user_id=self.user_id)
+            user_drafts = self.context.get_posts(post_id=self.post_id)
             if len(user_drafts) > 0:
                 post_title = user_drafts[0]["title"]
 

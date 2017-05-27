@@ -11,7 +11,7 @@ class UpdateDraftState(IdleState):
 
     @property
     def init_message(self):
-        return "Which draft do you want to *update*?"
+        return "Which *draft* do you want to *update*?"
 
     @property
     def initial_options(self):

@@ -74,6 +74,15 @@ class PelicanMarkdownBot(AbstractUserStateBot):
         self.database.update_post(post_id, user_id=user_id, title=title, status=status, tmsp_create=tmsp_create, content=content, title_image=title_image, tmsp_publish=tmsp_publish, original_post_id=original_post_id)
 
     def delete_post(self, post_id):
+        # delete any existing tags from post
+        post_tags = self.database.get_post_tag(post_id=post_id)
+        for post_tag in post_tags:
+            post_tag_id = post_tag["post_tag_id"]
+            self.delete_post_tag(post_tag_id)
+
+        # TODO
+        # delete any existing images from post
+
         self.database.delete_post(post_id)
 
     def get_tag(self, tag_id=None, name=None):
@@ -85,6 +94,7 @@ class PelicanMarkdownBot(AbstractUserStateBot):
     def delete_tag(self, tag_id):
         self.database.delete_tag(tag_id)
 
+    # TODO change parameter list?
     def get_post_tag(self, post_id, name=None):
         post_tags = []
 
@@ -101,6 +111,7 @@ class PelicanMarkdownBot(AbstractUserStateBot):
 
         return post_tags
 
+    # TODO change parameter list?
     def add_post_tag(self, post_id, name):
         # add tag if if does not exist yet
         if name not in self.get_tag(name=name):
@@ -112,7 +123,13 @@ class PelicanMarkdownBot(AbstractUserStateBot):
             if len(tags) > 0:
                 tag_id = tags[0]["tag_id"]
                 self.database.add_post_tag(post_id, tag_id)
-
+    """
+    def delete_post_tag(self, post_id, tag_id):
+        post_tags = self.database.get_post_tag(post_id=post_id, tag_id=tag_id)
+        for post_tag in post_tags:
+            post_tag_id = post_tag["post_tag_id"]
+            self.database.delete_post_tag(post_tag_id)
+    """
     def delete_post_tag(self, post_tag_id):
         self.database.delete_post_tag(post_tag_id)
 
