@@ -123,8 +123,12 @@ class SQLDBWrapper:
     def add_user(self, user_id, is_authorized, state):
         stmt = "INSERT INTO user (user_id, is_authorized, state) VALUES (?, ?, ?)"
         args = [user_id, 1 if is_authorized else 0, SQLDBWrapper.__serialize_state(state)]
-        self.__conn.execute(stmt, tuple(args))
+
+        cursor = self.__conn.cursor()
+        cursor.execute(stmt, tuple(args))
         self.__conn.commit()
+
+        return cursor.lastrowid
 
     def update_user(self, user_id, is_authorized=None, state=None):
         param_dict = dict({key: value for key, value in locals().items() if key != "self" and value is not None})
@@ -141,8 +145,11 @@ class SQLDBWrapper:
                 args.append(value)
         args.append(user_id)
 
-        self.__conn.execute(stmt, tuple(args))
+        cursor = self.__conn.cursor()
+        cursor.execute(stmt, tuple(args))
         self.__conn.commit()
+
+        return cursor.rowcount
 
     # -------------------------------------------------- post ----------------------------------------------------------
 
@@ -176,14 +183,21 @@ class SQLDBWrapper:
         for key, value in param_dict.items():
             args.append(value)
 
-        self.__conn.execute(stmt, tuple(args))
+        cursor = self.__conn.cursor()
+        cursor.execute(stmt, tuple(args))
         self.__conn.commit()
+
+        return cursor.lastrowid
 
     def delete_post(self, post_id):
         stmt = "DELETE FROM post WHERE post_id = ?"
         args = [post_id]
-        self.__conn.execute(stmt, tuple(args))
+
+        cursor = self.__conn.cursor()
+        cursor.execute(stmt, tuple(args))
         self.__conn.commit()
+
+        return cursor.rowcount
 
     def update_post(self, post_id, user_id=None, title=None, status=None, tmsp_create=None, content=None, title_image=None, tmsp_publish=None, original_post_id=None):
         param_dict = dict({key: value for key, value in locals().items() if key != "self" and value is not None})
@@ -195,8 +209,11 @@ class SQLDBWrapper:
             args.append(value)
         args.append(post_id)
 
-        self.__conn.execute(stmt, tuple(args))
+        cursor = self.__conn.cursor()
+        cursor.execute(stmt, tuple(args))
         self.__conn.commit()
+
+        return cursor.rowcount
 
     # -------------------------------------------------- tag -----------------------------------------------------------
 
@@ -217,14 +234,22 @@ class SQLDBWrapper:
     def add_tag(self, name):
         stmt = "INSERT INTO tag (name) VALUES (?)"
         args = [name]
-        self.__conn.execute(stmt, tuple(args))
+
+        cursor = self.__conn.cursor()
+        cursor.execute(stmt, tuple(args))
         self.__conn.commit()
+
+        return cursor.lastrowid
 
     def delete_tag(self, tag_id):
         stmt = "DELETE FROM tag WHERE tag_id = ?"
         args = [tag_id]
-        self.__conn.execute(stmt, tuple(args))
+
+        cursor = self.__conn.cursor()
+        cursor.execute(stmt, tuple(args))
         self.__conn.commit()
+
+        return cursor.rowcount
 
     # -------------------------------------------------- post_tag ------------------------------------------------------
 
@@ -246,14 +271,22 @@ class SQLDBWrapper:
     def add_post_tag(self, post_id, tag_id):
         stmt = "INSERT INTO post_tag (post_id, tag_id) VALUES (?, ?)"
         args = [post_id, tag_id]
-        self.__conn.execute(stmt, tuple(args))
+
+        cursor = self.__conn.cursor()
+        cursor.execute(stmt, tuple(args))
         self.__conn.commit()
+
+        return cursor.lastrowid
 
     def delete_post_tag(self, post_tag_id):
         stmt = "DELETE FROM post_tag WHERE post_tag_id = ?"
         args = [post_tag_id]
-        self.__conn.execute(stmt, tuple(args))
+
+        cursor = self.__conn.cursor()
+        cursor.execute(stmt, tuple(args))
         self.__conn.commit()
+
+        return cursor.rowcount
 
     # -------------------------------------------------- post_image ----------------------------------------------------
 
@@ -286,11 +319,18 @@ class SQLDBWrapper:
         for key, value in param_dict.items():
             args.append(value)
 
-        self.__conn.execute(stmt, tuple(args))
+        cursor = self.__conn.cursor()
+        cursor.execute(stmt, tuple(args))
         self.__conn.commit()
+
+        return cursor.lastrowid
 
     def delete_post_image(self, post_image_id):
         stmt = "DELETE FROM post_image WHERE post_image_id = ?"
         args = [post_image_id]
-        self.__conn.execute(stmt, tuple(args))
+
+        cursor = self.__conn.cursor()
+        cursor.execute(stmt, tuple(args))
         self.__conn.commit()
+
+        return cursor.rowcount
