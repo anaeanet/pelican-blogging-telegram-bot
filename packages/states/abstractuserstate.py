@@ -100,7 +100,7 @@ class AbstractUserState(AbstractState):
 
             # photo/document message
             elif document is not None or photo is not None:
-                file_name = "IMG_" + str(update[update_type]["message_id"]) + "_" + str(update[update_type]["date"])
+                file_name = "IMG_" + str(update[update_type]["message_id"])
                 caption = update[update_type]["caption"] if "caption" in update[update_type] else None
 
                 # picture was sent as document
@@ -116,7 +116,7 @@ class AbstractUserState(AbstractState):
                     thumb_file_id = photo[0]["file_id"]         # image with smallest size
 
                 if file_id is not None and file_name is not None:
-                    self.process_photo_message(user_id, chat_id, file_id, file_name, thumb_file_id=thumb_file_id, caption=caption)
+                    self.process_photo_message(user_id, chat_id, file_name, file_id, thumb_file_id=thumb_file_id, caption=caption)
 
         elif update_type == "callback_query":
             self.context.answer_callback_query(update[update_type]["id"])

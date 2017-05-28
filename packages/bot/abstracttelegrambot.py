@@ -101,7 +101,23 @@ class AbstractTelegramBot:
 
     def download_file(self, file_path):
         result_url = self.__file_url + file_path
-        return self.__get_url_response(result_url)
+        response = requests.get(result_url)
+        return response.content if response is not None else None
+
+    def send_photo(self, chat_id, photo, caption=None, disable_notification=None, reply_to_message_id=None, reply_markup=None):
+        result_url = self.__url + "sendPhoto?chat_id={}&photo={}".format(chat_id, photo)
+
+        if caption is not None:
+            result_url += "&caption={}".format(urllib.parse.quote_plus(caption))
+        if disable_notification is not None:
+            result_url += "&disable_notification={}".format(urllib.parse.quote_plus(disable_notification))
+        if reply_to_message_id is not None:
+            result_url += "&reply_to_message_id={}".format(urllib.parse.quote_plus(reply_to_message_id))
+        if reply_markup is not None:
+            result_url += "&reply_markup={}".format(urllib.parse.quote_plus(reply_markup))
+
+        js = AbstractTelegramBot.__get_json_from_url(result_url)
+        return js
 
     def handle_update(self, update):
         raise NotImplementedError("Abstract method! Implement in child class", type(self))
