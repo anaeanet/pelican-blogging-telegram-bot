@@ -81,7 +81,7 @@ class AddTagState(SelectDraftUpdateState):
                                               , "The specified tag(s) were already assigned to draft *" + post_title + "*."
                                               , parse_mode=ParseMode.MARKDOWN.value)
 
-                next_state = SelectDraftUpdateState(self.context, user_id, self.post_id, chat_id=chat_id)
+                next_state = AddTagState(self.context, user_id, self.post_id, chat_id=chat_id)
 
             else:
                 self.context.send_message(chat_id
