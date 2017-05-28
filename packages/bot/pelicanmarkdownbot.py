@@ -81,10 +81,10 @@ class PelicanMarkdownBot(AbstractUserStateBot):
         return self.database.get_posts(post_id=post_id, user_id=user_id, title=title, status=status, tmsp_create=tmsp_create, content=content, title_image=title_image, tmsp_publish=tmsp_publish, original_post_id=original_post_id)
 
     def add_post(self, user_id, title, status=None, tmsp_create=None, content=None, title_image=None, tmsp_publish=None, original_post_id=None):
-        self.database.add_post(user_id, title, status=status, tmsp_create=tmsp_create, content=content, title_image=title_image, tmsp_publish=tmsp_publish, original_post_id=original_post_id)
+        return self.database.add_post(user_id, title, status=status, tmsp_create=tmsp_create, content=content, title_image=title_image, tmsp_publish=tmsp_publish, original_post_id=original_post_id)
 
     def update_post(self, post_id, user_id=None, title=None, status=None, tmsp_create=None, content=None, title_image=None, tmsp_publish=None, original_post_id=None):
-        self.database.update_post(post_id, user_id=user_id, title=title, status=status, tmsp_create=tmsp_create, content=content, title_image=title_image, tmsp_publish=tmsp_publish, original_post_id=original_post_id)
+        return self.database.update_post(post_id, user_id=user_id, title=title, status=status, tmsp_create=tmsp_create, content=content, title_image=title_image, tmsp_publish=tmsp_publish, original_post_id=original_post_id)
 
     def delete_post(self, post_id):
         # delete any existing tags from post
@@ -97,31 +97,31 @@ class PelicanMarkdownBot(AbstractUserStateBot):
         for post_image in post_images:
             self.delete_post_image(post_image["post_image_id"])
 
-        self.database.delete_post(post_id)
+        return self.database.delete_post(post_id)
 
     def get_tags(self, tag_id=None, name=None):
         return self.database.get_tags(tag_id=tag_id, name=name)
 
     def add_tag(self, name):
-        self.database.add_tag(name)
+        return self.database.add_tag(name)
 
     def delete_tag(self, tag_id):
-        self.database.delete_tag(tag_id)
+        return self.database.delete_tag(tag_id)
 
     def get_post_tags(self, post_tag_id=None, post_id=None, tag_id=None):
         return self.database.get_post_tags(post_tag_id=post_tag_id, post_id=post_id, tag_id=tag_id)
 
     def add_post_tag(self, post_id, tag_id):
-        self.database.add_post_tag(post_id, tag_id)
+        return self.database.add_post_tag(post_id, tag_id)
 
     def delete_post_tag(self, post_tag_id):
-        self.database.delete_post_tag(post_tag_id)
+        return self.database.delete_post_tag(post_tag_id)
 
     def get_post_images(self, post_image_id=None, post_id=None, file_name=None, file_id=None, file=None, thumb_file_id=None, thumb_file=None, caption=None):
         return self.database.get_post_images(post_image_id=post_image_id, post_id=post_id, file_name=file_name, file_id=file_id, file=file, thumb_file_id=thumb_file_id, thumb_file=thumb_file, caption=caption)
 
     def add_post_image(self, post_id, file_name, file_id, file, thumb_file_id=None, thumb_file=None, caption=None):
-        self.database.add_post_image(post_id, file_name, file_id, file, thumb_file_id=thumb_file_id, thumb_file=thumb_file, caption=caption)
+        return self.database.add_post_image(post_id, file_name, file_id, file, thumb_file_id=thumb_file_id, thumb_file=thumb_file, caption=caption)
 
     def delete_post_image(self, post_image_id):
         # delete any reference to image as post's title image
@@ -129,4 +129,4 @@ class PelicanMarkdownBot(AbstractUserStateBot):
         for post in posts:
             self.update_post(post["post_id"], title_image="NULL")
 
-        self.database.delete_post_image(post_image_id)
+        return self.database.delete_post_image(post_image_id)
