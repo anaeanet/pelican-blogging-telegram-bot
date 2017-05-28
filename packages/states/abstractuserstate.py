@@ -1,4 +1,5 @@
 from packages.states.abstractstate import AbstractState
+from packages.bot.keyboardtype import KeyboardType
 from packages.bot.parsemode import ParseMode
 import packages.bot.telegram as telegram
 
@@ -42,12 +43,16 @@ class AbstractUserState(AbstractState):
     def build_state_message(self, chat_id, message_text, message_id=None, reply_options=None, keyboard_columns=1):
         if message_id is not None:
             self.context.edit_message_text(chat_id, message_id, message_text
-                                            , parse_mode=ParseMode.MARKDOWN.value
-                                            , reply_markup=telegram.build_inline_keyboard(reply_options, keyboard_columns))
+                                           , parse_mode=ParseMode.MARKDOWN.value
+                                           , reply_markup=telegram.build_keyboard(reply_options
+                                                                                  , KeyboardType.INLINE
+                                                                                  , columns=keyboard_columns))
         else:
             sent_message = self.context.send_message(chat_id, message_text
-                                            , parse_mode=ParseMode.MARKDOWN.value
-                                            , reply_markup=telegram.build_inline_keyboard(reply_options, keyboard_columns))
+                                                     , parse_mode=ParseMode.MARKDOWN.value
+                                                     , reply_markup=telegram.build_keyboard(reply_options
+                                                                                            , KeyboardType.INLINE
+                                                                                            , columns=keyboard_columns))
 
             # store message_id of sent message to support later deletion or editing
             if "result" in sent_message and "message_id" in sent_message["result"]:

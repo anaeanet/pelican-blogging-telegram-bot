@@ -6,7 +6,7 @@ __author__ = "anaeanet"
 
 class PelicanMarkdownBot(AbstractUserStateBot):
     """
-    This bot is a concrete implementation of a telegram bot.
+    This bot is a concrete implementation of a (user-state) telegram bot.
     It adds a persistence layer and only responds to authorized users.
     
     Its purpose is to create and maintain <a href="https://en.wikipedia.org/wiki/Markdown">MARKDOWN</a> files 

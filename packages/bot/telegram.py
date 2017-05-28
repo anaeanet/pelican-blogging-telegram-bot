@@ -1,3 +1,4 @@
+from packages.bot.keyboardtype import KeyboardType
 import json
 
 __author__ = "anaeanet"
@@ -26,18 +27,10 @@ def get_update_type(update):
     return result
 
 
-def build_keyboard(items, one_time_keyboard=True, resize_keyboard=True):
-    if items is None:
-        reply_markup = {"remove_keyboard": True}
-    else:
-        keyboard = [[item] for item in items]
-        reply_markup = {"keyboard": keyboard, "one_time_keyboard": one_time_keyboard, "resize_keyboard": resize_keyboard}
-    return json.dumps(reply_markup)
+def build_keyboard(items, keyboard_type, columns=1, one_time_keyboard=False, resize_keyboard=False):
+    result = None
 
-
-def build_inline_keyboard(items, columns=1):
     keyboard = []
-
     item_pos = 0
     while items is not None and item_pos < len(items):
         keyboard_columns = []
@@ -48,9 +41,14 @@ def build_inline_keyboard(items, columns=1):
         keyboard.append(keyboard_columns)
         item_pos += columns
 
-    return json.dumps({"inline_keyboard": keyboard})
+    if keyboard_type == KeyboardType.INLINE:
+        result = json.dumps({keyboard_type.value: keyboard})
 
+    elif keyboard_type == KeyboardType.KEYBOARD:
+        result = json.dumps({keyboard_type.value: keyboard
+                                , "one_time_keyboard": one_time_keyboard
+                                , "resize_keyboard": resize_keyboard})
 
-def build_force_reply(selective=False):
-    return json.dumps({"force_reply": True, "selective": selective})
+    return result
+
 
