@@ -30,7 +30,7 @@ class AddTagState(SelectDraftUpdateState):
                     tags.append(tag["name"])
 
             if len(tags) > 0:
-                message += "\r\n\r\n" + "*Current tags*\r\n" + ", ".join(tags)
+                message += "\r\n\r\n" + "*Current tag(s)*\r\n" + ", ".join(tags)
 
         return message
 
@@ -78,7 +78,7 @@ class AddTagState(SelectDraftUpdateState):
                                               , parse_mode=ParseMode.MARKDOWN.value)
                 else:
                     self.context.send_message(chat_id
-                                              , "The specified tag(s) were already assigned to draft *" + post_title + "*."
+                                              , "Tags not updated. All specified tag(s) were already assigned to draft *" + post_title + "*."
                                               , parse_mode=ParseMode.MARKDOWN.value)
 
                 next_state = AddTagState(self.context, user_id, self.post_id, chat_id=chat_id)
