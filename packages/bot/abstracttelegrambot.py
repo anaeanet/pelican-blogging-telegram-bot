@@ -11,8 +11,9 @@ class AbstractTelegramBot:
     It only takes care of receiving updates and sending messages.
     """
 
-    def __init__(self, token_url):
+    def __init__(self, token_url, file_token_url):
         self.__url = token_url
+        self.__file_url = file_token_url
         self.__next_update_id = None
 
         if type(self) is AbstractTelegramBot:
@@ -91,6 +92,16 @@ class AbstractTelegramBot:
 
         js = AbstractTelegramBot.__get_json_from_url(result_url)
         return js
+
+    def get_file(self, file_id):
+        result_url = self.__url + "getFile?file_id={}".format(file_id)
+
+        js = AbstractTelegramBot.__get_json_from_url(result_url)
+        return js
+
+    def download_file(self, file_path):
+        result_url = self.__file_url + file_path
+        return self.__get_url_response(result_url)
 
     def handle_update(self, update):
         raise NotImplementedError("Abstract method! Implement in child class", type(self))

@@ -11,12 +11,12 @@ __author__ = "anaeanet"
 
 def main():
     url = config.url.format(config.token)
+    file_url = config.file_url.format(config.token)
     start_state_class = IdleState
     database = SQLDBWrapper(config.database_name)
     authorized_users = config.authorized_users
 
-    bot = PelicanMarkdownBot(url, start_state_class, database, authorized_users=authorized_users)
-    #bot = MockBot(url, start_state_class, database, authorized_users=authorized_users)
+    bot = PelicanMarkdownBot(url, file_url, start_state_class, database, authorized_users=authorized_users)
 
     try:
         bot.run()

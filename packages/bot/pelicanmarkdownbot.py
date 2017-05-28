@@ -13,8 +13,8 @@ class PelicanMarkdownBot(AbstractUserStateBot):
     as well as linked image galleries for <a href="http://docs.getpelican.com/en/stable/">PELICAN</a> blog posts.
     """
 
-    def __init__(self, token_url, start_state_class, database, authorized_users=[]):
-        super().__init__(token_url, start_state_class)
+    def __init__(self, token_url, file_token_url, start_state_class, database, authorized_users=[]):
+        super().__init__(token_url, file_token_url, start_state_class)
         self.__database = database
         self.database.setup()
 
