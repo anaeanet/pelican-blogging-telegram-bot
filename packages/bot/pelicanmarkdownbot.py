@@ -117,11 +117,11 @@ class PelicanMarkdownBot(AbstractUserStateBot):
     def delete_post_tag(self, post_tag_id):
         return self.database.delete_post_tag(post_tag_id)
 
-    def get_post_images(self, post_image_id=None, post_id=None, file_name=None, file_id=None, file=None, thumb_file_id=None, thumb_file=None, caption=None):
-        return self.database.get_post_images(post_image_id=post_image_id, post_id=post_id, file_name=file_name, file_id=file_id, file=file, thumb_file_id=thumb_file_id, thumb_file=thumb_file, caption=caption)
+    def get_post_images(self, post_image_id=None, post_id=None, file_name=None, file_id=None, thumb_file_id=None, caption=None):
+        return self.database.get_post_images(post_image_id=post_image_id, post_id=post_id, file_name=file_name, file_id=file_id, thumb_file_id=thumb_file_id, caption=caption)
 
-    def add_post_image(self, post_id, file_name, file_id, file, thumb_file_id=None, thumb_file=None, caption=None):
-        return self.database.add_post_image(post_id, file_name, file_id, file, thumb_file_id=thumb_file_id, thumb_file=thumb_file, caption=caption)
+    def add_post_image(self, post_id, file_name, file_id, thumb_file_id=None, caption=None):
+        return self.database.add_post_image(post_id, file_name, file_id, thumb_file_id=thumb_file_id, caption=caption)
 
     def delete_post_image(self, post_image_id):
         # delete any reference to image as post's title image

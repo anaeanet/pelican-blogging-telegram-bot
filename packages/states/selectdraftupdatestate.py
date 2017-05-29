@@ -81,8 +81,7 @@ class SelectDraftUpdateState(AbstractUserPostState, IdleState):
                                                       , "Draft *" + post_title + "* currently has the following content:"
                                                       , parse_mode=ParseMode.MARKDOWN.value)
                             self.context.send_message(chat_id
-                                                      , post_content
-                                                      , parse_mode=ParseMode.MARKDOWN.value)
+                                                      , post_content)
                             from packages.states.editcontentstate import EditContentState
                             next_state = EditContentState(self.context, user_id, self.post_id, chat_id=chat_id)
 
