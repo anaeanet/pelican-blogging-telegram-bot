@@ -20,6 +20,7 @@ class SQLDBWrapper:
         tbl_stmts = [ "CREATE TABLE IF NOT EXISTS user (user_id INTEGER NOT NULL PRIMARY KEY"
                                                         + ", is_authorized INTEGER NOT NULL DEFAULT 0 CHECK (is_authorized == 0 or is_authorized == 1)"
                                                         + ", state TEXT NOT NULL)"
+
                     , "CREATE TABLE IF NOT EXISTS post (post_id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT"
                                                         + ", user_id INTEGER NOT NULL"
                                                         + ", title TEXT NOT NULL"
@@ -32,18 +33,21 @@ class SQLDBWrapper:
                                                         + ", FOREIGN KEY(user_id) REFERENCES user(user_id)"
                                                         + ", FOREIGN KEY(title_image) REFERENCES post_image(post_image_id)"
                                                         + ", FOREIGN KEY(original_post_id) REFERENCES post(post_id))"
+
                     , "CREATE TABLE IF NOT EXISTS tag (tag_id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT"
                                                         + ", name TEXT NOT NULL UNIQUE)"
+
                     , "CREATE TABLE IF NOT EXISTS post_tag (post_tag_id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT"
                                                         + ", post_id INTEGER NOT NULL"
                                                         + ", tag_id INTEGER NOT NULL"
                                                         + ", FOREIGN KEY(post_id) REFERENCES post(post_id)"
                                                         + ", FOREIGN KEY(tag_id) REFERENCES tag(tag_id))"
+
                     , "CREATE TABLE IF NOT EXISTS post_image (post_image_id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT"
                                                         + ", post_id INTEGER NOT NULL"
                                                         + ", file_name TEXT NOT NULL"
-                                                        + ", file_id INTEGER NOT NULL"
-                                                        + ", thumb_file_id INTEGER"
+                                                        + ", file_id TEXT NOT NULL"
+                                                        + ", thumb_file_id TEXT"
                                                         + ", caption TEXT"
                                                         + ", FOREIGN KEY(post_id) REFERENCES post(post_id))"
                     ]
@@ -288,7 +292,7 @@ class SQLDBWrapper:
 
     # -------------------------------------------------- post_image ----------------------------------------------------
 
-    def get_post_images(self, post_image_id=None, post_id=None, file_name=None, file_id=None, thumb_file_id=None, caption=None):
+    def get_post_images(self, post_image_id=None, post_id=None, file_name=None, file_id=None, file=None, thumb_file_id=None, thumb_file=None, caption=None):
         param_dict = dict({key: value for key, value in locals().items() if key != "self" and value is not None})
 
         stmt = "SELECT * FROM post_image"
