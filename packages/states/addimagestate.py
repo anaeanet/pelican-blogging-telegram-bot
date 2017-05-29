@@ -43,7 +43,26 @@ class AddImageState(SelectDraftUpdateState):
         # remove inline keyboard from latest bot message (by leaving out reply_options parameter)
         self.build_state_message(chat_id, self.init_message, message_id=self.message_id)
 
-        # TODO
+        user_drafts = self.context.get_posts(post_id=self.post_id)
+        if len(user_drafts) > 0:
+            post_title = user_drafts[0]["title"]
 
-        next_state = AddImageState(self.context, user_id, self.post_id, chat_id=chat_id)
+            # TODO
+
+            next_state = AddImageState(self.context, user_id, self.post_id, chat_id=chat_id)
+
+        else:
+            self.context.send_message(chat_id
+                                      , "It seems the draft you selected no longer exists..."
+                                      , parse_mode=ParseMode.MARKDOWN.value)
+
+            # show remaining drafts for updating
+            if len(self.context.get_posts(user_id=user_id, status="draft")) > 0:
+                from packages.states.updatedraftstate import UpdateDraftState
+                next_state = UpdateDraftState(self.context, user_id, chat_id=chat_id)
+            # no remaining drafts -> automatically go back to main menu
+            else:
+                from packages.states.idlestate import IdleState
+                next_state = IdleState(self.context, user_id, chat_id=chat_id)
+
         self.context.set_user_state(user_id, next_state)
