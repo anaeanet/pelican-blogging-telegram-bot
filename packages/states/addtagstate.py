@@ -56,6 +56,10 @@ class AddTagState(SelectDraftUpdateState):
                 new_tag_names = []
                 for new_tag_name in [x.strip(' \t\n\r') for x in re.split("[,\t\n\r]", text)]:
 
+                    # ignore "empty" tags
+                    if len(new_tag_name) == 0:
+                        continue
+
                     # add tag if it does not exist yet
                     tags = self.context.get_tags(name=new_tag_name)
                     if new_tag_name not in [tag["name"] for tag in tags]:
