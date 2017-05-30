@@ -47,7 +47,8 @@ class SQLDBWrapper:
                                                         + ", post_id INTEGER NOT NULL"
                                                         + ", file_name TEXT NOT NULL"
                                                         + ", file_id TEXT NOT NULL"
-                                                        + ", thumb_file_id TEXT"
+                                                        + ", file BLOB NOT NULL"
+                                                        + ", thumb_id TEXT"
                                                         + ", caption TEXT"
                                                         + ", FOREIGN KEY(post_id) REFERENCES post(post_id))"
                     ]
@@ -292,7 +293,7 @@ class SQLDBWrapper:
 
     # -------------------------------------------------- post_image ----------------------------------------------------
 
-    def get_post_images(self, post_image_id=None, post_id=None, file_name=None, file_id=None, file=None, thumb_file_id=None, thumb_file=None, caption=None):
+    def get_post_images(self, post_image_id=None, post_id=None, file_name=None, file_id=None, file=None, thumb_id=None, caption=None):
         param_dict = dict({key: value for key, value in locals().items() if key != "self" and value is not None})
 
         stmt = "SELECT * FROM post_image"
@@ -307,10 +308,11 @@ class SQLDBWrapper:
                         , "post_id": x[1]
                         , "file_name": x[2]
                         , "file_id": x[3]
-                        , "thumb_file_id": x[4]
-                        , "caption": x[5]}) for x in self.__conn.execute(stmt, tuple(args))]
+                        , "file": x[4]
+                        , "thumb_id": x[5]
+                        , "caption": x[6]}) for x in self.__conn.execute(stmt, tuple(args))]
 
-    def add_post_image(self, post_id, file_name, file_id, thumb_file_id=None, caption=None):
+    def add_post_image(self, post_id, file_name, file_id, file, thumb_id=None, caption=None):
         param_dict = dict({key: value for key, value in locals().items() if key != "self" and value is not None})
 
         stmt = "INSERT INTO post_image (" + ",".join(param_dict.keys()) + ") VALUES (" + ",".join(["?" for x in param_dict.keys()]) + ")"

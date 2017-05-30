@@ -50,7 +50,7 @@ class IdleState(AbstractUserState):
         else:
             self.build_state_message(chat_id, self.init_message, reply_options=self.initial_options)
 
-    def process_photo_message(self, user_id, chat_id, file_name, file_id, thumb_file_id=None, caption=None):
+    def process_photo_message(self, user_id, chat_id, file_name, file_id, thumb_id=None, caption=None):
 
         # delete previous bot message (if existing) before sending new ones
         if self.message_id is not None:
