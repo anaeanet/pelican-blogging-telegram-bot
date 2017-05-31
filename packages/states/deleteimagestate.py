@@ -26,9 +26,21 @@ class DeleteImageState(SelectDraftUpdateState):
         reply_options = [{"text": "<< update options", "callback_data": "/selectupdate"}
                         , {"text": "<< drafts", "callback_data": "/updatedraft"}]
 
-        # show deletion & preview button for every image currently assigned to draft
+        # identify title image of post
+        title_image_id = None
+        user_drafts = self.context.get_posts(post_id=self.post_id)
+        if len(user_drafts) > 0:
+            title_image_id = user_drafts[0]["title_image"]
+
+        # show deletion & preview button for every image currently assigned to draft, mark title image
         for post_image in self.context.get_post_images(post_id=self.post_id):
-            reply_options.append({"text": post_image["file_name"], "callback_data": "/deletepostimage " + str(post_image["post_image_id"])})
+            button_title = post_image["file_name"]
+
+            # mark title image
+            if title_image_id is not None and post_image["title_image"] == title_image_id:
+                button_title += " (Title)"
+
+            reply_options.append({"text": button_title, "callback_data": "/deletepostimage " + str(post_image["post_image_id"])})
             reply_options.append({"text": "preview", "callback_data": "/previewpostimage " + str(post_image["post_image_id"])})
 
         reply_options.append({"text": "<< main menu", "callback_data": "/mainmenu"})

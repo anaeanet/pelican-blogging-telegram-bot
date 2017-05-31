@@ -115,7 +115,20 @@ class PelicanMarkdownBot(AbstractUserStateBot):
         return self.database.add_post_tag(post_id, tag_id)
 
     def delete_post_tag(self, post_tag_id):
-        return self.database.delete_post_tag(post_tag_id)
+        # get tag_id of the tag that is about to be removed from post
+        tag_id = None
+        post_tags = self.database.get_post_tags(post_tag_id=post_tag_id)
+        for post_tag in post_tags:
+            tag_id = post_tag["tag_id"]
+
+        result = self.database.delete_post_tag(post_tag_id)
+
+        # if tag was successfully remove from post, checkif it is used anywhere else, delete - if not
+        post_tags_in_use = self.database.get_post_tags(tag_id=tag_id)
+        if result and len(post_tags_in_use) == 0:
+                self.database.delete_tag(tag_id)
+
+        return result
 
     def get_post_images(self, post_image_id=None, post_id=None, file_name=None, file_id=None, file=None, thumb_id=None, caption=None):
         return self.database.get_post_images(post_image_id=post_image_id, post_id=post_id, file_name=file_name, file_id=file_id, file=file, thumb_id=thumb_id, caption=caption)

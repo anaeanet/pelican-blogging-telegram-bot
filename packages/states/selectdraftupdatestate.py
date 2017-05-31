@@ -42,7 +42,9 @@ class SelectDraftUpdateState(AbstractUserPostState, IdleState):
             else:
                 reply_options.append([])
 
-            reply_options.append({"text": "SET title image", "callback_data": "/selectupdate /settitleimage"})
+            # only show option to set title image if post already has at least one image
+            if len(self.context.get_post_images(post_id=self.post_id)) > 0:
+                reply_options.append({"text": "SET title image", "callback_data": "/selectupdate /settitleimage"})
             # only show option to delete title image if post already has a title image
             user_posts = self.context.get_posts(post_id=self.post_id)
             if len(user_posts) > 0 and user_posts[0]["title_image"] is not None:
