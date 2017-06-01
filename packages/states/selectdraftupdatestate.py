@@ -123,11 +123,13 @@ class SelectDraftUpdateState(AbstractUserPostState, IdleState):
                     next_state = DeleteImageState(self.context, user_id, self.post_id, chat_id=chat_id, message_id=self.message_id)
                     self.context.set_user_state(user_id, next_state)
                 elif command_array[1] == "/settitleimage":
-                    # TODO
-                    None
+                    from packages.states.settitleimagestate import SetTitleImageState
+                    next_state = SetTitleImageState(self.context, user_id, self.post_id, chat_id=chat_id, message_id=self.message_id)
+                    self.context.set_user_state(user_id, next_state)
                 elif command_array[1] == "/deletetitleimage":
-                    # TODO
-                    None
+                    from packages.states.deletetitleimagestate import DeleteTitleImageState
+                    next_state = DeleteTitleImageState(self.context, user_id, self.post_id, chat_id=chat_id, message_id=self.message_id)
+                    self.context.set_user_state(user_id, next_state)
 
         else:
             super().process_callback_query(user_id, chat_id, message_id, data)

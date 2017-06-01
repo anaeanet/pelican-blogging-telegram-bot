@@ -218,6 +218,15 @@ class SQLDBWrapper:
 
         return cursor.rowcount
 
+    def delete_title_image(self, post_id):
+
+        stmt = "UPDATE post SET title_image = NULL WHERE post_id = ?"
+        args = [post_id]
+
+        cursor = self.__conn.cursor()
+        cursor.execute(stmt, tuple(args))
+        self.__conn.commit()
+
     # -------------------------------------------------- tag -----------------------------------------------------------
 
     def get_tags(self, tag_id=None, name=None):

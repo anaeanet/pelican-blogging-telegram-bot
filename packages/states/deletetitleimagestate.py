@@ -4,10 +4,10 @@ from packages.bot.parsemode import ParseMode
 __author__ = "aneanet"
 
 
-class DeleteImageState(SelectDraftUpdateState):
+class DeleteTitleImageState(SelectDraftUpdateState):
     """
     Concrete state implementation.
-    Lets the user select an image for deletion.
+    Lets the user remove a title image from the previously selected post.
     """
 
     @property
@@ -17,7 +17,13 @@ class DeleteImageState(SelectDraftUpdateState):
         user_drafts = self.context.get_posts(post_id=self.post_id)
         if len(user_drafts) > 0:
             post_title = user_drafts[0]["title"]
-            message = "Which *image* do you want to *delete* from draft *" + post_title + "*?"
+            title_image = user_drafts[0]["title_image"]
+
+            post_images = self.context.get_post_images(post_image_id=title_image)
+            if len(post_images) > 0:
+                title_image_name = post_images[0]["file_name"]
+
+                message = "Do you really want to remove *" + title_image_name + "* as title image of draft *" + post_title + "*?"
 
         return message
 
@@ -32,16 +38,8 @@ class DeleteImageState(SelectDraftUpdateState):
         if len(user_drafts) > 0:
             title_image_id = user_drafts[0]["title_image"]
 
-        # show deletion & preview button for every image currently assigned to draft, mark current title image
-        for post_image in self.context.get_post_images(post_id=self.post_id):
-            button_title = post_image["file_name"]
-
-            # mark title image
-            if title_image_id is not None and post_image["post_image_id"] == title_image_id:
-                button_title += " - TITLE"
-
-            reply_options.append({"text": button_title, "callback_data": "/deletepostimage " + str(post_image["post_image_id"])})
-            reply_options.append({"text": "preview", "callback_data": "/previewpostimage " + str(post_image["post_image_id"])})
+            reply_options.append({"text": "Yes, confirm", "callback_data": "/deletetitleimage " + str(title_image_id)})
+            reply_options.append({"text": "preview", "callback_data": "/previewpostimage " + str(title_image_id)})
 
         reply_options.append({"text": "<< main menu", "callback_data": "/mainmenu"})
 
@@ -52,10 +50,10 @@ class DeleteImageState(SelectDraftUpdateState):
 
         # TODO cleanup
 
-        # only accept "/deletepostimage ..." callback queries, have super() handle everything else
-        if len(command_array) > 1 and command_array[0] == "/deletepostimage":
+        # only accept "/deletetitleimage ..." callback queries, have super() handle everything else
+        if len(command_array) > 1 and command_array[0] == "/deletetitleimage":
 
-            # post_image selected for deletion - /deletepostimage <post_image_id>
+            # post_image selected for deletion - /deletetitleimage <post_image_id>
             if len(command_array) == 2:
                 post_image_id = command_array[1]
 
@@ -68,10 +66,10 @@ class DeleteImageState(SelectDraftUpdateState):
                         post_image_name = post_images[0]["file_name"]
 
                         # remove image from post
-                        self.context.delete_post_image(post_image_id)
+                        self.context.delete_title_image(self.post_id)
 
                         self.context.edit_message_text(chat_id, message_id
-                                                       , "Successfully deleted image *" + post_image_name + "* from draft *" + post_title + "*."
+                                                       , "Successfully deleted image *" + post_image_name + "* as title image from draft *" + post_title + "*."
                                                        , parse_mode=ParseMode.MARKDOWN.value)
 
                     else:
@@ -79,12 +77,8 @@ class DeleteImageState(SelectDraftUpdateState):
                                                        , "It seems the image you selected no longer exists..."
                                                        , parse_mode=ParseMode.MARKDOWN.value)
 
-                    # show remaining images for deletion
-                    if len(self.context.get_post_images(post_id=self.post_id)) > 0:
-                        next_state = DeleteImageState(self.context, user_id, self.post_id, chat_id=chat_id)
-                    # no remaining images -> automatically go back to update option menu
-                    else:
-                        next_state = SelectDraftUpdateState(self.context, user_id, self.post_id, chat_id=chat_id)
+                    # after deleting title image (successful or not), go back to update option menu for selected draft
+                    next_state = SelectDraftUpdateState(self.context, user_id, self.post_id, chat_id=chat_id)
 
                 else:
                     self.context.edit_message_text(chat_id, self.message_id
@@ -140,7 +134,7 @@ class DeleteImageState(SelectDraftUpdateState):
 
                     # show remaining images for deletion
                     if len(self.context.get_post_images(post_id=self.post_id)) > 0:
-                        next_state = DeleteImageState(self.context, user_id, self.post_id, chat_id=chat_id)
+                        next_state = DeleteTitleImageState(self.context, user_id, self.post_id, chat_id=chat_id)
                     # no remaining images -> automatically go back to update option menu
                     else:
                         next_state = SelectDraftUpdateState(self.context, user_id, self.post_id, chat_id=chat_id)

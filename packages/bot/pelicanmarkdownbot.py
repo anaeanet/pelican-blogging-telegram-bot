@@ -140,6 +140,9 @@ class PelicanMarkdownBot(AbstractUserStateBot):
         # delete any reference to image as post's title image
         posts = self.get_posts(title_image=post_image_id)
         for post in posts:
-            self.update_post(post["post_id"], title_image="NULL")
+            self.delete_title_image(post["post_id"])
 
         return self.database.delete_post_image(post_image_id)
+
+    def delete_title_image(self, post_id):
+        self.database.delete_title_image(post_id)
