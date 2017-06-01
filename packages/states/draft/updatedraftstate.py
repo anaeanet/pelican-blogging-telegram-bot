@@ -1,4 +1,4 @@
-from packages.states.idlestate import IdleState
+from packages.states.navigation.idlestate import IdleState
 
 __author__ = "aneanet"
 
@@ -31,7 +31,7 @@ class UpdateDraftState(IdleState):
             if len(command_array) == 2:
                 post_id = command_array[1]
 
-                from packages.states.selectdraftupdatestate import SelectDraftUpdateState
+                from packages.states.navigation.selectdraftupdatestate import SelectDraftUpdateState
                 next_state = SelectDraftUpdateState(self.context, user_id, post_id, chat_id=chat_id, message_id=message_id)
                 self.context.set_user_state(user_id, next_state)
 

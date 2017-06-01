@@ -1,6 +1,7 @@
-import sqlite3
 import importlib
-from packages.states.abstractuserpoststate import AbstractUserPostState
+import sqlite3
+
+from packages.states.abstract.abstractuserpoststate import AbstractUserPostState
 
 __author__ = 'anaeanet'
 

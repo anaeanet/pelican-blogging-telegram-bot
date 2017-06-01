@@ -1,7 +1,7 @@
-from packages.states.abstractstate import AbstractState
+import packages.bot.telegram as telegram
 from packages.bot.keyboardtype import KeyboardType
 from packages.bot.parsemode import ParseMode
-import packages.bot.telegram as telegram
+from packages.states.abstract.abstractstate import AbstractState
 
 __author__ = "aneanet"
 

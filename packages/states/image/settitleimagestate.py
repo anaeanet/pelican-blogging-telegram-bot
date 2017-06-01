@@ -1,13 +1,13 @@
-from packages.states.selectdraftupdatestate import SelectDraftUpdateState
 from packages.bot.parsemode import ParseMode
+from packages.states.navigation.selectdraftupdatestate import SelectDraftUpdateState
 
 __author__ = "aneanet"
 
 
-class DeleteTitleImageState(SelectDraftUpdateState):
+class SetTitleImageState(SelectDraftUpdateState):
     """
     Concrete state implementation.
-    Lets the user remove a title image from the previously selected post.
+    Lets the user select a title image from all image linked to the previously selected post.
     """
 
     @property
@@ -17,13 +17,7 @@ class DeleteTitleImageState(SelectDraftUpdateState):
         user_drafts = self.context.get_posts(post_id=self.post_id)
         if len(user_drafts) > 0:
             post_title = user_drafts[0]["title"]
-            title_image = user_drafts[0]["title_image"]
-
-            post_images = self.context.get_post_images(post_image_id=title_image)
-            if len(post_images) > 0:
-                title_image_name = post_images[0]["file_name"]
-
-                message = "Do you really want to remove *" + title_image_name + "* as title image of draft *" + post_title + "*?"
+            message = "Which *image* do you want to set as *title image* of draft *" + post_title + "*?"
 
         return message
 
@@ -38,8 +32,16 @@ class DeleteTitleImageState(SelectDraftUpdateState):
         if len(user_drafts) > 0:
             title_image_id = user_drafts[0]["title_image"]
 
-            reply_options.append({"text": "Yes, confirm", "callback_data": "/deletetitleimage " + str(title_image_id)})
-            reply_options.append({"text": "preview", "callback_data": "/previewpostimage " + str(title_image_id)})
+        # show select & preview button for every image currently assigned to draft, mark current title image
+        for post_image in self.context.get_post_images(post_id=self.post_id):
+            button_title = post_image["file_name"]
+
+            # mark title image
+            if title_image_id is not None and post_image["post_image_id"] == title_image_id:
+                button_title += " - TITLE"
+
+            reply_options.append({"text": button_title, "callback_data": "/settitleimage " + str(post_image["post_image_id"])})
+            reply_options.append({"text": "preview", "callback_data": "/previewpostimage " + str(post_image["post_image_id"])})
 
         reply_options.append({"text": "<< main menu", "callback_data": "/mainmenu"})
 
@@ -50,10 +52,10 @@ class DeleteTitleImageState(SelectDraftUpdateState):
 
         # TODO cleanup
 
-        # only accept "/deletetitleimage ..." callback queries, have super() handle everything else
-        if len(command_array) > 1 and command_array[0] == "/deletetitleimage":
+        # only accept "/settitleimage ..." callback queries, have super() handle everything else
+        if len(command_array) > 1 and command_array[0] == "/settitleimage":
 
-            # post_image selected for deletion - /deletetitleimage <post_image_id>
+            # post_image selected as title image - /settitleimage <post_image_id>
             if len(command_array) == 2:
                 post_image_id = command_array[1]
 
@@ -65,11 +67,11 @@ class DeleteTitleImageState(SelectDraftUpdateState):
                     if len(post_images) > 0:
                         post_image_name = post_images[0]["file_name"]
 
-                        # remove image from post
-                        self.context.delete_title_image(self.post_id)
+                        # set selected image as title image of post
+                        self.context.update_post(self.post_id, title_image=post_image_id)
 
                         self.context.edit_message_text(chat_id, message_id
-                                                       , "Successfully deleted image *" + post_image_name + "* as title image from draft *" + post_title + "*."
+                                                       , "Selected image *" + post_image_name + "* as title image for draft *" + post_title + "*."
                                                        , parse_mode=ParseMode.MARKDOWN.value)
 
                     else:
@@ -77,7 +79,7 @@ class DeleteTitleImageState(SelectDraftUpdateState):
                                                        , "It seems the image you selected no longer exists..."
                                                        , parse_mode=ParseMode.MARKDOWN.value)
 
-                    # after deleting title image (successful or not), go back to update option menu for selected draft
+                    # after setting title image (successful or not), go back to update option menu for selected draft
                     next_state = SelectDraftUpdateState(self.context, user_id, self.post_id, chat_id=chat_id)
 
                 else:
@@ -87,11 +89,11 @@ class DeleteTitleImageState(SelectDraftUpdateState):
 
                     # show remaining drafts for deletion
                     if len(self.context.get_posts(user_id=user_id, status="draft")) > 0:
-                        from packages.states.deletedraftstate import DeleteDraftState
+                        from packages.states.draft.deletedraftstate import DeleteDraftState
                         next_state = DeleteDraftState(self.context, user_id, chat_id=chat_id)
                     # no remaining drafts -> automatically go back to main menu
                     else:
-                        from packages.states.idlestate import IdleState
+                        from packages.states.navigation.idlestate import IdleState
                         next_state = IdleState(self.context, user_id, chat_id=chat_id)
 
                 self.context.set_user_state(user_id, next_state)
@@ -134,7 +136,7 @@ class DeleteTitleImageState(SelectDraftUpdateState):
 
                     # show remaining images for deletion
                     if len(self.context.get_post_images(post_id=self.post_id)) > 0:
-                        next_state = DeleteTitleImageState(self.context, user_id, self.post_id, chat_id=chat_id)
+                        next_state = SetTitleImageState(self.context, user_id, self.post_id, chat_id=chat_id)
                     # no remaining images -> automatically go back to update option menu
                     else:
                         next_state = SelectDraftUpdateState(self.context, user_id, self.post_id, chat_id=chat_id)
@@ -146,11 +148,11 @@ class DeleteTitleImageState(SelectDraftUpdateState):
 
                     # show remaining drafts for deletion
                     if len(self.context.get_posts(user_id=user_id, status="draft")) > 0:
-                        from packages.states.deletedraftstate import DeleteDraftState
+                        from packages.states.draft.deletedraftstate import DeleteDraftState
                         next_state = DeleteDraftState(self.context, user_id, chat_id=chat_id)
                     # no remaining drafts -> automatically go back to main menu
                     else:
-                        from packages.states.idlestate import IdleState
+                        from packages.states.navigation.idlestate import IdleState
                         next_state = IdleState(self.context, user_id, chat_id=chat_id)
 
                 self.context.set_user_state(user_id, next_state)

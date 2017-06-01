@@ -1,6 +1,6 @@
-from packages.states.abstractuserpoststate import AbstractUserPostState
-from packages.states.idlestate import IdleState
 from packages.bot.parsemode import ParseMode
+from packages.states.abstract.abstractuserpoststate import AbstractUserPostState
+from packages.states.navigation.idlestate import IdleState
 
 __author__ = "aneanet"
 
@@ -58,7 +58,7 @@ class ConfirmDraftDeletionState(AbstractUserPostState, IdleState):
 
                     # show remaining drafts for deletion
                     if len(self.context.get_posts(user_id=user_id, status="draft")) > 0:
-                        from packages.states.deletedraftstate import DeleteDraftState
+                        from packages.states.draft.deletedraftstate import DeleteDraftState
                         next_state = DeleteDraftState(self.context, user_id, chat_id=chat_id)
                     # no remaining drafts -> automatically go back to main menu
                     else:

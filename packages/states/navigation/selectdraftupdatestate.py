@@ -1,6 +1,6 @@
-from packages.states.abstractuserpoststate import AbstractUserPostState
-from packages.states.idlestate import IdleState
 from packages.bot.parsemode import ParseMode
+from packages.states.abstract.abstractuserpoststate import AbstractUserPostState
+from packages.states.navigation.idlestate import IdleState
 
 __author__ = "aneanet"
 
@@ -84,11 +84,11 @@ class SelectDraftUpdateState(AbstractUserPostState, IdleState):
                                                       , parse_mode=ParseMode.MARKDOWN.value)
                             self.context.send_message(chat_id
                                                       , post_content)
-                            from packages.states.editcontentstate import EditContentState
+                            from packages.states.draft.editcontentstate import EditContentState
                             next_state = EditContentState(self.context, user_id, self.post_id, chat_id=chat_id)
 
                         else:
-                            from packages.states.editcontentstate import EditContentState
+                            from packages.states.draft.editcontentstate import EditContentState
                             next_state = EditContentState(self.context, user_id, self.post_id, chat_id=chat_id, message_id=self.message_id)
 
                     else:
@@ -98,7 +98,7 @@ class SelectDraftUpdateState(AbstractUserPostState, IdleState):
 
                         # show remaining drafts for updating
                         if len(self.context.get_posts(user_id=user_id, status="draft")) > 0:
-                            from packages.states.updatedraftstate import UpdateDraftState
+                            from packages.states.draft.updatedraftstate import UpdateDraftState
                             next_state = UpdateDraftState(self.context, user_id, chat_id=chat_id)
                         # no remaining drafts -> automatically go back to main menu
                         else:
@@ -107,27 +107,27 @@ class SelectDraftUpdateState(AbstractUserPostState, IdleState):
                     self.context.set_user_state(user_id, next_state)
 
                 elif command_array[1] == "/addtag":
-                    from packages.states.addtagstate import AddTagState
+                    from packages.states.tag.addtagstate import AddTagState
                     next_state = AddTagState(self.context, user_id, self.post_id, chat_id=chat_id, message_id=self.message_id)
                     self.context.set_user_state(user_id, next_state)
                 elif command_array[1] == "/deletetag":
-                    from packages.states.deletetagstate import DeleteTagState
+                    from packages.states.tag.deletetagstate import DeleteTagState
                     next_state = DeleteTagState(self.context, user_id, self.post_id, chat_id=chat_id, message_id=self.message_id)
                     self.context.set_user_state(user_id, next_state)
                 elif command_array[1] == "/addimage":
-                    from packages.states.addimagestate import AddImageState
+                    from packages.states.image.addimagestate import AddImageState
                     next_state = AddImageState(self.context, user_id, self.post_id, chat_id=chat_id, message_id=self.message_id)
                     self.context.set_user_state(user_id, next_state)
                 elif command_array[1] == "/deleteimage":
-                    from packages.states.deleteimagestate import DeleteImageState
+                    from packages.states.image.deleteimagestate import DeleteImageState
                     next_state = DeleteImageState(self.context, user_id, self.post_id, chat_id=chat_id, message_id=self.message_id)
                     self.context.set_user_state(user_id, next_state)
                 elif command_array[1] == "/settitleimage":
-                    from packages.states.settitleimagestate import SetTitleImageState
+                    from packages.states.image.settitleimagestate import SetTitleImageState
                     next_state = SetTitleImageState(self.context, user_id, self.post_id, chat_id=chat_id, message_id=self.message_id)
                     self.context.set_user_state(user_id, next_state)
                 elif command_array[1] == "/deletetitleimage":
-                    from packages.states.deletetitleimagestate import DeleteTitleImageState
+                    from packages.states.image.deletetitleimagestate import DeleteTitleImageState
                     next_state = DeleteTitleImageState(self.context, user_id, self.post_id, chat_id=chat_id, message_id=self.message_id)
                     self.context.set_user_state(user_id, next_state)
 

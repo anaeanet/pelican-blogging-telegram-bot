@@ -1,5 +1,5 @@
-from packages.states.idlestate import IdleState
 from packages.bot.parsemode import ParseMode
+from packages.states.navigation.idlestate import IdleState
 
 __author__ = "aneanet"
 

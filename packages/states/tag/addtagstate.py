@@ -1,6 +1,7 @@
-from packages.states.selectdraftupdatestate import SelectDraftUpdateState
-from packages.bot.parsemode import ParseMode
 import re
+
+from packages.bot.parsemode import ParseMode
+from packages.states.navigation.selectdraftupdatestate import SelectDraftUpdateState
 
 __author__ = "aneanet"
 
@@ -94,11 +95,11 @@ class AddTagState(SelectDraftUpdateState):
 
                 # show remaining drafts for updating
                 if len(self.context.get_posts(user_id=user_id, status="draft")) > 0:
-                    from packages.states.updatedraftstate import UpdateDraftState
+                    from packages.states.draft.updatedraftstate import UpdateDraftState
                     next_state = UpdateDraftState(self.context, user_id, chat_id=chat_id)
                 # no remaining drafts -> automatically go back to main menu
                 else:
-                    from packages.states.idlestate import IdleState
+                    from packages.states.navigation.idlestate import IdleState
                     next_state = IdleState(self.context, user_id, chat_id=chat_id)
 
             self.context.set_user_state(user_id, next_state)

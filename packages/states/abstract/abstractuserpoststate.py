@@ -1,4 +1,4 @@
-from packages.states.abstractuserstate import AbstractUserState
+from packages.states.abstract.abstractuserstate import AbstractUserState
 
 __author__ = "aneanet"
 

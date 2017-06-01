@@ -1,5 +1,5 @@
-from packages.states.abstractuserstate import AbstractUserState
 from packages.bot.parsemode import ParseMode
+from packages.states.abstract.abstractuserstate import AbstractUserState
 
 __author__ = "aneanet"
 
@@ -68,15 +68,15 @@ class IdleState(AbstractUserState):
                 next_state = IdleState(self.context, user_id, chat_id=chat_id, message_id=message_id)
                 self.context.set_user_state(user_id, next_state)
             elif command_array[0] == "/createdraft":
-                from packages.states.createdraftstate import CreateDraftState
+                from packages.states.draft.createdraftstate import CreateDraftState
                 next_state = CreateDraftState(self.context, user_id, chat_id=chat_id, message_id=message_id)
                 self.context.set_user_state(user_id, next_state)
             elif command_array[0] == "/updatedraft":
-                from packages.states.updatedraftstate import UpdateDraftState
+                from packages.states.draft.updatedraftstate import UpdateDraftState
                 next_state = UpdateDraftState(self.context, user_id, chat_id=chat_id, message_id=message_id)
                 self.context.set_user_state(user_id, next_state)
             elif command_array[0] == "/deletedraft":
-                from packages.states.deletedraftstate import DeleteDraftState
+                from packages.states.draft.deletedraftstate import DeleteDraftState
                 next_state = DeleteDraftState(self.context, user_id, chat_id=chat_id, message_id=message_id)
                 self.context.set_user_state(user_id, next_state)
             elif command_array[0] == "/previewdraft":
