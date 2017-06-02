@@ -61,7 +61,7 @@ class AbstractUserState(AbstractState):
                 else:
                     self.__message_id = max(sent_message["result"]["message_id"], self.__message_id)
 
-    def process_message(self, user_id, chat_id, text):
+    def process_message(self, user_id, chat_id, text, entities):
         raise NotImplementedError("Abstract method! Implement in child class", type(self))
 
     def process_photo_message(self, user_id, chat_id, file_name, file_id, thumb_file_id=None, caption=None):
@@ -81,6 +81,7 @@ class AbstractUserState(AbstractState):
             text = None
             if "text" in update[update_type]:
                 text = update[update_type]["text"].strip(' \t\n\r')
+                entities = update[update_type]["entities"] if "entities" in update[update_type] else []
 
             # check if user sent photo as a document (yes, if there is a thumbnail)
             document = None
@@ -96,7 +97,7 @@ class AbstractUserState(AbstractState):
 
             # text message
             if text is not None:
-                self.process_message(user_id, chat_id, text)
+                self.process_message(user_id, chat_id, text, entities)
 
             # photo/document message
             elif document is not None or photo is not None:

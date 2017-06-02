@@ -6,7 +6,7 @@ __author__ = "aneanet"
 class AbstractUserPostState(AbstractUserState):
     """
     Abstract state class.
-    Adds attribute post_id.
+    Adds attribute post_id and sets default layout of inline keyboard to two-columns.
     """
 
     def __init__(self, context, user_id, post_id, chat_id=None, message_id=None):

@@ -37,7 +37,7 @@ class EditContentState(SelectDraftUpdateState):
                         , {"text": "<< main menu", "callback_data": "/mainmenu"}]
         return reply_options
 
-    def process_message(self, user_id, chat_id, text):
+    def process_message(self, user_id, chat_id, text, entities):
         if text.startswith("/") and not text.startswith("/append"):
             super().process_message(user_id, chat_id, text)
         else:

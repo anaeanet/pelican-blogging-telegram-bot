@@ -38,12 +38,11 @@ class AddTagState(SelectDraftUpdateState):
     @property
     def initial_options(self):
         reply_options = [{"text": "<< update options", "callback_data": "/selectupdate"}
-                         # TODO add button to show existing tags of user
                         , {"text": "<< drafts", "callback_data": "/updatedraft"}
                         , {"text": "<< main menu", "callback_data": "/mainmenu"}]
         return reply_options
 
-    def process_message(self, user_id, chat_id, text):
+    def process_message(self, user_id, chat_id, text, entities):
         if text.startswith("/"):
             super().process_message(user_id, chat_id, text)
         else:

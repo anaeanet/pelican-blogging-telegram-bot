@@ -27,7 +27,7 @@ class IdleState(AbstractUserState):
             # reply_options.append({"text": "PUBLISH a draft", "callback_data": "/publishdraft"})
         return reply_options
 
-    def process_message(self, user_id, chat_id, text):
+    def process_message(self, user_id, chat_id, text, entities):
 
         # delete previous bot message (if existing) before sending new ones
         if self.message_id is not None:
