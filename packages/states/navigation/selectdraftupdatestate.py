@@ -62,7 +62,7 @@ class SelectDraftUpdateState(AbstractUserPostState, IdleState):
         if len(command_array) == 1:
             if command_array[0] == "/selectupdate":
                 next_state = SelectDraftUpdateState(self.context, user_id, self.post_id, chat_id=chat_id, message_id=message_id)
-                self.context.set_user_state(user_id, next_state)
+                self.context.set_state(user_id, next_state)
 
         # only accept "/selectupdate ..." callback queries, have super() handle everything else
         if len(command_array) > 1 and command_array[0] == "/selectupdate":
@@ -104,32 +104,32 @@ class SelectDraftUpdateState(AbstractUserPostState, IdleState):
                         else:
                             next_state = IdleState(self.context, user_id, chat_id=chat_id)
 
-                    self.context.set_user_state(user_id, next_state)
+                    self.context.set_state(user_id, next_state)
 
                 elif command_array[1] == "/addtag":
                     from packages.states.tag.addtagstate import AddTagState
                     next_state = AddTagState(self.context, user_id, self.post_id, chat_id=chat_id, message_id=self.message_id)
-                    self.context.set_user_state(user_id, next_state)
+                    self.context.set_state(user_id, next_state)
                 elif command_array[1] == "/deletetag":
                     from packages.states.tag.deletetagstate import DeleteTagState
                     next_state = DeleteTagState(self.context, user_id, self.post_id, chat_id=chat_id, message_id=self.message_id)
-                    self.context.set_user_state(user_id, next_state)
+                    self.context.set_state(user_id, next_state)
                 elif command_array[1] == "/addimage":
                     from packages.states.image.addimagestate import AddImageState
                     next_state = AddImageState(self.context, user_id, self.post_id, chat_id=chat_id, message_id=self.message_id)
-                    self.context.set_user_state(user_id, next_state)
+                    self.context.set_state(user_id, next_state)
                 elif command_array[1] == "/deleteimage":
                     from packages.states.image.deleteimagestate import DeleteImageState
                     next_state = DeleteImageState(self.context, user_id, self.post_id, chat_id=chat_id, message_id=self.message_id)
-                    self.context.set_user_state(user_id, next_state)
+                    self.context.set_state(user_id, next_state)
                 elif command_array[1] == "/settitleimage":
                     from packages.states.image.settitleimagestate import SetTitleImageState
                     next_state = SetTitleImageState(self.context, user_id, self.post_id, chat_id=chat_id, message_id=self.message_id)
-                    self.context.set_user_state(user_id, next_state)
+                    self.context.set_state(user_id, next_state)
                 elif command_array[1] == "/deletetitleimage":
                     from packages.states.image.deletetitleimagestate import DeleteTitleImageState
                     next_state = DeleteTitleImageState(self.context, user_id, self.post_id, chat_id=chat_id, message_id=self.message_id)
-                    self.context.set_user_state(user_id, next_state)
+                    self.context.set_state(user_id, next_state)
 
         else:
             super().process_callback_query(user_id, chat_id, message_id, data)

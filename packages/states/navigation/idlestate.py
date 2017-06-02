@@ -44,7 +44,7 @@ class IdleState(AbstractUserState):
                                             , parse_mode=ParseMode.MARKDOWN.value)
             # reset to start state
             next_state = IdleState(self.context, user_id, chat_id=chat_id)
-            self.context.set_user_state(user_id, next_state)
+            self.context.set_state(user_id, next_state)
 
         # simply ignore arbitrary text message by moving current bot message underneath latest user message
         else:
@@ -66,19 +66,19 @@ class IdleState(AbstractUserState):
 
             if command_array[0] == "/mainmenu":
                 next_state = IdleState(self.context, user_id, chat_id=chat_id, message_id=message_id)
-                self.context.set_user_state(user_id, next_state)
+                self.context.set_state(user_id, next_state)
             elif command_array[0] == "/createdraft":
                 from packages.states.draft.createdraftstate import CreateDraftState
                 next_state = CreateDraftState(self.context, user_id, chat_id=chat_id, message_id=message_id)
-                self.context.set_user_state(user_id, next_state)
+                self.context.set_state(user_id, next_state)
             elif command_array[0] == "/updatedraft":
                 from packages.states.draft.updatedraftstate import UpdateDraftState
                 next_state = UpdateDraftState(self.context, user_id, chat_id=chat_id, message_id=message_id)
-                self.context.set_user_state(user_id, next_state)
+                self.context.set_state(user_id, next_state)
             elif command_array[0] == "/deletedraft":
                 from packages.states.draft.deletedraftstate import DeleteDraftState
                 next_state = DeleteDraftState(self.context, user_id, chat_id=chat_id, message_id=message_id)
-                self.context.set_user_state(user_id, next_state)
+                self.context.set_state(user_id, next_state)
             elif command_array[0] == "/previewdraft":
                 # TODO
                 None

@@ -43,4 +43,4 @@ class CreateDraftState(IdleState):
                                           , parse_mode=ParseMode.MARKDOWN.value)
                 next_state = IdleState(self.context, user_id, chat_id=chat_id)
 
-            self.context.set_user_state(user_id, next_state)
+            self.context.set_state(user_id, next_state)

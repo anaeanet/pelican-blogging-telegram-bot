@@ -51,20 +51,20 @@ class PelicanMarkdownBot(AbstractUserStateBot):
             else:
                 user_state = state_class(self, user_id, message_id=message_id)
 
-            super().set_user_state(user_id, user_state)
+            super().set_state(user_id, user_state)
 
     @property
     def database(self):
         return self.__database
 
-    def set_user_state(self, user_id, state):
+    def set_state(self, user_id, state):
         if not self.database.get_users(user_id=user_id):
             user_state = self.start_state_class(self, user_id)
             self.database.add_user(user_id, False, user_state)
         else:
             self.database.update_user(user_id, state=state)
 
-        super().set_user_state(user_id, state)
+        super().set_state(user_id, state)
 
     def handle_update(self, update):
         user_id = telegram.get_update_sender_id(update)
@@ -146,3 +146,55 @@ class PelicanMarkdownBot(AbstractUserStateBot):
 
     def delete_title_image(self, post_id):
         self.database.delete_title_image(post_id)
+
+    #---------------
+
+    """
+    def get_drafts(self, user_id):
+        return [post for post in self.database.get_posts(user_id) if post["tmsp_publish"] is None]
+
+    def create_draft(self, user_id, title):
+        return self.database.add_post(user_id, title)
+
+    def delete_draft(self, post_id):
+        return self.database.delete_post(post_id) > 0
+
+    def set_content(self, post_id, content):
+        return self.database.update_post(post_id, content=content) > 0
+
+    def get_tags(self, post_id):
+        # TODO
+        None
+
+    def add_tag(self, post_id, tag):
+        # TODO
+        None
+
+    def delete_tag(self, post_id, tag):
+        # TODO
+        None
+
+    def get_images(self, post_id):
+        # TODO
+        None
+
+    def add_image(self, post_id, file_name, file_id, file, thumb_id=None, caption=None):
+        # TODO
+        None
+
+    def delete_image(self, post_id, file_name):
+        # TODO
+        None
+
+    def get_title_image(self, post_id):
+        # TODO
+        None
+
+    def set_title_image(self, post_id, file_name):
+        # TODO
+        None
+
+    def delete_title_image(self, post_id):
+        # TODO
+        None
+    """
