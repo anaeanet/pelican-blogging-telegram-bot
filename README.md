@@ -1,1 +1,1 @@
-# telegramBloggingBot
+# pelican-blogging-telegram-bot
