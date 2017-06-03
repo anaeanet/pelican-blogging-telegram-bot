@@ -20,7 +20,7 @@ class AddTagState(SelectDraftUpdateState):
         if len(user_drafts) > 0:
             post_title = user_drafts[0]["title"]
             message = "What <b>tag(s)</b> do you want to add to draft <b>" + post_title + "</b>? " \
-                      + "(comma-separate multiple tags)"
+                        + "Comma-separate multiple tags."
 
             # add current post_tags to init_message
             tags = []

@@ -24,12 +24,10 @@ class PelicanMarkdownBot(AbstractUserStateBot):
             for user_id in authorized_users:
                 if not self.__database.get_users(user_id=user_id):
                     user_state = self.start_state_class(self, user_id)
-                    self.__database.add_user(user_id, True, user_state)
-                else:
-                    self.__database.update_user(user_id, is_authorized=True)
+                    self.__database.add_user(user_id, user_state)
 
-        # load all authorized users from database into bot's user-state-dictionary
-        for user in self.__database.get_users(is_authorized=True):
+        # load all users from database into bot's user-state-dictionary
+        for user in self.__database.get_users():
             state_class, params = user["state_class"]
             user_id = user["user_id"]
 
@@ -65,7 +63,7 @@ class PelicanMarkdownBot(AbstractUserStateBot):
 
     def handle_update(self, update):
         user_id = telegram.get_update_sender_id(update)
-        authorized_users = self.__database.get_users(user_id=user_id, is_authorized=True)
+        authorized_users = self.__database.get_users(user_id=user_id)
 
         if user_id is not None and len(authorized_users) == 1:
             print(self.get_state(user_id).__class__.__name__, update[telegram.get_update_type(update)])  # TODO remove print

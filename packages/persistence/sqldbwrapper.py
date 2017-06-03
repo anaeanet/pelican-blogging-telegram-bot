@@ -19,7 +19,6 @@ class SQLDBWrapper:
 
         # create required tables
         tbl_stmts = [ "CREATE TABLE IF NOT EXISTS user (user_id INTEGER NOT NULL PRIMARY KEY"
-                                                        + ", is_authorized INTEGER NOT NULL DEFAULT 0 CHECK (is_authorized == 0 or is_authorized == 1)"
                                                         + ", state TEXT NOT NULL)"
 
                     , "CREATE TABLE IF NOT EXISTS post (post_id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT"
@@ -94,16 +93,15 @@ class SQLDBWrapper:
 
     # -------------------------------------------------- user ----------------------------------------------------------
 
-    def get_users(self, user_id=None, is_authorized=None, state=None):
+    def get_users(self, user_id=None, state=None):
         """
         Fetches users from the database that fulfill *all* given criteria.
         If no criterion is specified, all users stored in the database are returned.
         If multiple criteria are specified, all of them need to be fulfilled for a user to be part of the result set.
 
         :param user_id: only users with given user_id are returned (at most 1 as user_id is primary key)
-        :param is_authorized: only users with specified authorization flag (True/False) are returned
         :param state: only users with specified state are returned
-        :return: a list of dictionaries where each dictionary represents one user (user_id, is_authorized, state_class)
+        :return: a list of dictionaries where each dictionary represents one user (user_id, state_class)
         """
 
         param_dict = dict({key: value for key, value in locals().items() if key != "self" and value is not None})
@@ -114,20 +112,17 @@ class SQLDBWrapper:
         if len(param_dict) > 0:
             stmt += " WHERE " + " = ? AND ".join(param_dict.keys()) + " = ?"
             for key, value in param_dict.items():
-                if key == "is_authorized":
-                    args.append(1 if value else 0)
-                elif key == "state":
+                if key == "state":
                     args.append(SQLDBWrapper.__serialize_state(value))
                 else:
                     args.append(value)
 
         return [dict({"user_id": x[0]
-                        , "is_authorized": True if x[1] == 1 else False
-                        , "state_class": SQLDBWrapper.__deserialize_state(x[2])}) for x in self.__conn.execute(stmt, tuple(args))]
+                        , "state_class": SQLDBWrapper.__deserialize_state(x[1])}) for x in self.__conn.execute(stmt, tuple(args))]
 
-    def add_user(self, user_id, is_authorized, state):
-        stmt = "INSERT INTO user (user_id, is_authorized, state) VALUES (?, ?, ?)"
-        args = [user_id, 1 if is_authorized else 0, SQLDBWrapper.__serialize_state(state)]
+    def add_user(self, user_id, state):
+        stmt = "INSERT INTO user (user_id, state) VALUES (?, ?)"
+        args = [user_id, SQLDBWrapper.__serialize_state(state)]
 
         cursor = self.__conn.cursor()
         cursor.execute(stmt, tuple(args))
@@ -135,16 +130,14 @@ class SQLDBWrapper:
 
         return cursor.lastrowid
 
-    def update_user(self, user_id, is_authorized=None, state=None):
+    def update_user(self, user_id, state=None):
         param_dict = dict({key: value for key, value in locals().items() if key != "self" and value is not None})
 
         stmt = "UPDATE user SET " + " = ?, ".join(param_dict.keys()) + " = ? WHERE user_id = ?"
         args = []
 
         for key, value in param_dict.items():
-            if key == "is_authorized":
-                args.append(1 if value else 0)
-            elif key == "state":
+            if key == "state":
                 args.append(SQLDBWrapper.__serialize_state(value))
             else:
                 args.append(value)
