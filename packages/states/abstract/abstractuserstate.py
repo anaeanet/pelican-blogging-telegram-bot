@@ -19,7 +19,7 @@ class AbstractUserState(AbstractState):
         super().__init__(context)
 
         if chat_id is not None:
-            self.build_state_message(chat_id, self.init_message, message_id=message_id, reply_options=self.initial_options)
+            self.build_state_message(chat_id, self.welcome_message, message_id=message_id, reply_options=self.callback_options)
 
         if type(self) is AbstractUserState:
             raise TypeError("Abstract class! Cannot be instantiated.")
@@ -33,11 +33,11 @@ class AbstractUserState(AbstractState):
         return self.__message_id
 
     @property
-    def init_message(self):
+    def welcome_message(self):
         raise NotImplementedError("Abstract method! Implement in child class", type(self))
 
     @property
-    def initial_options(self):
+    def callback_options(self):
         raise NotImplementedError("Abstract method! Implement in child class", type(self))
 
     def build_state_message(self, chat_id, message_text, message_id=None, reply_options=None, keyboard_columns=1):

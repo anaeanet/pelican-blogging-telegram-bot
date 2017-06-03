@@ -11,7 +11,7 @@ class EditDraftTitleState(SelectDraftUpdateState):
     """
 
     @property
-    def init_message(self):
+    def welcome_message(self):
         message = "It seems the draft you selected no longer exists..."
 
         user_drafts = self.context.get_posts(post_id=self.post_id)
@@ -25,7 +25,7 @@ class EditDraftTitleState(SelectDraftUpdateState):
         return message
 
     @property
-    def initial_options(self):
+    def callback_options(self):
         reply_options = [{"text": "<< update options", "callback_data": "/selectupdate"}
                         , {"text": "<< drafts", "callback_data": "/updatedraft"}
                         , {"text": "<< main menu", "callback_data": "/mainmenu"}]
@@ -37,7 +37,7 @@ class EditDraftTitleState(SelectDraftUpdateState):
             super().process_message(user_id, chat_id, text, entities)
         else:
             # remove inline keyboard from latest bot message (by leaving out reply_options parameter)
-            self.build_state_message(chat_id, self.init_message, message_id=self.message_id)
+            self.build_state_message(chat_id, self.welcome_message, message_id=self.message_id)
 
             user_drafts = self.context.get_posts(post_id=self.post_id)
             if len(user_drafts) > 0:

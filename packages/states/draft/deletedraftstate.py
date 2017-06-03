@@ -10,11 +10,11 @@ class DeleteDraftState(IdleState):
     """
 
     @property
-    def init_message(self):
+    def welcome_message(self):
         return "Which <b>draft</b> do you want to <b>delete</b>?"
 
     @property
-    def initial_options(self):
+    def callback_options(self):
         reply_options = []
         for post in self.context.get_posts(user_id=self.user_id, status="draft"):
             reply_options.append({"text": post["title"], "callback_data": "/deletedraft " + str(post["post_id"])})

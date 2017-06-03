@@ -12,11 +12,11 @@ class IdleState(AbstractUserState):
     """
 
     @property
-    def init_message(self):
+    def welcome_message(self):
         return "What do you want to do?"
 
     @property
-    def initial_options(self):
+    def callback_options(self):
         reply_options = [{"text": "CREATE a draft", "callback_data": "/createdraft"}]
         user_drafts = self.context.get_posts(user_id=self.user_id, status="draft")
         if len(user_drafts) > 0:
@@ -48,7 +48,7 @@ class IdleState(AbstractUserState):
 
         # simply ignore arbitrary text message by moving current bot message underneath latest user message
         else:
-            self.build_state_message(chat_id, self.init_message, reply_options=self.initial_options)
+            self.build_state_message(chat_id, self.welcome_message, reply_options=self.callback_options)
 
     def process_photo_message(self, user_id, chat_id, file_name, file_id, thumb_id=None, caption=None):
 
@@ -57,7 +57,7 @@ class IdleState(AbstractUserState):
             self.context.delete_message(chat_id, self.message_id)
 
         # simply ignore arbitrary photo message by moving current bot message underneath latest user message
-        self.build_state_message(chat_id, self.init_message, reply_options=self.initial_options)
+        self.build_state_message(chat_id, self.welcome_message, reply_options=self.callback_options)
 
     def process_callback_query(self, user_id, chat_id, message_id, data):
         command_array = data.split(" ")

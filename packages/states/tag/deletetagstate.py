@@ -11,7 +11,7 @@ class DeleteTagState(SelectDraftUpdateState):
     """
 
     @property
-    def init_message(self):
+    def welcome_message(self):
         message = "It seems the draft you selected no longer exists..."
 
         user_drafts = self.context.get_posts(post_id=self.post_id)
@@ -22,7 +22,7 @@ class DeleteTagState(SelectDraftUpdateState):
         return message
 
     @property
-    def initial_options(self):
+    def callback_options(self):
         reply_options = [{"text": "<< update options", "callback_data": "/selectupdate"}
                         , {"text": "<< drafts", "callback_data": "/updatedraft"}]
 

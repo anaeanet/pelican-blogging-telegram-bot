@@ -11,11 +11,11 @@ class CreateDraftState(IdleState):
     """
 
     @property
-    def init_message(self):
+    def welcome_message(self):
         return "Enter your new <b>draft's title</b>:"
 
     @property
-    def initial_options(self):
+    def callback_options(self):
         reply_options = [{"text": "<< main menu", "callback_data": "/mainmenu"}]
         return reply_options
 
@@ -24,7 +24,7 @@ class CreateDraftState(IdleState):
             super().process_message(user_id, chat_id, text)
         else:
             # remove inline keyboard from latest bot message (by leaving out reply_options parameter)
-            self.build_state_message(chat_id, self.init_message, message_id=self.message_id)
+            self.build_state_message(chat_id, self.welcome_message, message_id=self.message_id)
 
             post_id = self.context.add_post(user_id, text)
 
