@@ -22,7 +22,7 @@ class AbstractUserStateBot(AbstractTelegramBot):
     def start_state_class(self):
         return self.__start_state_class
 
-    def get_user_state(self, user_id):
+    def get_state(self, user_id):
         return self.__user_state_dict[user_id] if user_id in self.__user_state_dict else None
 
     def set_state(self, user_id, state):
@@ -33,7 +33,7 @@ class AbstractUserStateBot(AbstractTelegramBot):
     def handle_update(self, update):
         user_id = telegram.get_update_sender_id(update)
 
-        if user_id not in self.__user_state_dict or self.get_user_state(user_id) is None:
+        if user_id not in self.__user_state_dict or self.get_state(user_id) is None:
             self.set_state(user_id, self.start_state_class(self))
 
-        self.get_user_state(user_id).process_update(update)
+        self.get_state(user_id).process_update(update)

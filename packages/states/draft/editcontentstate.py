@@ -27,6 +27,7 @@ class EditContentState(SelectDraftUpdateState):
                             + "<b>append</b> content - type /append &lt;text&gt;"
             else:
                 message = "Draft <b>" + post_title + "</b> does not have any content yet." \
+                            + "\r\n\r\n" \
                             + "Just type away to <b>add new content</b>."
 
         return message
@@ -87,7 +88,7 @@ class EditContentState(SelectDraftUpdateState):
                     + "Headline: #..# text\r\n" \
                     + "Bold text: <b>**text**</b>\r\n" \
                     + "Italic text: <i>*text*</i>\r\n" \
-                    + "Web link - [text](http://www.example.com/)\r\n" \
+                    + "Web link: [text](http://www.example.com/)\r\n" \
                     + "Inline code: <code>`some code`</code>\r\n" \
                     + "Pre-formatted code block <pre>```some code```</pre>"
 

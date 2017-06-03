@@ -1,7 +1,6 @@
-from packages.states.idlestate import IdleState
+from packages.states.navigation.idlestate import IdleState
 from packages.persistence.sqldbwrapper import SQLDBWrapper
 from packages.bot.pelicanmarkdownbot import PelicanMarkdownBot
-from packages.bot.mockbot import MockBot
 from packages.bot.parsemode import ParseMode
 
 import config
@@ -12,15 +11,18 @@ __author__ = "anaeanet"
 def main():
     url = config.url.format(config.token)
     file_url = config.file_url.format(config.token)
-    start_state_class = IdleState
     database = SQLDBWrapper(config.database_name)
     authorized_users = config.authorized_users
 
-    bot = PelicanMarkdownBot(url, file_url, start_state_class, database, authorized_users=authorized_users)
+    bot = PelicanMarkdownBot(url, file_url, database, authorized_users=authorized_users)
+    bot.run()   # TODO once development is finished, remove row
 
     try:
         bot.run()
     except Exception as e:
+
+        # TODO log error
+
         # inform all authorized users about crashing blogging bot
         for user_id in authorized_users:
             bot.send_message(user_id
@@ -28,7 +30,7 @@ def main():
                              + "\r\n\r\n"
                              + "*" + str(type(e)) + "*" + "\r\n"
                              + "{}".format(e)
-                             , parse_mode=ParseMode.MARKDOWN.value)
+                             , parse_mode=ParseMode.HTML.value)
 
 
 if __name__ == "__main__":
