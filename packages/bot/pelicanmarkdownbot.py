@@ -77,14 +77,14 @@ class PelicanMarkdownBot(AbstractUserStateBot):
             # TODO: maybe do something with updates from unauthorized users?
             None
 
-    def get_posts(self, post_id=None, user_id=None, title=None, status=None, tmsp_create=None, content=None, title_image=None, tmsp_publish=None, original_post_id=None):
-        return self.database.get_posts(post_id=post_id, user_id=user_id, title=title, status=status, tmsp_create=tmsp_create, content=content, title_image=title_image, tmsp_publish=tmsp_publish, original_post_id=original_post_id)
+    def get_posts(self, post_id=None, user_id=None, title=None, status=None, gallery_title=None, tmsp_create=None, content=None, title_image=None, tmsp_publish=None, original_post_id=None):
+        return self.database.get_posts(post_id=post_id, user_id=user_id, title=title, status=status, gallery_title=gallery_title, tmsp_create=tmsp_create, content=content, title_image=title_image, tmsp_publish=tmsp_publish, original_post_id=original_post_id)
 
-    def add_post(self, user_id, title, status=None, tmsp_create=None, content=None, title_image=None, tmsp_publish=None, original_post_id=None):
-        return self.database.add_post(user_id, title, status=status, tmsp_create=tmsp_create, content=content, title_image=title_image, tmsp_publish=tmsp_publish, original_post_id=original_post_id)
+    def add_post(self, user_id, title, status=None, gallery_title=None, tmsp_create=None, content=None, title_image=None, tmsp_publish=None, original_post_id=None):
+        return self.database.add_post(user_id, title, status=status, gallery_title=gallery_title, tmsp_create=tmsp_create, content=content, title_image=title_image, tmsp_publish=tmsp_publish, original_post_id=original_post_id)
 
-    def update_post(self, post_id, user_id=None, title=None, status=None, tmsp_create=None, content=None, title_image=None, tmsp_publish=None, original_post_id=None):
-        return self.database.update_post(post_id, user_id=user_id, title=title, status=status, tmsp_create=tmsp_create, content=content, title_image=title_image, tmsp_publish=tmsp_publish, original_post_id=original_post_id)
+    def update_post(self, post_id, user_id=None, title=None, status=None, gallery_title=None, tmsp_create=None, content=None, title_image=None, tmsp_publish=None, original_post_id=None):
+        return self.database.update_post(post_id, user_id=user_id, title=title, status=status, gallery_title=gallery_title, tmsp_create=tmsp_create, content=content, title_image=title_image, tmsp_publish=tmsp_publish, original_post_id=original_post_id)
 
     def delete_post(self, post_id):
         # delete any existing tags from post

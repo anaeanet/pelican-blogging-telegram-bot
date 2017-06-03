@@ -4,7 +4,7 @@ from packages.states.navigation.selectdraftupdatestate import SelectDraftUpdateS
 __author__ = "aneanet"
 
 
-class EditTitleState(SelectDraftUpdateState):
+class EditDraftTitleState(SelectDraftUpdateState):
     """
     Concrete state implementation.
     Accepts plain text message as new content of draft/post.

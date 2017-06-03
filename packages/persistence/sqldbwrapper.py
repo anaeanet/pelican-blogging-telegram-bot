@@ -26,6 +26,7 @@ class SQLDBWrapper:
                                                         + ", user_id INTEGER NOT NULL"
                                                         + ", title TEXT NOT NULL"
                                                         + ", status TEXT NOT NULL DEFAULT 'draft' CHECK (status == 'draft' or status == 'published')"
+                                                        + ", gallery_title TEXT NOT NULL DEFAULT 'Bildergalerie'"
                                                         + ", tmsp_create TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP"
                                                         + ", content TEXT"
                                                         + ", title_image INTEGER"
@@ -157,7 +158,7 @@ class SQLDBWrapper:
 
     # -------------------------------------------------- post ----------------------------------------------------------
 
-    def get_posts(self, post_id=None, user_id=None, title=None, status=None, tmsp_create=None, content=None, title_image=None, tmsp_publish=None, original_post_id=None):
+    def get_posts(self, post_id=None, user_id=None, title=None, status=None, gallery_title=None, tmsp_create=None, content=None, title_image=None, tmsp_publish=None, original_post_id=None):
         param_dict = dict({key: value for key, value in locals().items() if key != "self" and value is not None})
 
         stmt = "SELECT * FROM post"
@@ -172,13 +173,14 @@ class SQLDBWrapper:
                         , "user_id": x[1]
                         , "title": x[2]
                         , "status": x[3]
-                        , "tmsp_create": x[4]
-                        , "content": x[5]
-                        , "title_image": x[6]
-                        , "tmsp_publish": x[7]
-                        , "original_post_id": x[8]}) for x in self.__conn.execute(stmt, tuple(args))]
+                        , "gallery_title": x[4]
+                        , "tmsp_create": x[5]
+                        , "content": x[6]
+                        , "title_image": x[7]
+                        , "tmsp_publish": x[8]
+                        , "original_post_id": x[9]}) for x in self.__conn.execute(stmt, tuple(args))]
 
-    def add_post(self, user_id, title, status=None, tmsp_create=None, content=None, title_image=None, tmsp_publish=None, original_post_id=None):
+    def add_post(self, user_id, title, status=None, gallery_title=None, tmsp_create=None, content=None, title_image=None, tmsp_publish=None, original_post_id=None):
         param_dict = dict({key: value for key, value in locals().items() if key != "self" and value is not None})
 
         stmt = "INSERT INTO post (" + ",".join(param_dict.keys()) + ") VALUES (" + ",".join(["?" for x in param_dict.keys()]) + ")"
@@ -203,7 +205,7 @@ class SQLDBWrapper:
 
         return cursor.rowcount
 
-    def update_post(self, post_id, user_id=None, title=None, status=None, tmsp_create=None, content=None, title_image=None, tmsp_publish=None, original_post_id=None):
+    def update_post(self, post_id, user_id=None, title=None, status=None, gallery_title=None, tmsp_create=None, content=None, title_image=None, tmsp_publish=None, original_post_id=None):
         param_dict = dict({key: value for key, value in locals().items() if key != "self" and value is not None})
 
         stmt = "UPDATE post SET " + " = ?, ".join(param_dict.keys()) + " = ? WHERE post_id = ?"
