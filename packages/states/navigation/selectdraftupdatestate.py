@@ -22,10 +22,11 @@ class SelectDraftUpdateState(AbstractUserPostState, IdleState):
 
     @property
     def initial_options(self):
-        reply_options = [{"text": "<< drafts", "callback_data": "/updatedraft"}]
+        reply_options = [{"text": "<< drafts", "callback_data": "/updatedraft"}, []]
 
         user_drafts = self.context.get_posts(post_id=self.post_id)
         if len(user_drafts) > 0:
+            reply_options.append({"text": "EDIT title", "callback_data": "/selectupdate /edittitle"})
             reply_options.append({"text": "EDIT content", "callback_data": "/selectupdate /editcontent"})
 
             reply_options.append({"text": "ADD tag(s)", "callback_data": "/selectupdate /addtag"})
@@ -71,7 +72,11 @@ class SelectDraftUpdateState(AbstractUserPostState, IdleState):
             if len(command_array) == 2:
 
                 # user attempts to update the selected draft's content
-                if command_array[1] == "/editcontent":
+                if command_array[1] == "/edittitle":
+                    from packages.states.draft.edittitlestate import EditTitleState
+                    next_state = EditTitleState(self.context, user_id, self.post_id, chat_id=chat_id, message_id=self.message_id)
+                    self.context.set_state(user_id, next_state)
+                elif command_array[1] == "/editcontent":
                     from packages.states.draft.editcontentstate import EditContentState
                     next_state = EditContentState(self.context, user_id, self.post_id, chat_id=chat_id, message_id=self.message_id)
                     self.context.set_state(user_id, next_state)
