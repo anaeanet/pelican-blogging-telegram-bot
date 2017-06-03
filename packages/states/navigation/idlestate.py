@@ -41,7 +41,7 @@ class IdleState(AbstractUserState):
                                             + "\r\n"
                                             + "I am here to help you create new blog posts or manage existing ones. "
                                             + "Just follow the interactive menu!"
-                                            , parse_mode=ParseMode.MARKDOWN.value)
+                                            , parse_mode=ParseMode.HTML.value)
             # reset to start state
             next_state = IdleState(self.context, user_id, chat_id=chat_id)
             self.context.set_state(user_id, next_state)

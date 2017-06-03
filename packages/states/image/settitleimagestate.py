@@ -17,7 +17,7 @@ class SetTitleImageState(SelectDraftUpdateState):
         user_drafts = self.context.get_posts(post_id=self.post_id)
         if len(user_drafts) > 0:
             post_title = user_drafts[0]["title"]
-            message = "Which *image* do you want to set as *title image* of draft *" + post_title + "*?"
+            message = "Which <b>image</b> do you want to <b>set as title image</b> of draft <b>" + post_title + "</b>?"
 
         return message
 
@@ -38,7 +38,7 @@ class SetTitleImageState(SelectDraftUpdateState):
 
             # mark title image
             if title_image_id is not None and post_image["post_image_id"] == title_image_id:
-                button_title += " - TITLE"
+                button_title += " [TITLE]"
 
             reply_options.append({"text": button_title, "callback_data": "/settitleimage " + str(post_image["post_image_id"])})
             reply_options.append({"text": "preview", "callback_data": "/previewpostimage " + str(post_image["post_image_id"])})
@@ -71,13 +71,13 @@ class SetTitleImageState(SelectDraftUpdateState):
                         self.context.update_post(self.post_id, title_image=post_image_id)
 
                         self.context.edit_message_text(chat_id, message_id
-                                                       , "Selected image *" + post_image_name + "* as title image for draft *" + post_title + "*."
-                                                       , parse_mode=ParseMode.MARKDOWN.value)
+                                                       , "Image <b>" + post_image_name + "</b> has beesn <b>set as title image</b> for draft <b>" + post_title + "</b>."
+                                                       , parse_mode=ParseMode.HTML.value)
 
                     else:
                         self.context.edit_message_text(chat_id, self.message_id
                                                        , "It seems the image you selected no longer exists..."
-                                                       , parse_mode=ParseMode.MARKDOWN.value)
+                                                       , parse_mode=ParseMode.HTML.value)
 
                     # after setting title image (successful or not), go back to update option menu for selected draft
                     next_state = SelectDraftUpdateState(self.context, user_id, self.post_id, chat_id=chat_id)
@@ -85,7 +85,7 @@ class SetTitleImageState(SelectDraftUpdateState):
                 else:
                     self.context.edit_message_text(chat_id, self.message_id
                                                    , "It seems the draft you selected no longer exists..."
-                                                   , parse_mode=ParseMode.MARKDOWN.value)
+                                                   , parse_mode=ParseMode.HTML.value)
 
                     # show remaining drafts for deletion
                     if len(self.context.get_posts(user_id=user_id, status="draft")) > 0:
@@ -132,7 +132,7 @@ class SetTitleImageState(SelectDraftUpdateState):
                     else:
                         self.context.edit_message_text(chat_id, self.message_id
                                                        , "It seems the image you selected no longer exists..."
-                                                       , parse_mode=ParseMode.MARKDOWN.value)
+                                                       , parse_mode=ParseMode.HTML.value)
 
                     # show remaining images for deletion
                     if len(self.context.get_post_images(post_id=self.post_id)) > 0:
@@ -144,7 +144,7 @@ class SetTitleImageState(SelectDraftUpdateState):
                 else:
                     self.context.edit_message_text(chat_id, self.message_id
                                                    , "It seems the draft you selected no longer exists..."
-                                                   , parse_mode=ParseMode.MARKDOWN.value)
+                                                   , parse_mode=ParseMode.HTML.value)
 
                     # show remaining drafts for deletion
                     if len(self.context.get_posts(user_id=user_id, status="draft")) > 0:

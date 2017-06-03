@@ -12,7 +12,7 @@ class CreateDraftState(IdleState):
 
     @property
     def init_message(self):
-        return "Enter the *title* of your *new draft*:"
+        return "Enter your new <b>draft's title</b>:"
 
     @property
     def initial_options(self):
@@ -31,8 +31,8 @@ class CreateDraftState(IdleState):
             # post creation was successful -> show post update options
             if post_id:
                 self.context.send_message(chat_id
-                                            , "Successfully created draft *" + text + "*"
-                                            , parse_mode=ParseMode.MARKDOWN.value)
+                                            , "Draft <b>" + text + "</b> has been <b>created</b>."
+                                            , parse_mode=ParseMode.HTML.value)
                 from packages.states.navigation.selectdraftupdatestate import SelectDraftUpdateState
                 next_state = SelectDraftUpdateState(self.context, user_id, post_id, chat_id=chat_id)
 
@@ -40,7 +40,7 @@ class CreateDraftState(IdleState):
             else:
                 self.context.send_message(chat_id
                                           , "New draft could not be created. Returning to main menu."
-                                          , parse_mode=ParseMode.MARKDOWN.value)
+                                          , parse_mode=ParseMode.HTML.value)
                 next_state = IdleState(self.context, user_id, chat_id=chat_id)
 
             self.context.set_state(user_id, next_state)

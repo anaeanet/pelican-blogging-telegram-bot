@@ -17,7 +17,7 @@ class DeleteTagState(SelectDraftUpdateState):
         user_drafts = self.context.get_posts(post_id=self.post_id)
         if len(user_drafts) > 0:
             post_title = user_drafts[0]["title"]
-            message = "Which *tag* do you want to *delete* from draft *" + post_title + "*?"
+            message = "Which <b>tag</b> do you want to <b>delete</b> from draft <b>" + post_title + "</b>?"
 
         return message
 
@@ -62,13 +62,13 @@ class DeleteTagState(SelectDraftUpdateState):
                         self.context.delete_post_tag(post_tag_id)
                         self.context.edit_message_text(chat_id, message_id
                                                        ,
-                                                       "Successfully deleted tag *" + tag_name + "* from draft *" + post_title + "*."
-                                                       , parse_mode=ParseMode.MARKDOWN.value)
+                                                       "Tag <b>" + tag_name + "</b> has been <b>deleted</b> from draft <b>" + post_title + "</b>."
+                                                       , parse_mode=ParseMode.HTML.value)
 
                     else:
                         self.context.edit_message_text(chat_id, self.message_id
                                                        , "It seems the tag you selected no longer exists..."
-                                                       , parse_mode=ParseMode.MARKDOWN.value)
+                                                       , parse_mode=ParseMode.HTML.value)
 
                     # show remaining tags for deletion
                     if len(self.context.get_post_tags(post_id=self.post_id)) > 0:
@@ -80,7 +80,7 @@ class DeleteTagState(SelectDraftUpdateState):
                 else:
                     self.context.edit_message_text(chat_id, self.message_id
                                                    , "It seems the draft you selected no longer exists..."
-                                                   , parse_mode=ParseMode.MARKDOWN.value)
+                                                   , parse_mode=ParseMode.HTML.value)
 
                     # show remaining drafts for deletion
                     if len(self.context.get_posts(user_id=user_id, status="draft")) > 0:

@@ -17,7 +17,7 @@ class ConfirmDraftDeletionState(AbstractUserPostState, IdleState):
         user_drafts = self.context.get_posts(post_id=self.post_id)
         if len(user_drafts) > 0:
             post_title = user_drafts[0]["title"]
-            message = "Do you *really* want to *delete* draft *" + post_title + "*?"
+            message = "Do you <b>really</b> want to <b>delete</b> draft <b>" + post_title + "</b>?"
         return message
 
     @property
@@ -48,13 +48,13 @@ class ConfirmDraftDeletionState(AbstractUserPostState, IdleState):
                         post_title = user_drafts[0]["title"]
                         self.context.delete_post(self.post_id)
                         self.context.edit_message_text(chat_id, message_id
-                                                             , "Successfully deleted draft *" + post_title + "*."
-                                                             , parse_mode=ParseMode.MARKDOWN.value)
+                                                             , "Draft <b>" + post_title + "</b> has been <b>deleted</b>."
+                                                             , parse_mode=ParseMode.HTML.value)
 
                     else:
                         self.context.edit_message_text(chat_id, self.message_id
                                                   , "It seems the draft you selected no longer exists..."
-                                                  , parse_mode=ParseMode.MARKDOWN.value)
+                                                  , parse_mode=ParseMode.HTML.value)
 
                     # show remaining drafts for deletion
                     if len(self.context.get_posts(user_id=user_id, status="draft")) > 0:

@@ -17,12 +17,12 @@ class AddImageState(SelectDraftUpdateState):
         user_drafts = self.context.get_posts(post_id=self.post_id)
         if len(user_drafts) > 0:
             post_title = user_drafts[0]["title"]
-            message = "What *image(s)* do you want to add to draft *" + post_title + "*?"
+            message = "What <b>image(s)</b> do you want to <b>add</b> to draft <b>" + post_title + "</b>?"
 
             # add current post_tags to init_message
             post_images = self.context.get_post_images(post_id=self.post_id)
             if len(post_images) > 0:
-                message += "\r\n\r\n" + "*Current image(s)*"
+                message += "\r\n\r\n" + "<b>Current image(s)</b>"
                 for post_image in post_images:
                     file_name = post_image["file_name"]
                     caption = post_image["caption"]
@@ -62,12 +62,12 @@ class AddImageState(SelectDraftUpdateState):
 
             if post_image_id is not None:
                 self.context.send_message(chat_id
-                                          , "Image successfully added to draft *" + post_title + "*."
-                                          , parse_mode=ParseMode.MARKDOWN.value)
+                                          , "Image <b>" + file_name + "</b> has been <b>added</b> to draft <b>" + post_title + "</b>."
+                                          , parse_mode=ParseMode.HTML.value)
             else:
                 self.context.send_message(chat_id
-                                          , "The sent image could not be added to draft *" + post_title + "*."
-                                          , parse_mode=ParseMode.MARKDOWN.value)
+                                          , "The <b>image</b> could <b>not</b> be <b>added</b> to draft <b>" + post_title + "</b>."
+                                          , parse_mode=ParseMode.HTML.value)
 
             next_state = AddImageState(self.context, user_id, self.post_id, chat_id=chat_id)
             self.context.set_state(user_id, next_state)
@@ -75,7 +75,7 @@ class AddImageState(SelectDraftUpdateState):
         else:
             self.context.send_message(chat_id
                                       , "It seems the draft you selected no longer exists..."
-                                      , parse_mode=ParseMode.MARKDOWN.value)
+                                      , parse_mode=ParseMode.HTML.value)
 
             # show remaining drafts for updating
             if len(self.context.get_posts(user_id=user_id, status="draft")) > 0:

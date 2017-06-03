@@ -17,7 +17,7 @@ class SelectDraftUpdateState(AbstractUserPostState, IdleState):
         user_drafts = self.context.get_posts(post_id=self.post_id)
         if len(user_drafts) > 0:
             post_title = user_drafts[0]["title"]
-            message = "What do you want to do with draft *" + post_title + "*?"
+            message = "What do you want to do with draft <b>" + post_title + "</b>?"
         return message
 
     @property
@@ -72,40 +72,9 @@ class SelectDraftUpdateState(AbstractUserPostState, IdleState):
 
                 # user attempts to update the selected draft's content
                 if command_array[1] == "/editcontent":
-
-                    user_drafts = self.context.get_posts(post_id=self.post_id,)
-                    if len(user_drafts) > 0:
-                        post_title = user_drafts[0]["title"]
-                        post_content = user_drafts[0]["content"]
-
-                        if post_content is not None and len(post_content) > 0:
-                            self.context.edit_message_text(chat_id, self.message_id
-                                                      , "Draft *" + post_title + "* currently has the following content:"
-                                                      , parse_mode=ParseMode.MARKDOWN.value)
-                            self.context.send_message(chat_id
-                                                      , post_content)
-                            from packages.states.draft.editcontentstate import EditContentState
-                            next_state = EditContentState(self.context, user_id, self.post_id, chat_id=chat_id)
-
-                        else:
-                            from packages.states.draft.editcontentstate import EditContentState
-                            next_state = EditContentState(self.context, user_id, self.post_id, chat_id=chat_id, message_id=self.message_id)
-
-                    else:
-                        self.context.edit_message_text(chat_id, self.message_id
-                                                  , "It seems the draft you selected no longer exists..."
-                                                  , parse_mode=ParseMode.MARKDOWN.value)
-
-                        # show remaining drafts for updating
-                        if len(self.context.get_posts(user_id=user_id, status="draft")) > 0:
-                            from packages.states.draft.updatedraftstate import UpdateDraftState
-                            next_state = UpdateDraftState(self.context, user_id, chat_id=chat_id)
-                        # no remaining drafts -> automatically go back to main menu
-                        else:
-                            next_state = IdleState(self.context, user_id, chat_id=chat_id)
-
+                    from packages.states.draft.editcontentstate import EditContentState
+                    next_state = EditContentState(self.context, user_id, self.post_id, chat_id=chat_id, message_id=self.message_id)
                     self.context.set_state(user_id, next_state)
-
                 elif command_array[1] == "/addtag":
                     from packages.states.tag.addtagstate import AddTagState
                     next_state = AddTagState(self.context, user_id, self.post_id, chat_id=chat_id, message_id=self.message_id)

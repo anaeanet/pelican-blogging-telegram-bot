@@ -19,7 +19,7 @@ class AddTagState(SelectDraftUpdateState):
         user_drafts = self.context.get_posts(post_id=self.post_id)
         if len(user_drafts) > 0:
             post_title = user_drafts[0]["title"]
-            message = "What *tag(s)* do you want to add to draft *" + post_title + "*? " \
+            message = "What <b>tag(s)</b> do you want to add to draft <b>" + post_title + "</b>? " \
                       + "(comma-separate multiple tags)"
 
             # add current post_tags to init_message
@@ -31,7 +31,7 @@ class AddTagState(SelectDraftUpdateState):
                     tags.append(tag["name"])
 
             if len(tags) > 0:
-                message += "\r\n\r\n" + "*Current tag(s)*\r\n" + ", ".join(tags)
+                message += "\r\n\r\n" + "<b>Current tag(s)</b>\r\n" + ", ".join(tags)
 
         return message
 
@@ -78,19 +78,19 @@ class AddTagState(SelectDraftUpdateState):
 
                 if len(new_tag_names) > 0:
                     self.context.send_message(chat_id
-                                              , "Tag(s) *" + ", ".join(new_tag_names) + "* successfully added to draft *" + post_title + "*."
-                                              , parse_mode=ParseMode.MARKDOWN.value)
+                                              , "Tag(s) <b>" + ", ".join(new_tag_names) + "</b> have been added to draft <b>" + post_title + "</b>."
+                                              , parse_mode=ParseMode.HTML.value)
                 else:
                     self.context.send_message(chat_id
-                                              , "Tags not updated. All specified tag(s) were already assigned to draft *" + post_title + "*."
-                                              , parse_mode=ParseMode.MARKDOWN.value)
+                                              , "<b>No tags(s) added</b>. All specified tag(s) were already assigned to draft <b>" + post_title + "</b>."
+                                              , parse_mode=ParseMode.HTML.value)
 
                 next_state = AddTagState(self.context, user_id, self.post_id, chat_id=chat_id)
 
             else:
                 self.context.send_message(chat_id
                                           , "It seems the draft you selected no longer exists..."
-                                          , parse_mode=ParseMode.MARKDOWN.value)
+                                          , parse_mode=ParseMode.HTML.value)
 
                 # show remaining drafts for updating
                 if len(self.context.get_posts(user_id=user_id, status="draft")) > 0:

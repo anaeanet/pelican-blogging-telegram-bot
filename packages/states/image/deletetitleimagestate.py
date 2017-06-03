@@ -23,7 +23,7 @@ class DeleteTitleImageState(SelectDraftUpdateState):
             if len(post_images) > 0:
                 title_image_name = post_images[0]["file_name"]
 
-                message = "Do you really want to remove *" + title_image_name + "* as title image of draft *" + post_title + "*?"
+                message = "Do you <b>really</b> want to <b>remove " + title_image_name + "</b> as title image of draft <b>" + post_title + "</b>?"
 
         return message
 
@@ -69,13 +69,13 @@ class DeleteTitleImageState(SelectDraftUpdateState):
                         self.context.delete_title_image(self.post_id)
 
                         self.context.edit_message_text(chat_id, message_id
-                                                       , "Successfully deleted image *" + post_image_name + "* as title image from draft *" + post_title + "*."
-                                                       , parse_mode=ParseMode.MARKDOWN.value)
+                                                       , "Image <b>" + post_image_name + "</b> has been <b>deleted as title image</b> from draft <b>" + post_title + "</b>."
+                                                       , parse_mode=ParseMode.HTML.value)
 
                     else:
                         self.context.edit_message_text(chat_id, self.message_id
                                                        , "It seems the image you selected no longer exists..."
-                                                       , parse_mode=ParseMode.MARKDOWN.value)
+                                                       , parse_mode=ParseMode.HTML.value)
 
                     # after deleting title image (successful or not), go back to update option menu for selected draft
                     next_state = SelectDraftUpdateState(self.context, user_id, self.post_id, chat_id=chat_id)
@@ -83,7 +83,7 @@ class DeleteTitleImageState(SelectDraftUpdateState):
                 else:
                     self.context.edit_message_text(chat_id, self.message_id
                                                    , "It seems the draft you selected no longer exists..."
-                                                   , parse_mode=ParseMode.MARKDOWN.value)
+                                                   , parse_mode=ParseMode.HTML.value)
 
                     # show remaining drafts for deletion
                     if len(self.context.get_posts(user_id=user_id, status="draft")) > 0:
@@ -130,7 +130,7 @@ class DeleteTitleImageState(SelectDraftUpdateState):
                     else:
                         self.context.edit_message_text(chat_id, self.message_id
                                                        , "It seems the image you selected no longer exists..."
-                                                       , parse_mode=ParseMode.MARKDOWN.value)
+                                                       , parse_mode=ParseMode.HTML.value)
 
                     # show remaining images for deletion
                     if len(self.context.get_post_images(post_id=self.post_id)) > 0:
@@ -142,7 +142,7 @@ class DeleteTitleImageState(SelectDraftUpdateState):
                 else:
                     self.context.edit_message_text(chat_id, self.message_id
                                                    , "It seems the draft you selected no longer exists..."
-                                                   , parse_mode=ParseMode.MARKDOWN.value)
+                                                   , parse_mode=ParseMode.HTML.value)
 
                     # show remaining drafts for deletion
                     if len(self.context.get_posts(user_id=user_id, status="draft")) > 0:

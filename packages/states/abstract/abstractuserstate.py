@@ -43,13 +43,13 @@ class AbstractUserState(AbstractState):
     def build_state_message(self, chat_id, message_text, message_id=None, reply_options=None, keyboard_columns=1):
         if message_id is not None:
             self.context.edit_message_text(chat_id, message_id, message_text
-                                           , parse_mode=ParseMode.MARKDOWN.value
+                                           , parse_mode=ParseMode.HTML.value
                                            , reply_markup=telegram.build_keyboard(reply_options
                                                                                   , KeyboardType.INLINE
                                                                                   , columns=keyboard_columns))
         else:
             sent_message = self.context.send_message(chat_id, message_text
-                                                     , parse_mode=ParseMode.MARKDOWN.value
+                                                     , parse_mode=ParseMode.HTML.value
                                                      , reply_markup=telegram.build_keyboard(reply_options
                                                                                             , KeyboardType.INLINE
                                                                                             , columns=keyboard_columns))
