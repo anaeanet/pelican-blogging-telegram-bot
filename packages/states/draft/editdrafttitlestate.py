@@ -17,10 +17,7 @@ class EditDraftTitleState(SelectDraftUpdateState):
         user_drafts = self.context.get_posts(post_id=self.post_id)
         if len(user_drafts) > 0:
             post_title = user_drafts[0]["title"]
-            post_content = user_drafts[0]["content"]
-
-            if post_content is not None and len(post_content) > 0:
-                message = "Enter the <b>new title</b> of draft <b>" + post_title + "</b>:"
+            message = "Enter the <b>new title</b> of draft <b>" + post_title + "</b>:"
 
         return message
 
@@ -33,8 +30,10 @@ class EditDraftTitleState(SelectDraftUpdateState):
         return reply_options
 
     def process_message(self, user_id, chat_id, text, entities):
+        next_state = self
+
         if text.startswith("/"):
-            super().process_message(user_id, chat_id, text, entities)
+            next_state = super().process_message(user_id, chat_id, text, entities)
         else:
             # remove inline keyboard from latest bot message (by leaving out reply_options parameter)
             self.build_state_message(chat_id, self.welcome_message, message_id=self.message_id)
@@ -64,4 +63,4 @@ class EditDraftTitleState(SelectDraftUpdateState):
                     from packages.states.navigation.idlestate import IdleState
                     next_state = IdleState(self.context, user_id, chat_id=chat_id)
 
-            self.context.set_state(user_id, next_state)
+        return next_state

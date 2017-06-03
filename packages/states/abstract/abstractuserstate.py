@@ -74,6 +74,7 @@ class AbstractUserState(AbstractState):
         raise NotImplementedError("Abstract method! Implement in child class", type(self))
 
     def process_update(self, update):
+        next_state = self
         update_type = telegram.get_update_type(update)
         user_id = telegram.get_update_sender_id(update)
 
@@ -103,7 +104,7 @@ class AbstractUserState(AbstractState):
 
                 # text message
                 if text is not None:
-                    self.process_message(user_id, chat_id, text, entities)
+                    next_state = self.process_message(user_id, chat_id, text, entities)
 
                 # photo/document message
                 elif document is not None or photo is not None:
@@ -123,7 +124,7 @@ class AbstractUserState(AbstractState):
                         thumb_id = photo[0]["file_id"]         # image with smallest size
 
                     if file_id is not None and file_name is not None:
-                        self.process_photo_message(user_id, chat_id, file_name, file_id, thumb_id=thumb_id, caption=caption)
+                        next_state = self.process_photo_message(user_id, chat_id, file_name, file_id, thumb_id=thumb_id, caption=caption)
 
                 else:
                     # TODO log
@@ -137,7 +138,7 @@ class AbstractUserState(AbstractState):
                 data = update[update_type]["data"].strip(' \t\n\r') if "data" in update[update_type] else None
 
                 if data is not None:
-                    self.process_callback_query(user_id, chat_id, message_id, data)
+                    next_state = self.process_callback_query(user_id, chat_id, message_id, data)
                 else:
                     # TODO log
                     None
@@ -149,3 +150,5 @@ class AbstractUserState(AbstractState):
         else:
             # TODO: maybe do something with updates from unauthorized users?
             None
+
+        return next_state

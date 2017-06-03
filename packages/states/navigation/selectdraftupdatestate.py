@@ -65,20 +65,18 @@ class SelectDraftUpdateState(AbstractUserPostState, IdleState):
         return reply_options
 
     def process_callback_query(self, user_id, chat_id, message_id, data):
+        next_state = self
         command_array = data.split(" ")
 
         # only accept "/selectupdate ..." callback query from any selected update option state
-        if len(command_array) == 1:
-            if command_array[0] == "/selectupdate":
+        if len(command_array) == 1 and command_array[0] == "/selectupdate":
                 next_state = SelectDraftUpdateState(self.context, user_id, self.post_id, chat_id=chat_id, message_id=message_id)
-                self.context.set_state(user_id, next_state)
 
         # only accept "/selectupdate ..." callback queries, have super() handle everything else
-        if len(command_array) > 1 and command_array[0] == "/selectupdate":
+        elif len(command_array) > 1 and command_array[0] == "/selectupdate":
 
             # update-option was chosen for selected draft - /selectupdate <update-option>
             if len(command_array) == 2:
-                next_state = self
 
                 # user attempts to update the selected draft's content
                 if command_array[1] == "/edittitle":
@@ -109,7 +107,7 @@ class SelectDraftUpdateState(AbstractUserPostState, IdleState):
                     from packages.states.image.editgallerytitlestate import EditGalleryTitleState
                     next_state = EditGalleryTitleState(self.context, user_id, self.post_id, chat_id=chat_id, message_id=self.message_id)
 
-                self.context.set_state(user_id, next_state)
-
         else:
-            super().process_callback_query(user_id, chat_id, message_id, data)
+            next_state = super().process_callback_query(user_id, chat_id, message_id, data)
+
+        return next_state

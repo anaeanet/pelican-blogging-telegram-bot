@@ -46,9 +46,8 @@ class DeleteTitleImageState(SelectDraftUpdateState):
         return reply_options
 
     def process_callback_query(self, user_id, chat_id, message_id, data):
+        next_state = self
         command_array = data.split(" ")
-
-        # TODO cleanup
 
         # only accept "/deletetitleimage ..." callback queries, have super() handle everything else
         if len(command_array) > 1 and command_array[0] == "/deletetitleimage":
@@ -93,8 +92,6 @@ class DeleteTitleImageState(SelectDraftUpdateState):
                     else:
                         from packages.states.navigation.idlestate import IdleState
                         next_state = IdleState(self.context, user_id, chat_id=chat_id)
-
-                self.context.set_state(user_id, next_state)
 
         # only accept "/previewpostimage ..." callback queries, have super() handle everything else
         elif len(command_array) > 1 and command_array[0] == "/previewpostimage":
@@ -153,7 +150,7 @@ class DeleteTitleImageState(SelectDraftUpdateState):
                         from packages.states.navigation.idlestate import IdleState
                         next_state = IdleState(self.context, user_id, chat_id=chat_id)
 
-                self.context.set_state(user_id, next_state)
-
         else:
-            super().process_callback_query(user_id, chat_id, message_id, data)
+            next_state = super().process_callback_query(user_id, chat_id, message_id, data)
+
+        return next_state

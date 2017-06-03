@@ -49,6 +49,7 @@ class EditContentState(SelectDraftUpdateState):
         return reply_options
 
     def process_callback_query(self, user_id, chat_id, message_id, data):
+        next_state = self
         command_array = data.split(" ")
 
         # only accept "/previewcontent" callback queries, have super() handle everything else
@@ -77,10 +78,8 @@ class EditContentState(SelectDraftUpdateState):
                     from packages.states.navigation.idlestate import IdleState
                     next_state = IdleState(self.context, user_id, chat_id=chat_id)
 
-            self.context.set_state(user_id, next_state)
-
         # only accept "/formatting" callback queries, have super() handle everything else
-        if len(command_array) == 1 and command_array[0] == "/formatting":
+        elif len(command_array) == 1 and command_array[0] == "/formatting":
 
             user_drafts = self.context.get_posts(post_id=self.post_id)
             if len(user_drafts) > 0:
@@ -110,14 +109,16 @@ class EditContentState(SelectDraftUpdateState):
                     from packages.states.navigation.idlestate import IdleState
                     next_state = IdleState(self.context, user_id, chat_id=chat_id)
 
-            self.context.set_state(user_id, next_state)
-
         else:
-            super().process_callback_query(user_id, chat_id, message_id, data)
+            next_state = super().process_callback_query(user_id, chat_id, message_id, data)
+
+        return next_state
 
     def process_message(self, user_id, chat_id, text, entities):
+        next_state = self
+
         if text.startswith("/") and not text.startswith("/append"):
-            super().process_message(user_id, chat_id, text, entities)
+            next_state = super().process_message(user_id, chat_id, text, entities)
         else:
             # remove inline keyboard from latest bot message (by leaving out reply_options parameter)
             self.build_state_message(chat_id, self.welcome_message, message_id=self.message_id)
@@ -152,4 +153,4 @@ class EditContentState(SelectDraftUpdateState):
                     from packages.states.navigation.idlestate import IdleState
                     next_state = IdleState(self.context, user_id, chat_id=chat_id)
 
-            self.context.set_state(user_id, next_state)
+        return next_state

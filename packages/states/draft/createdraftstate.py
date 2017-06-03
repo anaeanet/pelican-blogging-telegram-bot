@@ -20,8 +20,10 @@ class CreateDraftState(IdleState):
         return reply_options
 
     def process_message(self, user_id, chat_id, text, entities):
+        next_state = self
+
         if text.startswith("/"):
-            super().process_message(user_id, chat_id, text)
+            next_state = super().process_message(user_id, chat_id, text)
         else:
             # remove inline keyboard from latest bot message (by leaving out reply_options parameter)
             self.build_state_message(chat_id, self.welcome_message, message_id=self.message_id)
@@ -43,4 +45,4 @@ class CreateDraftState(IdleState):
                                           , parse_mode=ParseMode.HTML.value)
                 next_state = IdleState(self.context, user_id, chat_id=chat_id)
 
-            self.context.set_state(user_id, next_state)
+        return next_state

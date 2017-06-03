@@ -32,6 +32,7 @@ class ConfirmDraftDeletionState(AbstractUserPostState, IdleState):
         return reply_options
 
     def process_callback_query(self, user_id, chat_id, message_id, data):
+        next_state = self
         command_array = data.split(" ")
 
         # only accept "/confirmdraftdeletion ..." callback queries, have super() handle everything else
@@ -64,7 +65,7 @@ class ConfirmDraftDeletionState(AbstractUserPostState, IdleState):
                     else:
                         next_state = IdleState(self.context, user_id, chat_id=chat_id)
 
-                    self.context.set_state(user_id, next_state)
-
         else:
-            super().process_callback_query(user_id, chat_id, message_id, data)
+            next_state = super().process_callback_query(user_id, chat_id, message_id, data)
+
+        return next_state

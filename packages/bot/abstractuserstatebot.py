@@ -36,4 +36,5 @@ class AbstractUserStateBot(AbstractTelegramBot):
         if user_id not in self.__user_state_dict or self.get_state(user_id) is None:
             self.set_state(user_id, self.start_state_class(self))
 
-        self.get_state(user_id).process_update(update)
+        next_state = self.get_state(user_id).process_update(update)
+        self.set_state(user_id, next_state)

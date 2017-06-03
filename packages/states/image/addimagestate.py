@@ -38,6 +38,7 @@ class AddImageState(SelectDraftUpdateState):
         return reply_options
 
     def process_photo_message(self, user_id, chat_id, file_name, file_id, thumb_id=None, caption=None):
+        next_state = self
 
         # remove inline keyboard from latest bot message (by leaving out reply_options parameter)
         self.build_state_message(chat_id, self.welcome_message, message_id=self.message_id)
@@ -70,7 +71,6 @@ class AddImageState(SelectDraftUpdateState):
                                           , parse_mode=ParseMode.HTML.value)
 
             next_state = AddImageState(self.context, user_id, self.post_id, chat_id=chat_id)
-            self.context.set_state(user_id, next_state)
 
         else:
             self.context.send_message(chat_id
@@ -86,4 +86,4 @@ class AddImageState(SelectDraftUpdateState):
                 from packages.states.navigation.idlestate import IdleState
                 next_state = IdleState(self.context, user_id, chat_id=chat_id)
 
-            self.context.set_state(user_id, next_state)
+        return next_state
