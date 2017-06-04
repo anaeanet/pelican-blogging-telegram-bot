@@ -27,7 +27,7 @@ class SQLDBWrapper:
                                                         + ", status TEXT NOT NULL DEFAULT 'draft' CHECK (status == 'draft' or status == 'published')"
                                                         + ", gallery_title TEXT NOT NULL DEFAULT 'Bildergalerie'"
                                                         + ", tmsp_create TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP"
-                                                        + ", content TEXT"
+                                                        + ", content TEXT NOT NULL DEFAULT ''"
                                                         + ", title_image INTEGER"
                                                         + ", tmsp_publish TIMESTAMP"
                                                         + ", original_post_id INTEGER"

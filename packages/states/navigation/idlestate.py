@@ -22,7 +22,6 @@ class IdleState(AbstractUserState):
         if len(user_drafts) > 0:
             reply_options.append({"text": "UPDATE a draft", "callback_data": "/updatedraft"})
             reply_options.append({"text": "DELETE a draft", "callback_data": "/deletedraft"})
-            reply_options.append({"text": "PUBLISH a draft", "callback_data": "/publishdraft"})
         return reply_options
 
     def process_message(self, user_id, chat_id, text, entities):
@@ -79,8 +78,5 @@ class IdleState(AbstractUserState):
             elif command_array[0] == "/deletedraft":
                 from packages.states.draft.deletedraftstate import DeleteDraftState
                 next_state = DeleteDraftState(self.context, user_id, chat_id=chat_id, message_id=message_id)
-            elif command_array[0] == "/publishdraft":
-                # TODO
-                None
 
         return next_state

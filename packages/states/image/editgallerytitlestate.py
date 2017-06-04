@@ -34,6 +34,7 @@ class EditGalleryTitleState(SelectDraftUpdateState):
     def process_message(self, user_id, chat_id, text, entities):
         next_state = self
 
+        text = text.strip(' \t\n\r')
         if text.startswith("/"):
             next_state = super().process_message(user_id, chat_id, text, entities)
         else:

@@ -1,11 +1,10 @@
 from packages.bot.parsemode import ParseMode
-from packages.states.abstract.abstractuserpoststate import AbstractUserPostState
-from packages.states.navigation.idlestate import IdleState
+from packages.states.navigation.selectdraftupdatestate import SelectDraftUpdateState
 
 __author__ = "aneanet"
 
 
-class ConfirmDraftDeletionState(AbstractUserPostState, IdleState):
+class ConfirmDraftDeletionState(SelectDraftUpdateState):
     """
     Concrete state implementation.
     Lets the user confirm or abort deletion of a previously chosen draft.
@@ -22,11 +21,12 @@ class ConfirmDraftDeletionState(AbstractUserPostState, IdleState):
 
     @property
     def callback_options(self):
-        reply_options = [{"text": "<< drafts", "callback_data": "/deletedraft"}]
+        reply_options = [{"text": "<< drafts", "callback_data": "/deletedraft"}, []]
 
         user_drafts = self.context.get_posts(post_id=self.post_id)
         if len(user_drafts) > 0:
-            reply_options.append({"text": "Yes, delete", "callback_data": "/confirmdraftdeletion /confirm"})
+            reply_options.append({"text": "YES, delete", "callback_data": "/confirmdraftdeletion /confirm"})
+            reply_options.append([])
         reply_options.append({"text": "<< main menu", "callback_data": "/mainmenu"})
 
         return reply_options
@@ -63,6 +63,7 @@ class ConfirmDraftDeletionState(AbstractUserPostState, IdleState):
                         next_state = DeleteDraftState(self.context, user_id, chat_id=chat_id)
                     # no remaining drafts -> automatically go back to main menu
                     else:
+                        from packages.states.navigation.idlestate import IdleState
                         next_state = IdleState(self.context, user_id, chat_id=chat_id)
 
         else:

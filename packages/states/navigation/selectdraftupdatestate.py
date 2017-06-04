@@ -38,28 +38,34 @@ class SelectDraftUpdateState(AbstractUserPostState, IdleState):
             else:
                 reply_options.append([])
 
+            # fetch all currently linked post images
+            post_images = self.context.get_post_images(post_id=self.post_id)
+
             reply_options.append({"text": "ADD image(s)", "callback_data": "/selectupdate /addimage"})
             # only show option to delete images if post already has images
-            if len(self.context.get_post_images(post_id=self.post_id)) > 0:
+            if len(post_images) > 0:
                 reply_options.append({"text": "DELETE image(s)", "callback_data": "/selectupdate /deleteimage"})
             else:
                 reply_options.append([])
 
             # only show option to set title image if post already has at least one image
-            if len(self.context.get_post_images(post_id=self.post_id)) > 0:
+            if len(post_images) > 0:
                 reply_options.append({"text": "SET title image", "callback_data": "/selectupdate /settitleimage"})
             # only show option to delete title image if post already has a title image
-            user_posts = self.context.get_posts(post_id=self.post_id)
-            if len(user_posts) > 0 and user_posts[0]["title_image"] is not None:
+            if post["title_image"] is not None:
                 reply_options.append({"text": "DELETE title image", "callback_data": "/selectupdate /deletetitleimage"})
             else:
                 reply_options.append([])
 
             # only show option to update gallery title if there is at least on non-title image
-            post_images = self.context.get_post_images(post_id=self.post_id)
             if len(post_images) > 1 or (len(post_images) == 1 and post_images[0]["post_image_id"] != post["title_image"]):
                 reply_options.append({"text": "EDIT gallery title", "callback_data": "/selectupdate /editgallerytitle"})
                 reply_options.append([])
+
+            if len(post["title"]) > 0 and len(post["content"]) > 0:
+                reply_options.append({"text": "PUBLISH", "callback_data": "/selectupdate /publish"})
+                reply_options.append([])
+
 
         reply_options.append({"text": "<< main menu", "callback_data": "/mainmenu"})
         return reply_options
@@ -106,6 +112,9 @@ class SelectDraftUpdateState(AbstractUserPostState, IdleState):
                 elif command_array[1] == "/editgallerytitle":
                     from packages.states.image.editgallerytitlestate import EditGalleryTitleState
                     next_state = EditGalleryTitleState(self.context, user_id, self.post_id, chat_id=chat_id, message_id=self.message_id)
+                elif command_array[1] == "/publish":
+                    from packages.states.draft.publishdraftstate import PublishDraftState
+                    next_state = PublishDraftState(self.context, user_id, self.post_id, chat_id=chat_id, message_id=self.message_id)
 
         else:
             next_state = super().process_callback_query(user_id, chat_id, message_id, data)

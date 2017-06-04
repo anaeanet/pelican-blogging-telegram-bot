@@ -94,6 +94,10 @@ class PelicanMarkdownBot(AbstractUserStateBot):
 
         return self.__database.delete_post(post_id)
 
+    def publish_post(self, post_id):
+        # TODO
+        return 0
+
     def get_tags(self, tag_id=None, name=None):
         return self.__database.get_tags(tag_id=tag_id, name=name)
 
