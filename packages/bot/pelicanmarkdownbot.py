@@ -3,6 +3,7 @@ from packages.states.navigation.idlestate import IdleState
 from packages.datamodel.tag import Tag
 from packages.datamodel.image import Image
 from packages.datamodel.gallery import Gallery
+from packages.datamodel.poststate import PostState
 from packages.datamodel.post import Post
 import packages.bot.telegram as telegram
 
@@ -225,46 +226,106 @@ class PelicanMarkdownBot(AbstractUserStateBot):
     def delete_title_image(self, post_id):
         self.__database.delete_title_image(post_id)
 
-    # -------------------
+    # ---------------------------------------------------------------------
 
-    def get_user_drafts(self, user_id):
-        user_drafts = []
+    def a_get_user_posts(self, user_id, status=None):
+        user_posts = []
 
-        drafts = self.__database.get_posts(user_id=user_id, status="draft")
-        for draft in drafts:
+        posts = self.__database.get_posts(user_id=user_id, status=status.value)
+        for post in posts:
 
+            # fetch tags, gallery, and title image assigned to current post
+            tags = self.a_get_post_tags(post["post_id"])
+            title_image = self.a_get_post_title_image(post["post_id"])
+            gallery = self.a_get_post_gallery(post["post_id"])
 
-            # fetch tags assigned to current post
-            user_draft_tags = []
-            draft_tags = self.__database.get_post_tags(post_id=draft["post_id"])
-            for draft_tag in draft_tags:
+            user_posts.append(Post(post["post_id"], post["title"], PostState(post["status"])
+                                    , content=post["content"]
+                                    , tags=tags
+                                    , title_image=title_image
+                                    , gallery=gallery))
 
-                tags = self.__database.get_tags(tag_id=draft_tag["tag_id"])
-                for tag in tags:
-                    user_draft_tags.append(Tag(tag["tag_id"], tag["name"]))
+        return user_posts
 
-            # fetch gallery and title_image assigned to current post
-            user_draft_gallery = None
+    def a_get_post(self, post_id):
+        post = None
+
+        posts = self.__database.get_posts(post_id=post_id)
+        if len(posts) == 1:
+            p = posts[0]
+
+            # fetch tags, gallery, and title image assigned to current post
+            tags = self.a_get_post_tags(post_id)
+            title_image = self.a_get_post_title_image(post_id)
+            gallery = self.a_get_post_gallery(post_id)
+
+            post = Post(p["post_id"], p["title"], PostState(p["status"])
+                        , content=p["content"]
+                        , tags=tags
+                        , title_image=title_image
+                        , gallery=gallery)
+
+        return post
+
+    def a_get_post_tags(self, post_id):
+        user_post_tags = []
+
+        draft_tags = self.__database.get_post_tags(post_id=post_id)
+        for draft_tag in draft_tags:
+
+            tags = self.__database.get_tags(tag_id=draft_tag["tag_id"])
+            for tag in tags:
+                user_post_tags.append(Tag(tag["tag_id"], tag["name"]))
+
+        return user_post_tags
+
+    def a_get_post_title_image(self, post_id):
+        post_title_image = None
+
+        posts = self.__database.get_posts(post_id=post_id)
+        if len(posts) == 1:
+            post = posts[0]
+
+            post_images = self.__database.get_post_images(post_image_id=post["title_image"])
+            if len(post_images) == 1:
+                post_image = post_images[0]
+
+                post_title_image = Image(post_image["post_image_id"]
+                                         , post_image["file_name"], post_image["file_id"], post_image["file"]
+                                         , thumb_id=post_image["thumb_id"], caption=post_image["caption"])
+
+        return post_title_image
+
+    def a_get_post_gallery(self, post_id):
+        post_gallery = None
+
+        posts = self.__database.get_posts(post_id=post_id)
+        if len(posts) == 1:
+            post = posts[0]
             gallery_images = []
-            user_draft_title_image = None
-            draft_images = self.__database.get_post_images(post_id=draft["post_id"])
-            for draft_image in draft_images:
 
-                img = Image(draft_image["post_image_id"]
-                            , draft_image["file_name"], draft_image["file_id"], draft_image["file"]
-                            , thumb_id=draft_image["thumb_id"], caption=draft_image["captio "])
+            post_images = self.__database.get_post_images(post_id=post_id)
+            for post_image in post_images:
 
-                if draft_image["post_image_id"] == draft["title_image"]:
-                    user_draft_title_image = img
-                else:
+                img = Image(post_image["post_image_id"]
+                            , post_image["file_name"], post_image["file_id"], post_image["file"]
+                            , thumb_id=post_image["thumb_id"], caption=post_image["caption"])
+
+                if post_image["post_image_id"] != post["title_image"]:
                     gallery_images.append(img)
 
             if len(gallery_images) > 0:
-                user_draft_gallery = Gallery(draft["gallery_title"], gallery_images)
+                post_gallery = Gallery(post["gallery_title"], gallery_images)
 
-            user_drafts.append(Post(draft["post_id"], draft["title"], content=draft["content"]
-                                    , tags=user_draft_tags
-                                    , title_image=user_draft_title_image
-                                    , gallery=user_draft_gallery))
+        return post_gallery
 
-        return user_drafts
+    def a_create_user_post(self, user_id, title, status):
+        user_draft = None
+
+        from datetime import datetime
+        post_id = self.__database.add_post(user_id, title, status=status.value, gallery_title="Bildergalerie", tmsp_create=datetime.now(), content="", title_image=None, tmsp_publish=None, original_post_id=None)
+
+        if post_id:
+            user_draft = self.a_get_post(post_id)
+
+        return user_draft
