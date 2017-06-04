@@ -286,13 +286,16 @@ class PelicanMarkdownBot(AbstractUserStateBot):
         if len(posts) == 1:
             post = posts[0]
 
-            post_images = self.__database.get_post_images(post_image_id=post["title_image"])
-            if len(post_images) == 1:
-                post_image = post_images[0]
+            post_image_id = post["title_image"]
+            if post_image_id is not None:
 
-                post_title_image = Image(post_image["post_image_id"]
-                                         , post_image["file_name"], post_image["file_id"], post_image["file"]
-                                         , thumb_id=post_image["thumb_id"], caption=post_image["caption"])
+                post_images = self.__database.get_post_images(post_image_id=post["title_image"])
+                if len(post_images) == 1:
+                    post_image = post_images[0]
+
+                    post_title_image = Image(post_image["post_image_id"]
+                                             , post_image["file_name"], post_image["file_id"], post_image["file"]
+                                             , thumb_id=post_image["thumb_id"], caption=post_image["caption"])
 
         return post_title_image
 
