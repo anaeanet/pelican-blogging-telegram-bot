@@ -3,7 +3,7 @@ __author__ = 'anaeanet'
 
 class Post:
 
-    def __init__(self, post_id, title, content=None, tags=None, title_image=None, gallery=None):
+    def __init__(self, post_id, title, content=None, tags=[], title_image=None, gallery=None):
         self.__id = post_id
         self.__title = title
         self.__content = content

@@ -1,5 +1,9 @@
 from packages.bot.abstractuserstatebot import AbstractUserStateBot
 from packages.states.navigation.idlestate import IdleState
+from packages.datamodel.tag import Tag
+from packages.datamodel.image import Image
+from packages.datamodel.gallery import Gallery
+from packages.datamodel.post import Post
 import packages.bot.telegram as telegram
 
 __author__ = "anaeanet"
@@ -220,3 +224,47 @@ class PelicanMarkdownBot(AbstractUserStateBot):
 
     def delete_title_image(self, post_id):
         self.__database.delete_title_image(post_id)
+
+    # -------------------
+
+    def get_user_drafts(self, user_id):
+        user_drafts = []
+
+        drafts = self.__database.get_posts(user_id=user_id, status="draft")
+        for draft in drafts:
+
+
+            # fetch tags assigned to current post
+            user_draft_tags = []
+            draft_tags = self.__database.get_post_tags(post_id=draft["post_id"])
+            for draft_tag in draft_tags:
+
+                tags = self.__database.get_tags(tag_id=draft_tag["tag_id"])
+                for tag in tags:
+                    user_draft_tags.append(Tag(tag["tag_id"], tag["name"]))
+
+            # fetch gallery and title_image assigned to current post
+            user_draft_gallery = None
+            gallery_images = []
+            user_draft_title_image = None
+            draft_images = self.__database.get_post_images(post_id=draft["post_id"])
+            for draft_image in draft_images:
+
+                img = Image(draft_image["post_image_id"]
+                            , draft_image["file_name"], draft_image["file_id"], draft_image["file"]
+                            , thumb_id=draft_image["thumb_id"], caption=draft_image["captio "])
+
+                if draft_image["post_image_id"] == draft["title_image"]:
+                    user_draft_title_image = img
+                else:
+                    gallery_images.append(img)
+
+            if len(gallery_images) > 0:
+                user_draft_gallery = Gallery(draft["gallery_title"], gallery_images)
+
+            user_drafts.append(Post(draft["post_id"], draft["title"], content=draft["content"]
+                                    , tags=user_draft_tags
+                                    , title_image=user_draft_title_image
+                                    , gallery=user_draft_gallery))
+
+        return user_drafts
