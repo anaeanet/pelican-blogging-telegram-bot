@@ -370,7 +370,7 @@ class PelicanMarkdownBot(AbstractUserStateBot):
             for tag in post_tags:
 
                 # ignore tags with "wrong" tag_id
-                if str(tag.id) != tag_id:
+                if str(tag.id) != str(tag_id):
                     continue
                 else:
 
@@ -387,3 +387,19 @@ class PelicanMarkdownBot(AbstractUserStateBot):
             self.__database.delete_tag(tag_id=tag_id)
 
         return deleted_tag
+
+    def a_delete_post(self, post_id):
+        deleted_post = None
+
+        post = self.a_get_post(post_id)
+
+        # remove tags from post
+        for tag in post.tags:
+            deleted_tag = self.a_delete_tag(post_id, tag.id)
+
+        # TODO remove title_image and gallery
+
+        if self.__database.delete_post(post_id) > 0:
+            deleted_post = post
+
+        return deleted_post
