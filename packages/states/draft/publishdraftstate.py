@@ -38,7 +38,7 @@ class PublishDraftState(SelectDraftUpdateState):
 
         text = text.strip(' \t\n\r')
         if text.startswith("/") and not text.startswith("/publish"):
-            next_state = super().process_message(user_id, chat_id, text)
+            next_state = super().process_message(user_id, chat_id, text, entities)
         else:
             # remove inline keyboard from latest bot message (by leaving out reply_options parameter)
             self.build_state_message(chat_id, self.welcome_message, message_id=self.message_id)
@@ -49,8 +49,10 @@ class PublishDraftState(SelectDraftUpdateState):
 
                 command_parts = [x.strip(' \t\n\r') for x in text.split(" ")]
                 if len(command_parts) == 2 and command_parts[0] == "/publish" and command_parts[1] in ["draft", "post"]:
+                    status = command_parts[1] if command_parts[1] == "draft" else "published"
 
-                    if self.context.publish_post(self.post_id) > 0:
+                    from datetime import datetime
+                    if self.context.publish_post(self.post_id, status, datetime.now()) > 0:
                         self.context.send_message(chat_id
                                                   , "Draft <b>" + post_title + "</b> has been <b>published as " + command_parts[1] + "</b>."
                                                   , parse_mode=ParseMode.HTML.value)

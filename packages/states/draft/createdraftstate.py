@@ -24,7 +24,7 @@ class CreateDraftState(IdleState):
 
         text = text.strip(' \t\n\r')
         if text.startswith("/"):
-            next_state = super().process_message(user_id, chat_id, text)
+            next_state = super().process_message(user_id, chat_id, text, entities)
         else:
             # remove inline keyboard from latest bot message (by leaving out reply_options parameter)
             self.build_state_message(chat_id, self.welcome_message, message_id=self.message_id)
