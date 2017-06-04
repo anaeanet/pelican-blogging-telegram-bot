@@ -236,8 +236,8 @@ class PelicanMarkdownBot(AbstractUserStateBot):
 
             # fetch tags, gallery, and title image assigned to current post
             tags = self.a_get_post_tags(post["post_id"])
-            title_image = self.a_get_post_title_image(post["post_id"])
-            gallery = self.a_get_post_gallery(post["post_id"])
+            title_image = self.a_get_title_image(post["post_id"])
+            gallery = self.a_get_gallery(post["post_id"])
 
             user_posts.append(Post(post["post_id"], post["title"], PostState(post["status"])
                                     , content=post["content"]
@@ -256,8 +256,8 @@ class PelicanMarkdownBot(AbstractUserStateBot):
 
             # fetch tags, gallery, and title image assigned to current post
             tags = self.a_get_post_tags(post_id)
-            title_image = self.a_get_post_title_image(post_id)
-            gallery = self.a_get_post_gallery(post_id)
+            title_image = self.a_get_title_image(post_id)
+            gallery = self.a_get_gallery(post_id)
 
             post = Post(p["post_id"], p["title"], PostState(p["status"])
                         , content=p["content"]
@@ -279,7 +279,7 @@ class PelicanMarkdownBot(AbstractUserStateBot):
 
         return user_post_tags
 
-    def a_get_post_title_image(self, post_id):
+    def a_get_title_image(self, post_id):
         post_title_image = None
 
         posts = self.__database.get_posts(post_id=post_id)
@@ -299,7 +299,7 @@ class PelicanMarkdownBot(AbstractUserStateBot):
 
         return post_title_image
 
-    def a_get_post_gallery(self, post_id):
+    def a_get_gallery(self, post_id):
         post_gallery = None
 
         posts = self.__database.get_posts(post_id=post_id)
@@ -322,7 +322,7 @@ class PelicanMarkdownBot(AbstractUserStateBot):
 
         return post_gallery
 
-    def a_create_user_post(self, user_id, title, status):
+    def a_create_post(self, user_id, title, status):
         user_draft = None
 
         from datetime import datetime
@@ -332,3 +332,58 @@ class PelicanMarkdownBot(AbstractUserStateBot):
             user_draft = self.a_get_post(post_id)
 
         return user_draft
+
+    def a_add_tag(self, post_id, name):
+        tag = None
+
+        post = self.a_get_post(post_id)
+        if post is not None:
+
+            # check if tag is not already part of post's tag list
+            post_tags = self.a_get_post_tags(post_id)
+            if name not in [tag.name for tag in post_tags]:
+
+                # check if tag exists at all, if not -> add to db
+                tags = self.__database.get_tags(name=name)
+                if len(tags) == 0:
+                    tag_id = self.__database.add_tag(name)
+                else:
+                    tag_id = tags[0]["tag_id"]
+
+                # link tag with post
+                if tag_id > 0:
+                    post_tag_id = self.__database.add_post_tag(post_id, tag_id)
+
+                    if post_tag_id > 0:
+                        tag = Tag(tag_id, name)
+
+        return tag
+
+    def a_delete_tag(self, post_id, tag_id):
+        deleted_tag = None
+
+        post = self.a_get_post(post_id)
+        if post is not None:
+
+            # check if tag is part of post's tag list
+            post_tags = self.a_get_post_tags(post_id)
+            for tag in post_tags:
+
+                # ignore tags with "wrong" tag_id
+                if str(tag.id) != tag_id:
+                    continue
+                else:
+
+                    post_tags = self.__database.get_post_tags(post_id=post_id, tag_id=tag_id)
+                    if len(post_tags) == 1:
+                        post_tag_id = post_tags[0]["post_tag_id"]
+
+                        # remove tag from post and return deleted tag
+                        if self.__database.delete_post_tag(post_tag_id) > 0:
+                            deleted_tag = tag
+
+        # check if tag is used by any other draft, if not -> remove completely
+        if len(self.__database.get_post_tags(tag_id=tag_id)) == 0:
+            self.__database.delete_tag(tag_id=tag_id)
+
+        return deleted_tag
