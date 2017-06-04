@@ -84,7 +84,7 @@ class EditContentState(SelectDraftUpdateState):
             user_drafts = self.context.get_posts(post_id=self.post_id)
             if len(user_drafts) > 0:
                 message = "Following <b>Markdown</b> options are supported:\r\n\r\n" \
-                    + "Headline: #..# text\r\n" \
+                    + "Heading 1-6: #..# text\r\n" \
                     + "Bold text: <b>**text**</b>\r\n" \
                     + "Italic text: <i>*text*</i>\r\n" \
                     + "Web link: [text](http://www.example.com/)\r\n" \
