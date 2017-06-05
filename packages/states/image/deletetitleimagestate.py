@@ -16,7 +16,7 @@ class DeleteTitleImageState(SelectDraftUpdateState):
     def welcome_message(self):
         message = "It seems the draft you selected no longer exists..."
 
-        post = self.context.a_get_post(self.post_id)
+        post = self.context.get_post(self.post_id)
         if post is not None and post.title_image is not None:
             message = "Do you <b>really</b> want to <b>remove " + post.title_image.name + "</b> as title image of draft <b>" + post.title + "</b>?"
 
@@ -29,7 +29,7 @@ class DeleteTitleImageState(SelectDraftUpdateState):
                         , {"text": "<< drafts", "callback_data": "/updatedraft"}]
 
         # show confirm deletion and preview button
-        post = self.context.a_get_post(self.post_id)
+        post = self.context.get_post(self.post_id)
         if post is not None and post.title_image is not None:
             reply_options.append({"text": "YES, delete", "callback_data": "/deletetitleimage " + str(post.title_image.id)})
             reply_options.append({"text": "preview", "callback_data": "/previewpostimage " + str(post.title_image.id)})
@@ -49,10 +49,10 @@ class DeleteTitleImageState(SelectDraftUpdateState):
             post_image_id = command_array[1]
 
             # check if previously selected post still exists
-            post = self.context.a_get_post(self.post_id)
+            post = self.context.get_post(self.post_id)
             if post is not None:
 
-                removed_image = self.context.a_delete_title_image(self.post_id)
+                removed_image = self.context.delete_post_title_image(self.post_id)
 
                 if removed_image is not None:
                     self.context.edit_message_text(chat_id, message_id
@@ -74,7 +74,7 @@ class DeleteTitleImageState(SelectDraftUpdateState):
                                           , parse_mode=ParseMode.HTML.value)
 
                 # show remaining drafts for updating
-                user_drafts = self.context.a_get_user_posts(user_id=user_id, status=PostState.DRAFT)
+                user_drafts = self.context.get_user_posts(user_id=user_id, status=PostState.DRAFT)
                 if len(user_drafts) > 0:
                     from packages.states.draft.updatedraftstate import DeleteDraftState
                     next_state = DeleteDraftState(self.context, user_id, chat_id=chat_id)
@@ -92,7 +92,7 @@ class DeleteTitleImageState(SelectDraftUpdateState):
             self.build_state_message(chat_id, self.welcome_message, message_id=self.message_id)
 
             # check if previously selected post still exists
-            post = self.context.a_get_post(self.post_id)
+            post = self.context.get_post(self.post_id)
             if post is not None:
 
                 preview_image = None
@@ -122,7 +122,7 @@ class DeleteTitleImageState(SelectDraftUpdateState):
                                           , parse_mode=ParseMode.HTML.value)
 
                 # show remaining drafts for updating
-                user_drafts = self.context.a_get_user_posts(user_id=user_id, status=PostState.DRAFT)
+                user_drafts = self.context.get_user_posts(user_id=user_id, status=PostState.DRAFT)
                 if len(user_drafts) > 0:
                     from packages.states.draft.updatedraftstate import DeleteDraftState
                     next_state = DeleteDraftState(self.context, user_id, chat_id=chat_id)

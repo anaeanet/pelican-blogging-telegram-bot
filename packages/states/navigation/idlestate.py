@@ -22,7 +22,7 @@ class IdleState(AbstractUserState):
         reply_options = [{"text": "CREATE a draft", "callback_data": "/createdraft"}]
 
         # if user already has any draft posts, show buttons to update or delete them
-        user_drafts = self.context.a_get_user_posts(self.user_id, status=PostState.DRAFT)
+        user_drafts = self.context.get_user_posts(self.user_id, status=PostState.DRAFT)
         if len(user_drafts) > 0:
             reply_options.append({"text": "UPDATE a draft", "callback_data": "/updatedraft"})
             reply_options.append({"text": "DELETE a draft", "callback_data": "/deletedraft"})

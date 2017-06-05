@@ -79,18 +79,16 @@ class PelicanMarkdownBot(AbstractUserStateBot):
 
     # --- following message act as intermediary wrappers for states changing db data ---
 
-    # TODO rename methods
-
-    def a_get_user_posts(self, user_id, status=None):
+    def get_user_posts(self, user_id, status=None):
         user_posts = []
 
         posts = self.__database.get_posts(user_id=user_id, status=status.value)
         for post in posts:
 
             # fetch tags, gallery, and title image assigned to current post
-            tags = self.a_get_post_tags(post["post_id"])
-            title_image = self.a_get_title_image(post["post_id"])
-            gallery = self.a_get_gallery(post["post_id"])
+            tags = self.get_post_tags(post["post_id"])
+            title_image = self.get_post_title_image(post["post_id"])
+            gallery = self.get_post_gallery(post["post_id"])
 
             user_posts.append(Post(post["post_id"], post["title"], PostState(post["status"])
                                     , content=post["content"]
@@ -100,7 +98,7 @@ class PelicanMarkdownBot(AbstractUserStateBot):
 
         return user_posts
 
-    def a_get_post(self, post_id):
+    def get_post(self, post_id):
         post = None
 
         posts = self.__database.get_posts(post_id=post_id)
@@ -108,9 +106,9 @@ class PelicanMarkdownBot(AbstractUserStateBot):
             p = posts[0]
 
             # fetch tags, gallery, and title image assigned to current post
-            tags = self.a_get_post_tags(post_id)
-            title_image = self.a_get_title_image(post_id)
-            gallery = self.a_get_gallery(post_id)
+            tags = self.get_post_tags(post_id)
+            title_image = self.get_post_title_image(post_id)
+            gallery = self.get_post_gallery(post_id)
 
             post = Post(p["post_id"], p["title"], PostState(p["status"])
                         , content=p["content"]
@@ -120,7 +118,7 @@ class PelicanMarkdownBot(AbstractUserStateBot):
 
         return post
 
-    def a_get_post_tags(self, post_id):
+    def get_post_tags(self, post_id):
         user_post_tags = []
 
         draft_tags = self.__database.get_post_tags(post_id=post_id)
@@ -132,7 +130,7 @@ class PelicanMarkdownBot(AbstractUserStateBot):
 
         return user_post_tags
 
-    def a_get_title_image(self, post_id):
+    def get_post_title_image(self, post_id):
         post_title_image = None
 
         posts = self.__database.get_posts(post_id=post_id)
@@ -152,7 +150,7 @@ class PelicanMarkdownBot(AbstractUserStateBot):
 
         return post_title_image
 
-    def a_get_gallery(self, post_id):
+    def get_post_gallery(self, post_id):
         post_gallery = None
 
         posts = self.__database.get_posts(post_id=post_id)
@@ -174,29 +172,29 @@ class PelicanMarkdownBot(AbstractUserStateBot):
 
         return post_gallery
 
-    def a_create_post(self, user_id, title, status):
+    def create_post(self, user_id, title, status):
         post = None
 
         from datetime import datetime
         post_id = self.__database.add_post(user_id, title, status=status.value, gallery_title="Bildergalerie", tmsp_create=datetime.now(), content="", title_image=None, tmsp_publish=None, original_post_id=None)
 
         if post_id:
-            post = self.a_get_post(post_id)
+            post = self.get_post(post_id)
 
         return post
 
-    def a_update_post(self, post_id, title=None, content=None, gallery_title=None, title_image=None):
+    def update_post(self, post_id, title=None, content=None, gallery_title=None, title_image=None):
         updated_post = None
 
         if self.__database.update_post(post_id, title=title, content=content, gallery_title=gallery_title, title_image=title_image) > 0:
-            updated_post = self.a_get_post(post_id)
+            updated_post = self.get_post(post_id)
 
         return updated_post
 
-    def a_add_tag(self, post_id, name):
+    def add_post_tag(self, post_id, name):
         tag = None
 
-        post = self.a_get_post(post_id)
+        post = self.get_post(post_id)
         if post is not None:
 
             # check if tag is not already part of post's tag list
@@ -218,10 +216,10 @@ class PelicanMarkdownBot(AbstractUserStateBot):
 
         return tag
 
-    def a_delete_tag(self, post_id, tag_id):
+    def delete_post_tag(self, post_id, tag_id):
         deleted_tag = None
 
-        post = self.a_get_post(post_id)
+        post = self.get_post(post_id)
         if post is not None:
 
             # check if tag is part of post's tag list
@@ -246,31 +244,31 @@ class PelicanMarkdownBot(AbstractUserStateBot):
 
         return deleted_tag
 
-    def a_delete_post(self, post_id):
+    def delete_post(self, post_id):
         deleted_post = None
 
-        post = self.a_get_post(post_id)
+        post = self.get_post(post_id)
         if post is not None:
 
             # remove tags from post
             for tag in post.tags:
-                deleted_tag = self.a_delete_tag(post.id, tag.id)
+                deleted_tag = self.delete_post_tag(post.id, tag.id)
 
             if post.title_image is not None:
-                deleted_title_image = self.a_delete_title_image(post.id)
+                deleted_title_image = self.delete_post_title_image(post.id)
 
             for image in post.gallery.images + ([post.title_image] if post.title_image is not None else []):
-                deleted_image = self.a_delete_image(post.id, image.id)
+                deleted_image = self.delete_post_image(post.id, image.id)
 
             if self.__database.delete_post(post.id) > 0:
                 deleted_post = post
 
         return deleted_post
 
-    def a_add_image(self, post_id, file_name, file_id, thumb_id=None, caption=None):
+    def add_post_image(self, post_id, file_name, file_id, thumb_id=None, caption=None):
         image = None
 
-        post = self.a_get_post(post_id)
+        post = self.get_post(post_id)
         if post is not None:
 
             # check if image is not already part of post's gallery or title image
@@ -296,10 +294,10 @@ class PelicanMarkdownBot(AbstractUserStateBot):
 
         return image
 
-    def a_delete_image(self, post_id, post_image_id):
+    def delete_post_image(self, post_id, post_image_id):
         deleted_image = None
 
-        post = self.a_get_post(post_id)
+        post = self.get_post(post_id)
         if post is not None:
 
             # check if image is part of post's gallery or title image
@@ -320,10 +318,10 @@ class PelicanMarkdownBot(AbstractUserStateBot):
 
         return deleted_image
 
-    def a_delete_title_image(self, post_id):
+    def delete_post_title_image(self, post_id):
         deleted_image = None
 
-        post = self.a_get_post(post_id)
+        post = self.get_post(post_id)
         if post is not None:
 
             if post.title_image is not None and self.__database.delete_title_image(post_id) > 0:

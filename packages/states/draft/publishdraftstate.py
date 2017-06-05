@@ -12,6 +12,8 @@ class PublishDraftState(SelectDraftUpdateState):
     Accepts plain text message to publish a current draft either as draft post or final post.
     """
 
+    # TODO
+
     @property
     def welcome_message(self):
         message = "It seems the draft you selected no longer exists..."

@@ -20,7 +20,7 @@ class DeleteDraftState(IdleState):
         reply_options = []
 
         # for all user drafts show corresponding button
-        user_drafts = self.context.a_get_user_posts(self.user_id, status=PostState.DRAFT)
+        user_drafts = self.context.get_user_posts(self.user_id, status=PostState.DRAFT)
         for post in user_drafts:
             reply_options.append({"text": post.title, "callback_data": "/deletedraft " + str(post.id)})
 

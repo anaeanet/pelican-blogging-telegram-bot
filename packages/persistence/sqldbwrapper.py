@@ -13,7 +13,8 @@ class SQLDBWrapper:
     """
 
     # TODO put statement execution in try-except and log any issues
-    # TODO pslit up image data structure like for tags
+    # TODO split up image data structure like for tags
+    # TODO have sql functions return objects rather than dicts
 
     def __init__(self, datbase_name):
         self.__conn = sqlite3.connect(datbase_name)
@@ -47,6 +48,13 @@ class SQLDBWrapper:
                                                         + ", FOREIGN KEY(post_id) REFERENCES post(post_id)"
                                                         + ", FOREIGN KEY(tag_id) REFERENCES tag(tag_id))"
 
+                    , "CREATE TABLE IF NOT EXISTS image (image_id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT"
+                                                        + ", file_name TEXT NOT NULL"
+                                                        + ", file_id TEXT NOT NULL"
+                                                        + ", file BLOB NOT NULL"
+                                                        + ", thumb_id TEXT"
+                                                        + ", caption TEXT)"
+
                     , "CREATE TABLE IF NOT EXISTS post_image (post_image_id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT"
                                                         + ", post_id INTEGER NOT NULL"
                                                         + ", file_name TEXT NOT NULL"
@@ -56,6 +64,15 @@ class SQLDBWrapper:
                                                         + ", caption TEXT"
                                                         + ", FOREIGN KEY(post_id) REFERENCES post(post_id))"
                     ]
+
+        """
+                    , "CREATE TABLE IF NOT EXISTS post_image (post_image_id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT"
+                                                        + ", post_id INTEGER NOT NULL"
+                                                        + ", image_id INTEGER NOT NULL"
+                                                        + ", FOREIGN KEY(post_id) REFERENCES post(post_id)"
+                                                        + ", FOREIGN KEY(image_id) REFERENCES image(image_id))"
+        """
+
         for stmt in tbl_stmts:
             self.__conn.execute(stmt)
 
