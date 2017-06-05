@@ -1,4 +1,5 @@
 from packages.states.navigation.idlestate import IdleState
+from packages.datamodel.poststate import PostState
 
 __author__ = "aneanet"
 
@@ -6,6 +7,7 @@ __author__ = "aneanet"
 class DeleteDraftState(IdleState):
     """
     Concrete state implementation.
+
     Lets the user select a draft for deletion.
     """
 
@@ -16,24 +18,28 @@ class DeleteDraftState(IdleState):
     @property
     def callback_options(self):
         reply_options = []
-        for post in self.context.get_posts(user_id=self.user_id, status="draft"):
-            reply_options.append({"text": post["title"], "callback_data": "/deletedraft " + str(post["post_id"])})
+
+        # for all user drafts show corresponding button
+        user_drafts = self.context.a_get_user_posts(self.user_id, status=PostState.DRAFT)
+        for post in user_drafts:
+            reply_options.append({"text": post.title, "callback_data": "/deletedraft " + str(post.id)})
+
+        # add button to return to main menu
         reply_options.append({"text": "<< main menu", "callback_data": "/mainmenu"})
+
         return reply_options
 
     def process_callback_query(self, user_id, chat_id, message_id, data):
         next_state = self
         command_array = data.split(" ")
 
-        # only accept "/deletedraft ..." callback queries, have super() handle everything else
-        if len(command_array) > 1 and command_array[0] == "/deletedraft":
+        # only accept "/deletedraft <post_id>" callback queries
+        if len(command_array) == 2 and command_array[0] == "/deletedraft":
 
-            # draft selected for deletion - /deletedraft <post_id>
-            if len(command_array) == 2:
-                post_id = command_array[1]
+            post_id = command_array[1]
 
-                from packages.states.draft.confirmdraftdeletionstate import ConfirmDraftDeletionState
-                next_state = ConfirmDraftDeletionState(self.context, user_id, post_id, chat_id=chat_id, message_id=message_id)
+            from packages.states.draft.confirmdraftdeletionstate import ConfirmDraftDeletionState
+            next_state = ConfirmDraftDeletionState(self.context, user_id, post_id, chat_id=chat_id, message_id=message_id)
 
         else:
             next_state = super().process_callback_query(user_id, chat_id, message_id, data)

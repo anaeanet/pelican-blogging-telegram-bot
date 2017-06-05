@@ -77,156 +77,9 @@ class PelicanMarkdownBot(AbstractUserStateBot):
             # TODO: maybe do something with updates from unauthorized users?
             None
 
-    def get_posts(self, post_id=None, user_id=None, title=None, status=None, gallery_title=None, tmsp_create=None, content=None, title_image=None, tmsp_publish=None, original_post_id=None):
-        return self.__database.get_posts(post_id=post_id, user_id=user_id, title=title, status=status, gallery_title=gallery_title, tmsp_create=tmsp_create, content=content, title_image=title_image, tmsp_publish=tmsp_publish, original_post_id=original_post_id)
+    # --- following message act as intermediary wrappers for states changing db data ---
 
-    def add_post(self, user_id, title, status=None, gallery_title=None, tmsp_create=None, content=None, title_image=None, tmsp_publish=None, original_post_id=None):
-        return self.__database.add_post(user_id, title, status=status, gallery_title=gallery_title, tmsp_create=tmsp_create, content=content, title_image=title_image, tmsp_publish=tmsp_publish, original_post_id=original_post_id)
-
-    def update_post(self, post_id, user_id=None, title=None, status=None, gallery_title=None, tmsp_create=None, content=None, title_image=None, tmsp_publish=None, original_post_id=None):
-        return self.__database.update_post(post_id, user_id=user_id, title=title, status=status, gallery_title=gallery_title, tmsp_create=tmsp_create, content=content, title_image=title_image, tmsp_publish=tmsp_publish, original_post_id=original_post_id)
-
-    def delete_post(self, post_id):
-        # delete any existing tags from post
-        post_tags = self.__database.get_post_tags(post_id=post_id)
-        for post_tag in post_tags:
-            self.delete_post_tag(post_tag["post_tag_id"])
-
-        # delete any existing images from post
-        post_images = self.__database.get_post_images(post_id=post_id)
-        for post_image in post_images:
-            self.delete_post_image(post_image["post_image_id"])
-
-        return self.__database.delete_post(post_id)
-
-    def publish_post(self, post_id, status, tmsp_publish):
-        result = 0
-
-        # mark post as published at publish_date
-        # TODO self.__database.update_post(post_id, status=status, tmsp_publish=tmsp_publish)
-
-        # retrieve to-be-published post and make sure that minimal attributes have values, i.e. title & content
-        posts = self.__database.get_posts(post_id=post_id)
-        if len(posts) == 1 and len(posts[0]["title"]) > 0 and len(posts[0]["content"]) > 0:
-            post = posts[0]
-
-            # add title row to markdown file
-            pelican_post = "Title: " + post["title"]
-
-            # image folder name and name of *.md file
-            timestamp = tmsp_publish.strftime("%Y-%m-%d_%H-%M-%S")
-
-            # add date row to markdown file
-            pelican_post += "\r\n" + "Date: " + tmsp_publish.strftime("%Y-%m-%d %H:%M")
-
-            tag_names = []
-            post_tags = self.__database.get_post_tags(post_id=post_id)
-            for post_tag in post_tags:
-                tags = self.__database.get_tags(post_tag["tag_id"])
-                if len(tags) > 0:
-                    tag_names.append(tags[0]["name"])
-
-            # add tags row to markdown file
-            if len(tag_names) > 0:
-                pelican_post += "\r\n" + "Tags: " + ", ".join(tag_names)
-
-            title_image = None
-            gallery = None
-            post_images = self.__database.get_post_images(post_id=post_id)
-            if len(post_images) > (0 if post["title_image"] is None else 1):
-
-                gallery = "{photo}" + timestamp + "{" + post["gallery_title"] + "}"
-
-                for post_image in post_images:
-                    if post_image["post_image_id"] == post["title_image"]:
-                        title_image = "{photo}" + timestamp + "/" + post_image["file_name"]
-
-            if title_image:
-                pelican_post += "\r\n" + "image: " + title_image
-            if gallery:
-                pelican_post += "\r\n" + "gallery: " + gallery
-
-            # add status row to markdown file
-            pelican_post += "\r\n" + "Status: " + post["status"]
-            # add content to markdown file
-            pelican_post += "\r\n\r\n" + post["content"]
-
-            pelican_file = open(timestamp + ".md", "w")
-            pelican_file.write(pelican_post)
-
-            if len(post_images) > 0:
-
-                import os
-                import errno
-                try:
-                    result = result and os.makedirs(timestamp)
-                except OSError as exception:
-                    if exception.errno != errno.EEXIST:
-                        raise
-
-                for image in post_images:
-                    file = open(timestamp + "/" + image["file_name"], "wb")
-                    result = result and file.write(image["file"])
-
-                captions = open(timestamp + "/" + "captions.txt", "w")
-                result = result and captions.write("\r\n".join([x["file_name"] + ":" + x["caption"] for x in post_images]))
-
-        # if anything went wrong when attempting to publish, mark post as draft again on DB
-        if result == 0:
-            # TODO delete publish timestamp
-            None #self.__database.update_post(post_id, status="draft", tmsp_publish=None)
-
-        return result
-
-    def get_tags(self, tag_id=None, name=None):
-        return self.__database.get_tags(tag_id=tag_id, name=name)
-
-    def add_tag(self, name):
-        return self.__database.add_tag(name)
-
-    def delete_tag(self, tag_id):
-        return self.__database.delete_tag(tag_id)
-
-    def get_post_tags(self, post_tag_id=None, post_id=None, tag_id=None):
-        return self.__database.get_post_tags(post_tag_id=post_tag_id, post_id=post_id, tag_id=tag_id)
-
-    def add_post_tag(self, post_id, tag_id):
-        return self.__database.add_post_tag(post_id, tag_id)
-
-    def delete_post_tag(self, post_tag_id):
-        # get tag_id of the tag that is about to be removed from post
-        tag_id = None
-        post_tags = self.__database.get_post_tags(post_tag_id=post_tag_id)
-        for post_tag in post_tags:
-            tag_id = post_tag["tag_id"]
-
-        result = self.__database.delete_post_tag(post_tag_id)
-
-        # if tag was successfully remove from post, checkif it is used anywhere else, delete - if not
-        post_tags_in_use = self.__database.get_post_tags(tag_id=tag_id)
-        if result and len(post_tags_in_use) == 0:
-                self.__database.delete_tag(tag_id)
-
-        return result
-
-    def get_post_images(self, post_image_id=None, post_id=None, file_name=None, file_id=None, file=None, thumb_id=None, caption=None):
-        return self.__database.get_post_images(post_image_id=post_image_id, post_id=post_id, file_name=file_name, file_id=file_id, file=file, thumb_id=thumb_id, caption=caption)
-
-    def add_post_image(self, post_id, file_name, file_id, file, thumb_id=None, caption=None):
-        return self.__database.add_post_image(post_id, file_name, file_id, file, thumb_id=thumb_id, caption=caption)
-
-    def delete_post_image(self, post_image_id):
-        # delete any reference to image as post's title image
-        posts = self.get_posts(title_image=post_image_id)
-        for post in posts:
-            self.delete_title_image(post["post_id"])
-
-        return self.__database.delete_post_image(post_image_id)
-
-    def delete_title_image(self, post_id):
-        self.__database.delete_title_image(post_id)
-
-    # ---------------------------------------------------------------------
+    # TODO rename methods
 
     def a_get_user_posts(self, user_id, status=None):
         user_posts = []
@@ -332,10 +185,10 @@ class PelicanMarkdownBot(AbstractUserStateBot):
 
         return post
 
-    def a_update_post(self, post_id, title=None, content=None, gallery_title=None):
+    def a_update_post(self, post_id, title=None, content=None, gallery_title=None, title_image=None):
         updated_post = None
 
-        if self.__database.update_post(post_id, title=title, content=content, gallery_title=gallery_title) > 0:
+        if self.__database.update_post(post_id, title=title, content=content, gallery_title=gallery_title, title_image=title_image) > 0:
             updated_post = self.a_get_post(post_id)
 
         return updated_post
@@ -403,9 +256,10 @@ class PelicanMarkdownBot(AbstractUserStateBot):
             for tag in post.tags:
                 deleted_tag = self.a_delete_tag(post.id, tag.id)
 
-            # TODO remove title_image
+            if post.title_image is not None:
+                deleted_title_image = self.a_delete_title_image(post.id)
 
-            for image in post.gallery.images:
+            for image in post.gallery.images + ([post.title_image] if post.title_image is not None else []):
                 deleted_image = self.a_delete_image(post.id, image.id)
 
             if self.__database.delete_post(post.id) > 0:
@@ -421,7 +275,7 @@ class PelicanMarkdownBot(AbstractUserStateBot):
 
             # check if image is not already part of post's gallery or title image
             if file_id not in [image.file_id for image in
-                               (post.gallery.images + [post.title_image] if post.title_image is not None else [])]:
+                               post.gallery.images + ([post.title_image] if post.title_image is not None else [])]:
 
                 # TODO move this code somewhere else?
 
@@ -463,5 +317,16 @@ class PelicanMarkdownBot(AbstractUserStateBot):
                     # remove image from post and return deleted image
                     if self.__database.delete_post_image(image.id) > 0:
                         deleted_image = Image(image.id, image.name, image.file_id, image.file, thumb_id=image.thumb_id, caption=image.caption)
+
+        return deleted_image
+
+    def a_delete_title_image(self, post_id):
+        deleted_image = None
+
+        post = self.a_get_post(post_id)
+        if post is not None:
+
+            if post.title_image is not None and self.__database.delete_title_image(post_id) > 0:
+                deleted_image = post.title_image
 
         return deleted_image

@@ -13,6 +13,7 @@ class SQLDBWrapper:
     """
 
     # TODO put statement execution in try-except and log any issues
+    # TODO pslit up image data structure like for tags
 
     def __init__(self, datbase_name):
         self.__conn = sqlite3.connect(datbase_name)
@@ -226,6 +227,8 @@ class SQLDBWrapper:
         cursor = self.__conn.cursor()
         cursor.execute(stmt, tuple(args))
         self.__conn.commit()
+
+        return cursor.rowcount
 
     # -------------------------------------------------- tag -----------------------------------------------------------
 

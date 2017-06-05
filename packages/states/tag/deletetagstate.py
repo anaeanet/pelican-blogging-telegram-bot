@@ -1,5 +1,6 @@
 from packages.bot.parsemode import ParseMode
 from packages.states.navigation.selectdraftupdatestate import SelectDraftUpdateState
+from packages.datamodel.poststate import PostState
 
 __author__ = "aneanet"
 
@@ -7,6 +8,7 @@ __author__ = "aneanet"
 class DeleteTagState(SelectDraftUpdateState):
     """
     Concrete state implementation.
+
     Lets the user select a tag for deletion.
     """
 
@@ -14,25 +16,25 @@ class DeleteTagState(SelectDraftUpdateState):
     def welcome_message(self):
         message = "It seems the draft you selected no longer exists..."
 
-        user_drafts = self.context.get_posts(post_id=self.post_id)
-        if len(user_drafts) > 0:
-            post_title = user_drafts[0]["title"]
-            message = "Which <b>tag</b> do you want to <b>delete</b> from draft <b>" + post_title + "</b>?"
+        post = self.context.a_get_post(self.post_id)
+        if post is not None:
+            message = "Which <b>tag</b> do you want to <b>delete</b> from draft <b>" + post.title + "</b>?"
 
         return message
 
     @property
     def callback_options(self):
+
+        # add buttons to return to update option menu, draft list
         reply_options = [{"text": "<< update options", "callback_data": "/selectupdate"}
                         , {"text": "<< drafts", "callback_data": "/updatedraft"}]
 
         # show deletion button for every tag currently assigned to draft
-        for post_tag in self.context.get_post_tags(post_id=self.post_id):
-            tags = self.context.get_tags(tag_id=post_tag["tag_id"])
-            for tag in tags:
-                reply_options.append({"text": tag["name"], "callback_data": "/deleteposttag " + str(tag["tag_id"])})
+        post_tags = self.context.a_get_post_tags(self.post_id)
+        for tag in post_tags:
+            reply_options.append({"text": tag.name, "callback_data": "/deleteposttag " + str(tag.id)})
 
-        # make sure that "mainmenu" button always covers entire width of table
+        # add button to return to main menu, make sure it always covers entire width of table
         if len(reply_options) % 2 == 1:
             reply_options.append({})
         reply_options.append({"text": "<< main menu", "callback_data": "/mainmenu"})
@@ -43,54 +45,50 @@ class DeleteTagState(SelectDraftUpdateState):
         next_state = self
         command_array = data.split(" ")
 
-        # only accept "/deleteposttag ..." callback queries, have super() handle everything else
-        if len(command_array) > 1 and command_array[0] == "/deleteposttag":
+        # only accept "/deleteposttag <tag_id>" callback queries
+        if len(command_array) == 2 and command_array[0] == "/deleteposttag":
 
-            # tag selected for deletion - /deleteposttag <tag_id>
-            if len(command_array) == 2:
-                tag_id = command_array[1]
+            tag_id = command_array[1]
 
-                user_drafts = self.context.get_posts(post_id=self.post_id)
-                if len(user_drafts) > 0:
-                    post_title = user_drafts[0]["title"]
+            # check if previously selected post still exists
+            post = self.context.a_get_post(self.post_id)
+            if post is not None:
 
-                    tags = self.context.get_tags(tag_id=tag_id)
-                    post_tags = self.context.get_post_tags(post_id=self.post_id, tag_id=tag_id)
-                    if len(tags) > 0 and len(post_tags) > 0:
-                        post_tag_id = post_tags[0]["post_tag_id"]
-                        tag_name = tags[0]["name"]
+                deleted_tag = self.context.a_delete_tag(post.id, tag_id)
 
-                        self.context.delete_post_tag(post_tag_id)
-                        self.context.edit_message_text(chat_id, message_id
-                                                       ,
-                                                       "Tag <b>" + tag_name + "</b> has been <b>deleted</b> from draft <b>" + post_title + "</b>."
-                                                       , parse_mode=ParseMode.HTML.value)
-
-                    else:
-                        self.context.edit_message_text(chat_id, self.message_id
-                                                       , "It seems the tag you selected no longer exists..."
-                                                       , parse_mode=ParseMode.HTML.value)
-
-                    # show remaining tags for deletion
-                    if len(self.context.get_post_tags(post_id=self.post_id)) > 0:
-                        next_state = DeleteTagState(self.context, user_id, self.post_id, chat_id=chat_id)
-                    # no remaining tags -> automatically go back to update option menu
-                    else:
-                        next_state = SelectDraftUpdateState(self.context, user_id, self.post_id, chat_id=chat_id)
-
+                # tag removal successful
+                if deleted_tag is not None:
+                    self.context.edit_message_text(chat_id, message_id
+                                                    , "Tag <b>" + deleted_tag.name + "</b> has been <b>deleted</b> from draft <b>" + post.title + "</b>."
+                                                    , parse_mode=ParseMode.HTML.value)
+                # tag removal not successful
                 else:
                     self.context.edit_message_text(chat_id, self.message_id
-                                                   , "It seems the draft you selected no longer exists..."
+                                                   , "It seems the tag you selected no longer exists..."
                                                    , parse_mode=ParseMode.HTML.value)
 
-                    # show remaining drafts for deletion
-                    if len(self.context.get_posts(user_id=user_id, status="draft")) > 0:
-                        from packages.states.draft.deletedraftstate import DeleteDraftState
-                        next_state = DeleteDraftState(self.context, user_id, chat_id=chat_id)
-                    # no remaining drafts -> automatically go back to main menu
-                    else:
-                        from packages.states.navigation.idlestate import IdleState
-                        next_state = IdleState(self.context, user_id, chat_id=chat_id)
+                # show remaining tags for deletion
+                if len(post.tags) - (1 if deleted_tag is not None else 0) > 0:
+                    next_state = DeleteTagState(self.context, user_id, post.id, chat_id=chat_id)
+                # no remaining tags -> automatically go back to update option menu
+                else:
+                    next_state = SelectDraftUpdateState(self.context, user_id, post.id, chat_id=chat_id)
+
+            # previously selected post no longer exists
+            else:
+                self.context.send_message(chat_id
+                                          , "It seems the draft you selected no longer exists..."
+                                          , parse_mode=ParseMode.HTML.value)
+
+                # show remaining drafts for updating
+                user_drafts = self.context.a_get_user_posts(user_id=user_id, status=PostState.DRAFT)
+                if len(user_drafts) > 0:
+                    from packages.states.draft.updatedraftstate import DeleteDraftState
+                    next_state = DeleteDraftState(self.context, user_id, chat_id=chat_id)
+                # no remaining drafts -> automatically go back to main menu
+                else:
+                    from packages.states.navigation.idlestate import IdleState
+                    next_state = IdleState(self.context, user_id, chat_id=chat_id)
 
         else:
             next_state = super().process_callback_query(user_id, chat_id, message_id, data)

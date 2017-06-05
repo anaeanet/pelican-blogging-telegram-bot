@@ -1,5 +1,6 @@
 from packages.bot.parsemode import ParseMode
 from packages.states.navigation.selectdraftupdatestate import SelectDraftUpdateState
+from packages.datamodel.poststate import PostState
 
 __author__ = "aneanet"
 
@@ -7,6 +8,7 @@ __author__ = "aneanet"
 class DeleteImageState(SelectDraftUpdateState):
     """
     Concrete state implementation.
+
     Lets the user select an image for deletion.
     """
 
@@ -14,35 +16,32 @@ class DeleteImageState(SelectDraftUpdateState):
     def welcome_message(self):
         message = "It seems the draft you selected no longer exists..."
 
-        user_drafts = self.context.get_posts(post_id=self.post_id)
-        if len(user_drafts) > 0:
-            post_title = user_drafts[0]["title"]
-            message = "Which <b>image</b> do you want to <b>delete</b> from draft <b>" + post_title + "</b>?"
+        post = self.context.a_get_post(self.post_id)
+        if post is not None:
+            message = "Which <b>image</b> do you want to <b>delete</b> from draft <b>" + post.title + "</b>?"
 
         return message
 
     @property
     def callback_options(self):
+
+        # add buttons to return to update option menu, draft list
         reply_options = [{"text": "<< update options", "callback_data": "/selectupdate"}
                         , {"text": "<< drafts", "callback_data": "/updatedraft"}]
 
-        # identify title image of post
-        title_image_id = None
-        user_drafts = self.context.get_posts(post_id=self.post_id)
-        if len(user_drafts) > 0:
-            title_image_id = user_drafts[0]["title_image"]
+        # show deletion and preview button for every image currently assigned to draft
+        post = self.context.a_get_post(self.post_id)
+        if post is not None:
 
-        # show deletion & preview button for every image currently assigned to draft, mark current title image
-        for post_image in self.context.get_post_images(post_id=self.post_id):
-            button_title = post_image["file_name"]
+            if post.title_image is not None:
+                reply_options.append({"text": "[TITLE] " + post.title_image.name, "callback_data": "/deletepostimage " + str(post.title_image.id)})
+                reply_options.append({"text": "preview", "callback_data": "/previewpostimage " + str(post.title_image.id)})
 
-            # mark title image
-            if title_image_id is not None and post_image["post_image_id"] == title_image_id:
-                button_title += " [TITLE]"
+            for image in post.gallery.images:
+                reply_options.append({"text": image.name, "callback_data": "/deletepostimage " + str(image.id)})
+                reply_options.append({"text": "preview", "callback_data": "/previewpostimage " + str(image.id)})
 
-            reply_options.append({"text": button_title, "callback_data": "/deletepostimage " + str(post_image["post_image_id"])})
-            reply_options.append({"text": "preview", "callback_data": "/previewpostimage " + str(post_image["post_image_id"])})
-
+        # add button to return to main menu
         reply_options.append({"text": "<< main menu", "callback_data": "/mainmenu"})
 
         return reply_options
@@ -51,111 +50,98 @@ class DeleteImageState(SelectDraftUpdateState):
         next_state = self
         command_array = data.split(" ")
 
-        # only accept "/deletepostimage ..." callback queries, have super() handle everything else
-        if len(command_array) > 1 and command_array[0] == "/deletepostimage":
+        # only accept "/deletepostimage <post_image_id>" callback queries
+        if len(command_array) == 2 and command_array[0] == "/deletepostimage":
 
-            # post_image selected for deletion - /deletepostimage <post_image_id>
-            if len(command_array) == 2:
-                post_image_id = command_array[1]
+            post_image_id = command_array[1]
 
-                user_drafts = self.context.get_posts(post_id=self.post_id)
-                if len(user_drafts) > 0:
-                    post_title = user_drafts[0]["title"]
+            # check if previously selected post still exists
+            post = self.context.a_get_post(self.post_id)
+            if post is not None:
 
-                    post_images = self.context.get_post_images(post_image_id=post_image_id)
-                    if len(post_images) > 0:
-                        post_image_name = post_images[0]["file_name"]
+                deleted_image = self.context.a_delete_image(post.id, post_image_id)
 
-                        # remove image from post
-                        self.context.delete_post_image(post_image_id)
-
-                        self.context.edit_message_text(chat_id, message_id
-                                                       , "Image <b>" + post_image_name + "</b> has been <b>deleted</b> from draft <b>" + post_title + "</b>."
-                                                       , parse_mode=ParseMode.HTML.value)
-
-                    else:
-                        self.context.edit_message_text(chat_id, self.message_id
-                                                       , "It seems the image you selected no longer exists..."
-                                                       , parse_mode=ParseMode.HTML.value)
-
-                    # show remaining images for deletion
-                    if len(self.context.get_post_images(post_id=self.post_id)) > 0:
-                        next_state = DeleteImageState(self.context, user_id, self.post_id, chat_id=chat_id)
-                    # no remaining images -> automatically go back to update option menu
-                    else:
-                        next_state = SelectDraftUpdateState(self.context, user_id, self.post_id, chat_id=chat_id)
-
+                # image removal successful
+                if deleted_image is not None:
+                    self.context.edit_message_text(chat_id, message_id
+                                                   , "Image <b>" + deleted_image.name + "</b> has been <b>deleted</b> from draft <b>" + post.title + "</b>."
+                                                   , parse_mode=ParseMode.HTML.value)
+                # image removal not successful
                 else:
                     self.context.edit_message_text(chat_id, self.message_id
-                                                   , "It seems the draft you selected no longer exists..."
+                                                   , "It seems the image you selected no longer exists..."
                                                    , parse_mode=ParseMode.HTML.value)
 
-                    # show remaining drafts for deletion
-                    if len(self.context.get_posts(user_id=user_id, status="draft")) > 0:
-                        from packages.states.draft.deletedraftstate import DeleteDraftState
-                        next_state = DeleteDraftState(self.context, user_id, chat_id=chat_id)
-                    # no remaining drafts -> automatically go back to main menu
-                    else:
-                        from packages.states.navigation.idlestate import IdleState
-                        next_state = IdleState(self.context, user_id, chat_id=chat_id)
+                # show remaining images for deletion
+                post_images = post.gallery.images + ([post.title_image] if post.title_image is not None else [])
+                if len(post_images) - (1 if deleted_image is not None else 0) > 0:
+                    next_state = DeleteImageState(self.context, user_id, post.id, chat_id=chat_id)
+                # no remaining images -> automatically go back to update option menu
+                else:
+                    next_state = SelectDraftUpdateState(self.context, user_id, self.post_id, chat_id=chat_id)
 
-        # only accept "/previewpostimage ..." callback queries, have super() handle everything else
-        elif len(command_array) > 1 and command_array[0] == "/previewpostimage":
+            # previously selected post no longer exists
+            else:
+                self.context.send_message(chat_id
+                                          , "It seems the draft you selected no longer exists..."
+                                          , parse_mode=ParseMode.HTML.value)
 
-            # post_image selected for preview - /previewpostimage <post_image_id>
-            if len(command_array) == 2:
-                post_image_id = command_array[1]
-
-                # remove inline keyboard from latest bot message (by leaving out reply_options parameter)
-                self.build_state_message(chat_id, self.welcome_message, message_id=self.message_id)
-
-                user_drafts = self.context.get_posts(post_id=self.post_id)
+                # show remaining drafts for updating
+                user_drafts = self.context.a_get_user_posts(user_id=user_id, status=PostState.DRAFT)
                 if len(user_drafts) > 0:
+                    from packages.states.draft.updatedraftstate import DeleteDraftState
+                    next_state = DeleteDraftState(self.context, user_id, chat_id=chat_id)
+                # no remaining drafts -> automatically go back to main menu
+                else:
+                    from packages.states.navigation.idlestate import IdleState
+                    next_state = IdleState(self.context, user_id, chat_id=chat_id)
 
-                    post_images = self.context.get_post_images(post_image_id=post_image_id)
-                    if len(post_images) > 0:
-                        post_image = post_images[0]
-                        thumb_id = post_image["thumb_id"]
-                        file_id = post_image["file_id"]
-                        file_name = post_image["file_name"]
-                        caption = post_image["caption"]
+        # only accept "/previewpostimage <post_image_id>" callback queries
+        elif len(command_array) == 2 and command_array[0] == "/previewpostimage":
 
-                        # build caption from file_name and actual caption - if one was provided
-                        image_caption = file_name
-                        if caption:
-                            image_caption += "\r\n" + caption
-                        if len(image_caption) > 100:
-                            image_caption = image_caption[:min(100, len(image_caption)-1)] + "..."
+            post_image_id = command_array[1]
 
-                        # send thumbnail, or original photo if no thumbnail exists
-                        self.context.send_photo(chat_id, thumb_id if thumb_id else file_id, caption=image_caption)
+            # remove inline keyboard from latest bot message (by leaving out reply_options parameter)
+            self.build_state_message(chat_id, self.welcome_message, message_id=self.message_id)
 
+            # check if previously selected post still exists
+            post = self.context.a_get_post(self.post_id)
+            if post is not None:
+
+                preview_image = None
+                for image in post.gallery.images + ([post.title_image] if post.title_image is not None else []):
+                    # ignore "wrong" images
+                    if str(image.id) != str(post_image_id):
+                        continue
                     else:
-                        self.context.edit_message_text(chat_id, self.message_id
-                                                       , "It seems the image you selected no longer exists..."
-                                                       , parse_mode=ParseMode.HTML.value)
+                        preview_image = image
 
-                    # show remaining images for deletion
-                    if len(self.context.get_post_images(post_id=self.post_id)) > 0:
-                        next_state = DeleteImageState(self.context, user_id, self.post_id, chat_id=chat_id)
-                    # no remaining images -> automatically go back to update option menu
-                    else:
-                        next_state = SelectDraftUpdateState(self.context, user_id, self.post_id, chat_id=chat_id)
-
+                # image found -> preview
+                if image is not None:
+                    self.context.send_photo(chat_id, image.thumb_id if image.thumb_id else image.file_id, caption=image.caption)
+                # image not found
                 else:
                     self.context.edit_message_text(chat_id, self.message_id
-                                                   , "It seems the draft you selected no longer exists..."
+                                                   , "It seems the image you selected no longer exists..."
                                                    , parse_mode=ParseMode.HTML.value)
 
-                    # show remaining drafts for deletion
-                    if len(self.context.get_posts(user_id=user_id, status="draft")) > 0:
-                        from packages.states.draft.deletedraftstate import DeleteDraftState
-                        next_state = DeleteDraftState(self.context, user_id, chat_id=chat_id)
-                    # no remaining drafts -> automatically go back to main menu
-                    else:
-                        from packages.states.navigation.idlestate import IdleState
-                        next_state = IdleState(self.context, user_id, chat_id=chat_id)
+                next_state = DeleteImageState(self.context, user_id, self.post_id, chat_id=chat_id)
 
+            # previously selected post no longer exists
+            else:
+                self.context.send_message(chat_id
+                                          , "It seems the draft you selected no longer exists..."
+                                          , parse_mode=ParseMode.HTML.value)
+
+                # show remaining drafts for updating
+                user_drafts = self.context.a_get_user_posts(user_id=user_id, status=PostState.DRAFT)
+                if len(user_drafts) > 0:
+                    from packages.states.draft.updatedraftstate import DeleteDraftState
+                    next_state = DeleteDraftState(self.context, user_id, chat_id=chat_id)
+                # no remaining drafts -> automatically go back to main menu
+                else:
+                    from packages.states.navigation.idlestate import IdleState
+                    next_state = IdleState(self.context, user_id, chat_id=chat_id)
         else:
             next_state = super().process_callback_query(user_id, chat_id, message_id, data)
 

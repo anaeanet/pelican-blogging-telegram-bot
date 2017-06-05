@@ -1,5 +1,6 @@
 from packages.bot.parsemode import ParseMode
 from packages.states.abstract.abstractuserstate import AbstractUserState
+from packages.datamodel.poststate import PostState
 
 __author__ = "aneanet"
 
@@ -7,6 +8,7 @@ __author__ = "aneanet"
 class IdleState(AbstractUserState):
     """
     Concrete state implementation.
+
     This class serves as start state for all users of "PelicanMarkdownBot" 
     and provides functionality to process common commands and navigation.
     """
@@ -18,10 +20,13 @@ class IdleState(AbstractUserState):
     @property
     def callback_options(self):
         reply_options = [{"text": "CREATE a draft", "callback_data": "/createdraft"}]
-        user_drafts = self.context.get_posts(user_id=self.user_id, status="draft")
+
+        # if user already has any draft posts, show buttons to update or delete them
+        user_drafts = self.context.a_get_user_posts(self.user_id, status=PostState.DRAFT)
         if len(user_drafts) > 0:
             reply_options.append({"text": "UPDATE a draft", "callback_data": "/updatedraft"})
             reply_options.append({"text": "DELETE a draft", "callback_data": "/deletedraft"})
+
         return reply_options
 
     def process_message(self, user_id, chat_id, text, entities):
@@ -65,7 +70,7 @@ class IdleState(AbstractUserState):
         next_state = self
         command_array = data.split(" ")
 
-        if len(command_array) > 0:
+        if len(command_array) == 1:
 
             if command_array[0] == "/mainmenu":
                 next_state = IdleState(self.context, user_id, chat_id=chat_id, message_id=message_id)
