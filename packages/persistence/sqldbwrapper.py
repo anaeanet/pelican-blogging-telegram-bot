@@ -12,6 +12,8 @@ class SQLDBWrapper:
     to separate bot implementation from specific database implementation.
     """
 
+    # TODO put statement execution in try-except and log any issues
+
     def __init__(self, datbase_name):
         self.__conn = sqlite3.connect(datbase_name)
 
@@ -191,6 +193,8 @@ class SQLDBWrapper:
     def delete_post(self, post_id):
         stmt = "DELETE FROM post WHERE post_id = ?"
         args = [post_id]
+
+        # TODO delete foreign key objects before deleting post
 
         cursor = self.__conn.cursor()
         cursor.execute(stmt, tuple(args))
