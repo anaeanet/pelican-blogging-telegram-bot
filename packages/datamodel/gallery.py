@@ -3,13 +3,13 @@ __author__ = 'anaeanet'
 
 class Gallery:
 
-    def __init__(self, name, images):
-        self.__name = name
+    def __init__(self, title, images):
+        self.__title = title
         self.__images = images
 
     @property
-    def name(self):
-        return self.__name
+    def title(self):
+        return self.__title
 
     @property
     def images(self):

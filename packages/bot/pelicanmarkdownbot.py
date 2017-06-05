@@ -317,8 +317,7 @@ class PelicanMarkdownBot(AbstractUserStateBot):
                 if post_image["post_image_id"] != post["title_image"]:
                     gallery_images.append(img)
 
-            if len(gallery_images) > 0:
-                post_gallery = Gallery(post["gallery_title"], gallery_images)
+            post_gallery = Gallery(post["gallery_title"], gallery_images)
 
         return post_gallery
 
@@ -403,3 +402,11 @@ class PelicanMarkdownBot(AbstractUserStateBot):
             deleted_post = post
 
         return deleted_post
+
+    def a_update_post(self, post_id, title=None, content=None, gallery_title=None):
+        updated_post = None
+
+        if self.__database.update_post(post_id, title=title, content=content, gallery_title=gallery_title) > 0:
+            updated_post = self.a_get_post(post_id)
+
+        return updated_post
