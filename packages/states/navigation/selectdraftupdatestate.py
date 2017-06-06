@@ -57,7 +57,7 @@ class SelectDraftUpdateState(AbstractUserPostState, IdleState):
 
             # --- title image buttons ---
 
-            # only show option to set title image if post already has at least one image
+            # only show option to set title image if post already has at least one non-title image
             if len(post.gallery.images) > 0:
                 reply_options.append({"text": "SET title image", "callback_data": "/selectupdate /settitleimage"})
 

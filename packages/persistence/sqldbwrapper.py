@@ -15,6 +15,7 @@ class SQLDBWrapper:
     # TODO put statement execution in try-except and log any issues
     # TODO split up image data structure like for tags
     # TODO have sql functions return objects rather than dicts
+    # TODO add author name in user table
 
     def __init__(self, datbase_name):
         self.__conn = sqlite3.connect(datbase_name)
@@ -50,28 +51,17 @@ class SQLDBWrapper:
 
                     , "CREATE TABLE IF NOT EXISTS image (image_id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT"
                                                         + ", file_name TEXT NOT NULL"
-                                                        + ", file_id TEXT NOT NULL"
+                                                        + ", file_id TEXT NOT NULL UNIQUE"
                                                         + ", file BLOB NOT NULL"
-                                                        + ", thumb_id TEXT"
-                                                        + ", caption TEXT)"
+                                                        + ", thumb_id TEXT)"
 
-                    , "CREATE TABLE IF NOT EXISTS post_image (post_image_id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT"
-                                                        + ", post_id INTEGER NOT NULL"
-                                                        + ", file_name TEXT NOT NULL"
-                                                        + ", file_id TEXT NOT NULL"
-                                                        + ", file BLOB NOT NULL"
-                                                        + ", thumb_id TEXT"
-                                                        + ", caption TEXT"
-                                                        + ", FOREIGN KEY(post_id) REFERENCES post(post_id))"
-                    ]
-
-        """
                     , "CREATE TABLE IF NOT EXISTS post_image (post_image_id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT"
                                                         + ", post_id INTEGER NOT NULL"
                                                         + ", image_id INTEGER NOT NULL"
+                                                        + ", caption TEXT"
                                                         + ", FOREIGN KEY(post_id) REFERENCES post(post_id)"
                                                         + ", FOREIGN KEY(image_id) REFERENCES image(image_id))"
-        """
+                    ]
 
         for stmt in tbl_stmts:
             self.__conn.execute(stmt)
@@ -320,9 +310,53 @@ class SQLDBWrapper:
 
         return cursor.rowcount
 
+    # -------------------------------------------------- image ---------------------------------------------------------
+
+    def get_images(self, image_id=None, file_name=None, file_id=None, file=None, thumb_id=None):
+        param_dict = dict({key: value for key, value in locals().items() if key != "self" and value is not None})
+
+        stmt = "SELECT * FROM image"
+        args = []
+
+        if len(param_dict) > 0:
+            stmt += " WHERE " + " = ? AND ".join(param_dict.keys()) + " = ?"
+            for key, value in param_dict.items():
+                args.append(value)
+
+        return [dict({"image_id": x[0]
+                         , "file_name": x[1]
+                         , "file_id": x[2]
+                         , "file": x[3]
+                         , "thumb_id": x[4]}) for x in self.__conn.execute(stmt, tuple(args))]
+
+    def add_image(self, file_name, file_id, file, thumb_id=None):
+        param_dict = dict({key: value for key, value in locals().items() if key != "self" and value is not None})
+
+        stmt = "INSERT INTO image (" + ",".join(param_dict.keys()) + ") VALUES (" + ",".join(["?" for x in param_dict.keys()]) + ")"
+        args = []
+
+        for key, value in param_dict.items():
+            args.append(value)
+
+        cursor = self.__conn.cursor()
+        cursor.execute(stmt, tuple(args))
+        self.__conn.commit()
+
+        return cursor.lastrowid
+
+    def delete_image(self, image_id):
+        stmt = "DELETE FROM image WHERE image_id = ?"
+        args = [image_id]
+
+        cursor = self.__conn.cursor()
+        cursor.execute(stmt, tuple(args))
+        self.__conn.commit()
+
+        return cursor.rowcount
+
     # -------------------------------------------------- post_image ----------------------------------------------------
 
-    def get_post_images(self, post_image_id=None, post_id=None, file_name=None, file_id=None, file=None, thumb_id=None, caption=None):
+    def get_post_images(self, post_image_id=None, post_id=None, image_id=None, caption=None):
         param_dict = dict({key: value for key, value in locals().items() if key != "self" and value is not None})
 
         stmt = "SELECT * FROM post_image"
@@ -335,13 +369,10 @@ class SQLDBWrapper:
 
         return [dict({"post_image_id": x[0]
                         , "post_id": x[1]
-                        , "file_name": x[2]
-                        , "file_id": x[3]
-                        , "file": x[4]
-                        , "thumb_id": x[5]
-                        , "caption": x[6]}) for x in self.__conn.execute(stmt, tuple(args))]
+                        , "image_id": x[2]
+                        , "caption": x[3]}) for x in self.__conn.execute(stmt, tuple(args))]
 
-    def add_post_image(self, post_id, file_name, file_id, file, thumb_id=None, caption=None):
+    def add_post_image(self, post_id, image_id, caption=None):
         param_dict = dict({key: value for key, value in locals().items() if key != "self" and value is not None})
 
         stmt = "INSERT INTO post_image (" + ",".join(param_dict.keys()) + ") VALUES (" + ",".join(["?" for x in param_dict.keys()]) + ")"

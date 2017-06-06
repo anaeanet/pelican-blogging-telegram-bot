@@ -118,60 +118,6 @@ class PelicanMarkdownBot(AbstractUserStateBot):
 
         return post
 
-    def get_post_tags(self, post_id):
-        user_post_tags = []
-
-        draft_tags = self.__database.get_post_tags(post_id=post_id)
-        for draft_tag in draft_tags:
-
-            tags = self.__database.get_tags(tag_id=draft_tag["tag_id"])
-            for tag in tags:
-                user_post_tags.append(Tag(tag["tag_id"], tag["name"]))
-
-        return user_post_tags
-
-    def get_post_title_image(self, post_id):
-        post_title_image = None
-
-        posts = self.__database.get_posts(post_id=post_id)
-        if len(posts) == 1:
-            post = posts[0]
-
-            post_image_id = post["title_image"]
-            if post_image_id is not None:
-
-                post_images = self.__database.get_post_images(post_image_id=post["title_image"])
-                if len(post_images) == 1:
-                    post_image = post_images[0]
-
-                    post_title_image = Image(post_image["post_image_id"]
-                                             , post_image["file_name"], post_image["file_id"], post_image["file"]
-                                             , thumb_id=post_image["thumb_id"], caption=post_image["caption"])
-
-        return post_title_image
-
-    def get_post_gallery(self, post_id):
-        post_gallery = None
-
-        posts = self.__database.get_posts(post_id=post_id)
-        if len(posts) == 1:
-            post = posts[0]
-            gallery_images = []
-
-            post_images = self.__database.get_post_images(post_id=post_id)
-            for post_image in post_images:
-
-                img = Image(post_image["post_image_id"]
-                            , post_image["file_name"], post_image["file_id"], post_image["file"]
-                            , thumb_id=post_image["thumb_id"], caption=post_image["caption"])
-
-                if post_image["post_image_id"] != post["title_image"]:
-                    gallery_images.append(img)
-
-            post_gallery = Gallery(post["gallery_title"], gallery_images)
-
-        return post_gallery
-
     def create_post(self, user_id, title, status):
         post = None
 
@@ -183,13 +129,49 @@ class PelicanMarkdownBot(AbstractUserStateBot):
 
         return post
 
-    def update_post(self, post_id, title=None, content=None, gallery_title=None, title_image=None):
+    def update_post(self, post_id, title=None, content=None, gallery_title=None):
         updated_post = None
 
-        if self.__database.update_post(post_id, title=title, content=content, gallery_title=gallery_title, title_image=title_image) > 0:
+        if self.__database.update_post(post_id, title=title, content=content, gallery_title=gallery_title) > 0:
             updated_post = self.get_post(post_id)
 
         return updated_post
+
+    def delete_post(self, post_id):
+        deleted_post = None
+
+        post = self.get_post(post_id)
+        if post is not None:
+
+            # remove tags from post
+            for tag in post.tags:
+                deleted_tag = self.delete_post_tag(post.id, tag.id)
+
+            # remove reference to title image from post
+            if post.title_image is not None:
+                deleted_title_image = self.delete_post_title_image(post.id)
+
+            # remove all links to images from post
+            for image in post.gallery.images + ([post.title_image] if post.title_image is not None else []):
+                deleted_image = self.delete_post_image(post.id, image.id)
+
+            # delete post itself
+            if self.__database.delete_post(post.id) > 0:
+                deleted_post = post
+
+        return deleted_post
+
+    def get_post_tags(self, post_id):
+        user_post_tags = []
+
+        post_tags = self.__database.get_post_tags(post_id=post_id)
+        for draft_tag in post_tags:
+
+            tags = self.__database.get_tags(tag_id=draft_tag["tag_id"])
+            for tag in tags:
+                user_post_tags.append(Tag(tag["tag_id"], tag["name"]))
+
+        return user_post_tags
 
     def add_post_tag(self, post_id, name):
         tag = None
@@ -244,26 +226,30 @@ class PelicanMarkdownBot(AbstractUserStateBot):
 
         return deleted_tag
 
-    def delete_post(self, post_id):
-        deleted_post = None
+    def get_post_gallery(self, post_id):
+        post_gallery = None
 
-        post = self.get_post(post_id)
-        if post is not None:
+        posts = self.__database.get_posts(post_id=post_id)
+        if len(posts) == 1:
+            post = posts[0]
+            gallery_images = []
 
-            # remove tags from post
-            for tag in post.tags:
-                deleted_tag = self.delete_post_tag(post.id, tag.id)
+            post_images = self.__database.get_post_images(post_id=post_id)
+            for post_image in post_images:
 
-            if post.title_image is not None:
-                deleted_title_image = self.delete_post_title_image(post.id)
+                images = self.__database.get_images(image_id=post_image["image_id"])
+                for image in images:
 
-            for image in post.gallery.images + ([post.title_image] if post.title_image is not None else []):
-                deleted_image = self.delete_post_image(post.id, image.id)
+                    img = Image(image["image_id"]
+                                , image["file_name"], image["file_id"], image["file"]
+                                , thumb_id=image["thumb_id"], caption=post_image["caption"])
 
-            if self.__database.delete_post(post.id) > 0:
-                deleted_post = post
+                    if post_image["post_image_id"] != post["title_image"]:
+                        gallery_images.append(img)
 
-        return deleted_post
+            post_gallery = Gallery(post["gallery_title"], gallery_images)
+
+        return post_gallery
 
     def add_post_image(self, post_id, file_name, file_id, thumb_id=None, caption=None):
         image = None
@@ -275,26 +261,37 @@ class PelicanMarkdownBot(AbstractUserStateBot):
             if file_id not in [image.file_id for image in
                                post.gallery.images + ([post.title_image] if post.title_image is not None else [])]:
 
-                # TODO move this code somewhere else?
+                # check if image exists at all, if not -> add to db
+                images = self.__database.get_images(file_id=file_id)
+                if len(images) == 0:
+                    image_id = 0
 
-                # get telegram "File" via file_id, then download actual image
-                file = None
-                telegram_file = self.get_file(file_id)
-                if "result" in telegram_file and "file_path" in telegram_file["result"]:
-                    file_url = telegram_file["result"]["file_path"]
-                    file_name += "." + file_url.rsplit(".", 1)[1]
-                    file = self.download_file(file_url)
+                    # TODO move this code somewhere else?
+
+                    # get telegram "File" via file_id, then download actual image
+                    file = None
+                    telegram_file = self.get_file(file_id)
+                    if "result" in telegram_file and "file_path" in telegram_file["result"]:
+                        file_url = telegram_file["result"]["file_path"]
+                        file_name += "." + file_url.rsplit(".", 1)[1]
+                        file = self.download_file(file_url)
+
+                    if file is not None:
+                        image_id = self.__database.add_image(file_name, file_id, file, thumb_id=thumb_id)
+
+                else:
+                    image_id = images[0]["image_id"]
 
                 # link image with post
-                if file is not None:
-                    post_image_id = self.__database.add_post_image(post.id, file_name, file_id, file, thumb_id=None, caption=caption)
+                if image_id > 0:
+                    post_image_id = self.__database.add_post_image(post.id, image_id, caption=caption)
 
                     if post_image_id > 0:
-                        image = Image(post_image_id, file_name, file_id, file, thumb_id=thumb_id, caption=caption)
+                        image = Image(image_id, file_name, file_id, file, thumb_id=thumb_id, caption=caption)
 
         return image
 
-    def delete_post_image(self, post_id, post_image_id):
+    def delete_post_image(self, post_id, image_id):
         deleted_image = None
 
         post = self.get_post(post_id)
@@ -304,19 +301,74 @@ class PelicanMarkdownBot(AbstractUserStateBot):
             for image in post.gallery.images + ([post.title_image] if post.title_image is not None else []):
 
                 # ignore images with "wrong" post_image_id
-                if str(image.id) != str(post_image_id):
+                if str(image.id) != str(image_id):
                     continue
                 else:
 
-                    # if image is post's title image, remove reference
-                    if post.title_image is not None and post.title_image.id == image.id:
-                        self.__database.delete_title_image(post.id)
+                    post_images = self.__database.get_post_images(post_id=post.id, image_id=image.id)
+                    if len(post_images) == 1:
+                        post_image_id = post_images[0]["post_image_id"]
 
-                    # remove image from post and return deleted image
-                    if self.__database.delete_post_image(image.id) > 0:
-                        deleted_image = Image(image.id, image.name, image.file_id, image.file, thumb_id=image.thumb_id, caption=image.caption)
+                        # if image is post's title image, remove reference
+                        if post.title_image is not None and post.title_image.id == image.id:
+                            self.__database.delete_title_image(post.id)
+
+                        # remove image from post and return deleted image
+                        if self.__database.delete_post_image(image.id) > 0:
+                            deleted_image = Image(image.id, image.name, image.file_id, image.file, thumb_id=image.thumb_id, caption=image.caption)
+
+        # check if image is used by any other draft, if not -> remove completely
+        if len(self.__database.get_post_images(image_id=image_id)) == 0:
+            self.__database.delete_image(image_id=image_id)
 
         return deleted_image
+
+    def get_post_title_image(self, post_id):
+        post_title_image = None
+
+        posts = self.__database.get_posts(post_id=post_id)
+        if len(posts) == 1:
+            post = posts[0]
+
+            post_image_id = post["title_image"]
+            if post_image_id is not None:
+
+                post_images = self.__database.get_post_images(post_image_id=post_image_id)
+                if len(post_images) == 1:
+                    post_image = post_images[0]
+
+                    images = self.__database.get_images(image_id=post_image["image_id"])
+                    if len(images) == 1:
+                        image = images[0]
+
+                        post_title_image = Image(image["image_id"]
+                                                , image["file_name"], image["file_id"], image["file"]
+                                                , thumb_id=image["thumb_id"], caption=post_image["caption"])
+
+        return post_title_image
+
+    def set_post_title_image(self, post_id, image_id):
+        title_image = None
+
+        post = self.get_post(post_id)
+        if post is not None:
+
+            # ensure that title image is already part of post's gallery
+            for image in post.gallery.images:
+
+                # ignore "wrong" images
+                if str(image.id) != str(image_id):
+                    continue
+                else:
+
+                    post_images = self.__database.get_post_images(post_id=post.id, image_id=image.id)
+                    if len(post_images) == 1:
+                        post_image_id = post_images[0]["post_image_id"]
+
+                        if self.__database.update_post(post.id, title_image=post_image_id) > 0:
+                            title_image = image
+
+        return title_image
 
     def delete_post_title_image(self, post_id):
         deleted_image = None

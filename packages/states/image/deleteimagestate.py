@@ -50,16 +50,16 @@ class DeleteImageState(SelectDraftUpdateState):
         next_state = self
         command_array = data.split(" ")
 
-        # only accept "/deletepostimage <post_image_id>" callback queries
+        # only accept "/deletepostimage <image_id>" callback queries
         if len(command_array) == 2 and command_array[0] == "/deletepostimage":
 
-            post_image_id = command_array[1]
+            image_id = command_array[1]
 
             # check if previously selected post still exists
             post = self.context.get_post(self.post_id)
             if post is not None:
 
-                deleted_image = self.context.delete_post_image(post.id, post_image_id)
+                deleted_image = self.context.delete_post_image(post.id, image_id)
 
                 # image removal successful
                 if deleted_image is not None:
@@ -96,10 +96,10 @@ class DeleteImageState(SelectDraftUpdateState):
                     from packages.states.navigation.idlestate import IdleState
                     next_state = IdleState(self.context, user_id, chat_id=chat_id)
 
-        # only accept "/previewpostimage <post_image_id>" callback queries
+        # only accept "/previewpostimage <image_id>" callback queries
         elif len(command_array) == 2 and command_array[0] == "/previewpostimage":
 
-            post_image_id = command_array[1]
+            image_id = command_array[1]
 
             # remove inline keyboard from latest bot message (by leaving out reply_options parameter)
             self.build_state_message(chat_id, self.welcome_message, message_id=self.message_id)
@@ -111,7 +111,7 @@ class DeleteImageState(SelectDraftUpdateState):
                 preview_image = None
                 for image in post.gallery.images + ([post.title_image] if post.title_image is not None else []):
                     # ignore "wrong" images
-                    if str(image.id) != str(post_image_id):
+                    if str(image.id) != str(image_id):
                         continue
                     else:
                         preview_image = image

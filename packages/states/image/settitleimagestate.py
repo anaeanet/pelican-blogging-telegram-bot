@@ -50,20 +50,20 @@ class SetTitleImageState(SelectDraftUpdateState):
         next_state = self
         command_array = data.split(" ")
 
-        # only accept "/settitleimage <post_image_id>" callback queries
+        # only accept "/settitleimage <image_id>" callback queries
         if len(command_array) == 2 and command_array[0] == "/settitleimage":
 
-            post_image_id = command_array[1]
+            image_id = command_array[1]
 
             # check if previously selected post still exists
             post = self.context.get_post(self.post_id)
             if post is not None:
 
-                updated_post = self.context.update_post(post.id, title_image=post_image_id)
+                title_image = self.context.set_post_title_image(post.id, image_id)
 
-                if updated_post is not None:
+                if title_image is not None:
                     self.context.edit_message_text(chat_id, message_id
-                                                   , "Image <b>" + updated_post.title_image.name + "</b> has been <b>set as title image</b> for draft <b>" + post.title + "</b>."
+                                                   , "Image <b>" + title_image.name + "</b> has been <b>set as title image</b> for draft <b>" + post.title + "</b>."
                                                    , parse_mode=ParseMode.HTML.value)
 
                 else:
@@ -90,10 +90,10 @@ class SetTitleImageState(SelectDraftUpdateState):
                     from packages.states.navigation.idlestate import IdleState
                     next_state = IdleState(self.context, user_id, chat_id=chat_id)
 
-        # only accept "/previewpostimage <post_image_id>" callback queries
+        # only accept "/previewpostimage <image_id>" callback queries
         elif len(command_array) == 2 and command_array[0] == "/previewpostimage":
 
-            post_image_id = command_array[1]
+            image_id = command_array[1]
 
             # remove inline keyboard from latest bot message (by leaving out reply_options parameter)
             self.build_state_message(chat_id, self.welcome_message, message_id=self.message_id)
@@ -105,7 +105,7 @@ class SetTitleImageState(SelectDraftUpdateState):
                 preview_image = None
                 for image in post.gallery.images + ([post.title_image] if post.title_image is not None else []):
                     # ignore "wrong" images
-                    if str(image.id) != str(post_image_id):
+                    if str(image.id) != str(image_id):
                         continue
                     else:
                         preview_image = image
