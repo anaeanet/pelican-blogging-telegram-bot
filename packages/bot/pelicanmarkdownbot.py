@@ -6,6 +6,7 @@ from packages.datamodel.gallery import Gallery
 from packages.datamodel.poststate import PostState
 from packages.datamodel.post import Post
 import packages.bot.telegram as telegram
+from datetime import datetime
 
 __author__ = "anaeanet"
 
@@ -77,10 +78,74 @@ class PelicanMarkdownBot(AbstractUserStateBot):
             # TODO: maybe do something with updates from unauthorized users?
             None
 
-    def publish(self, post_id, state):
+    def publish(self, post, post_state):
         is_published = False
 
-        # TODO
+        if post is not None and post_state in [state for state in PostState] \
+                and post.title is not None and post.content is not None:
+
+            # use current timestamp as publish date
+            tmsp_publish = datetime.now()
+
+            # check if post is based on previously published one, use original publish data
+            if post.original_post is not None:
+                original_post = self.get_post(post.original_post)
+                if original_post is not None:
+                    tmsp_publish = original_post.tmsp_publish
+                else:
+                    # TODO log error
+                    None
+
+            # use tmsp_publish as filename for blog post
+            md_file_name = tmsp_publish.strftime("%Y-%m-%d_%H-%M-%S")
+
+            # build content of markdown post file
+            md_post = "Title: {}".format(post.title) \
+                      + "\r\n" + "Date: {}".format(tmsp_publish.strftime("%Y-%m-%d %H:%M"))
+            if post.original_post is not None:
+                md_post += "\r\n" + "Modified: ".format(datetime.now().strftime("%Y-%m-%d %H:%M"))
+            if len(post.tags) > 0:
+                md_post += "\r\n" + "Tags: {}".format(", ".join([tag.name for tag in post.tags]))
+            if post.title_image is not None:
+                md_post += "\r\n" + "image: {photo}" + "{}".format(md_file_name) + "/" + "{}".format(post.title_image.name)
+            if len(post.gallery.images) > 0:
+                md_post += "\r\n" + "gallery: {photo}" + "{}".format(md_file_name) + "{" + post.gallery.title + "}"
+            md_post += "\r\n" + "Status: {}".format(post_state.value) \
+                       + "\r\n" \
+                       + "\r\n" + post.content
+
+            # TODO is it possible to create file and gallery folder at target location directly?
+
+            # write markdown post file to working directory
+            with open(md_file_name + ".md", "w") as post_file:
+                post_file.write(md_post)
+
+            # if any image is linked to post, create folder
+            if post.title_image is not None or len(post.gallery.images) > 0:
+                import os
+                import errno
+
+                try:
+                    os.makedirs(md_file_name)
+                except OSError as exception:
+                    if exception.errno != errno.EEXIST:
+                        raise
+
+                # create empty captions file
+                with open(os.path.join(md_file_name, "captions.txt"), "w") as captions_file:
+                    captions_file.write("# captions.txt")
+
+            # store all post images in the corresponding folder
+            for image in post.gallery.images + ([post.title_image] if post.title_image is not None else []):
+                with open(os.path.join(md_file_name, image.name), "wb") as img_file:
+                    img_file.write(image.file)
+                with open(os.path.join(md_file_name, "captions.txt"), "a") as captions_file:
+                    captions_file.write("\r\n" + image.name + ":" + image.caption)
+
+
+            # TODO check if md file saving was successful, if image saving was successful
+
+            # TODO publish post with tmsp_publish and publish_type, if update successful, return True and transfer files to target
 
         return is_published
 
@@ -128,7 +193,6 @@ class PelicanMarkdownBot(AbstractUserStateBot):
     def create_post(self, user_id, title, status, original_post=None):
         post = None
 
-        from datetime import datetime
         post_id = self.__database.add_post(user_id, title, status=status.value, gallery_title="Bildergalerie", tmsp_create=datetime.now(), content="", title_image=None, tmsp_publish=None, original_post=original_post)
 
         if post_id:

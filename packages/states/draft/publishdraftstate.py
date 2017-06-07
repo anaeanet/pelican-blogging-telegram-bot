@@ -8,7 +8,8 @@ __author__ = "aneanet"
 class PublishDraftState(SelectDraftUpdateState):
     """
     Concrete state implementation.
-    Accepts plain text message to publish a current draft either as draft post or final post.
+
+    Accepts user choice to publish a current draft either as draft or final post.
     """
 
     # TODO
@@ -51,9 +52,8 @@ class PublishDraftState(SelectDraftUpdateState):
         next_state = self
         command_array = data.split(" ")
 
-        # only accept "/publish <draft/post>" callback queries
-        if len(command_array) == 2 and command_array[0] == "/publish" \
-                and command_array[1] in [PostState.DRAFT.value, PostState.PUBLISHED.value]:
+        # only accept "/publish <draft/published>" callback queries
+        if len(command_array) == 2 and command_array[0] == "/publish" and command_array[1] in [state.value for state in PostState]:
 
             publish_type = command_array[1]
 
@@ -61,13 +61,13 @@ class PublishDraftState(SelectDraftUpdateState):
             post = self.context.get_post(self.post_id)
             if post is not None:
 
-                is_published = self.context.publish(post.id, publish_type)
+                is_published = self.context.publish(post, PostState(publish_type))
 
                 # publishing successful
                 if is_published:
                     self.context.edit_message_text(chat_id, message_id
                                                     , "<b>" + post.title + "</b> has been <b>published</b> as <b>"
-                                                    + ("draft" if publish_type == "draft" else "final post") + "</b>."
+                                                    + ("draft" if publish_type == PostState.DRAFT.value else "final post") + "</b>."
                                                     , parse_mode=ParseMode.HTML.value)
 
                     # if published as post -> go back to main menu
