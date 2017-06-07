@@ -77,6 +77,13 @@ class PelicanMarkdownBot(AbstractUserStateBot):
             # TODO: maybe do something with updates from unauthorized users?
             None
 
+    def publish(self, post_id, state):
+        is_published = False
+
+        # TODO
+
+        return is_published
+
     # --- following message act as intermediary wrappers for states changing db data ---
 
     def get_user_posts(self, user_id, status=None):
@@ -118,21 +125,21 @@ class PelicanMarkdownBot(AbstractUserStateBot):
 
         return post
 
-    def create_post(self, user_id, title, status):
+    def create_post(self, user_id, title, status, original_post=None):
         post = None
 
         from datetime import datetime
-        post_id = self.__database.add_post(user_id, title, status=status.value, gallery_title="Bildergalerie", tmsp_create=datetime.now(), content="", title_image=None, tmsp_publish=None, original_post_id=None)
+        post_id = self.__database.add_post(user_id, title, status=status.value, gallery_title="Bildergalerie", tmsp_create=datetime.now(), content="", title_image=None, tmsp_publish=None, original_post=original_post)
 
         if post_id:
             post = self.get_post(post_id)
 
         return post
 
-    def update_post(self, post_id, title=None, content=None, gallery_title=None):
+    def update_post(self, post_id, title=None, content=None, gallery_title=None, tmsp_publish=None, original_post=None):
         updated_post = None
 
-        if self.__database.update_post(post_id, title=title, content=content, gallery_title=gallery_title) > 0:
+        if self.__database.update_post(post_id, title=title, content=content, gallery_title=gallery_title, tmsp_publish=tmsp_publish, original_post=original_post) > 0:
             updated_post = self.get_post(post_id)
 
         return updated_post

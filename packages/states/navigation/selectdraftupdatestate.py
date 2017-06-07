@@ -129,12 +129,8 @@ class SelectDraftUpdateState(AbstractUserPostState, IdleState):
                 from packages.states.image.editgallerytitlestate import EditGalleryTitleState
                 next_state = EditGalleryTitleState(self.context, user_id, self.post_id, chat_id=chat_id, message_id=self.message_id)
             elif command_array[1] == "/publish":
-                # TODO
-                None
-                """
                 from packages.states.draft.publishdraftstate import PublishDraftState
                 next_state = PublishDraftState(self.context, user_id, self.post_id, chat_id=chat_id, message_id=self.message_id)
-                """
 
         else:
             next_state = super().process_callback_query(user_id, chat_id, message_id, data)

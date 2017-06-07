@@ -13,9 +13,9 @@ class SQLDBWrapper:
     """
 
     # TODO put statement execution in try-except and log any issues
-    # TODO split up image data structure like for tags
-    # TODO have sql functions return objects rather than dicts
+    # TODO have sql functions return objects rather than dicts?
     # TODO add author name in user table
+    # TODO make send_message, ... in abstracttelegrambot return an object rather than dict...
 
     def __init__(self, datbase_name):
         self.__conn = sqlite3.connect(datbase_name)
@@ -35,10 +35,10 @@ class SQLDBWrapper:
                                                         + ", content TEXT NOT NULL DEFAULT ''"
                                                         + ", title_image INTEGER"
                                                         + ", tmsp_publish TIMESTAMP"
-                                                        + ", original_post_id INTEGER"
+                                                        + ", original_post INTEGER"
                                                         + ", FOREIGN KEY(user_id) REFERENCES user(user_id)"
                                                         + ", FOREIGN KEY(title_image) REFERENCES post_image(post_image_id)"
-                                                        + ", FOREIGN KEY(original_post_id) REFERENCES post(post_id))"
+                                                        + ", FOREIGN KEY(original_post) REFERENCES post(post_id))"
 
                     , "CREATE TABLE IF NOT EXISTS tag (tag_id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT"
                                                         + ", name TEXT NOT NULL UNIQUE)"
@@ -161,7 +161,7 @@ class SQLDBWrapper:
 
     # -------------------------------------------------- post ----------------------------------------------------------
 
-    def get_posts(self, post_id=None, user_id=None, title=None, status=None, gallery_title=None, tmsp_create=None, content=None, title_image=None, tmsp_publish=None, original_post_id=None):
+    def get_posts(self, post_id=None, user_id=None, title=None, status=None, gallery_title=None, tmsp_create=None, content=None, title_image=None, tmsp_publish=None, original_post=None):
         param_dict = dict({key: value for key, value in locals().items() if key != "self" and value is not None})
 
         stmt = "SELECT * FROM post"
@@ -181,9 +181,9 @@ class SQLDBWrapper:
                         , "content": x[6]
                         , "title_image": x[7]
                         , "tmsp_publish": x[8]
-                        , "original_post_id": x[9]}) for x in self.__conn.execute(stmt, tuple(args))]
+                        , "original_post": x[9]}) for x in self.__conn.execute(stmt, tuple(args))]
 
-    def add_post(self, user_id, title, status=None, gallery_title=None, tmsp_create=None, content=None, title_image=None, tmsp_publish=None, original_post_id=None):
+    def add_post(self, user_id, title, status=None, gallery_title=None, tmsp_create=None, content=None, title_image=None, tmsp_publish=None, original_post=None):
         param_dict = dict({key: value for key, value in locals().items() if key != "self" and value is not None})
 
         stmt = "INSERT INTO post (" + ",".join(param_dict.keys()) + ") VALUES (" + ",".join(["?" for x in param_dict.keys()]) + ")"
@@ -210,7 +210,7 @@ class SQLDBWrapper:
 
         return cursor.rowcount
 
-    def update_post(self, post_id, user_id=None, title=None, status=None, gallery_title=None, tmsp_create=None, content=None, title_image=None, tmsp_publish=None, original_post_id=None):
+    def update_post(self, post_id, user_id=None, title=None, status=None, gallery_title=None, tmsp_create=None, content=None, title_image=None, tmsp_publish=None, original_post=None):
         param_dict = dict({key: value for key, value in locals().items() if key != "self" and value is not None})
 
         stmt = "UPDATE post SET " + " = ?, ".join(param_dict.keys()) + " = ? WHERE post_id = ?"
