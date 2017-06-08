@@ -20,8 +20,8 @@ class PelicanMarkdownBot(AbstractUserStateBot):
     as well as linked image galleries for <a href="http://docs.getpelican.com/en/stable/">PELICAN</a> blog posts.
     """
 
-    def __init__(self, token_url, file_token_url, database, authorized_users=[]):
-        super().__init__(token_url, file_token_url, IdleState)
+    def __init__(self, token, url, file_url, database, authorized_users=[]):
+        super().__init__(token, url, file_url, IdleState)
         self.__database = database
         self.__database.setup()
 
@@ -92,9 +92,6 @@ class PelicanMarkdownBot(AbstractUserStateBot):
                 original_post = self.get_post(post.original_post)
                 if original_post is not None:
                     tmsp_publish = original_post.tmsp_publish
-                else:
-                    # TODO log error
-                    None
 
             # use tmsp_publish as filename for blog post
             md_file_name = tmsp_publish.strftime("%Y-%m-%d_%H-%M-%S")
@@ -120,7 +117,7 @@ class PelicanMarkdownBot(AbstractUserStateBot):
             with open(md_file_name + ".md", "w") as post_file:
                 post_file.write(md_post)
 
-            # if any image is linked to post, create folder
+            # if any image is linked to post, create folder if it does not exist already
             if post.title_image is not None or len(post.gallery.images) > 0:
                 import os
                 import errno

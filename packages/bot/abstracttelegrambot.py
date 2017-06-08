@@ -11,9 +11,9 @@ class AbstractTelegramBot:
     It only takes care of receiving updates and sending messages.
     """
 
-    def __init__(self, token_url, file_token_url):
-        self.__url = token_url
-        self.__file_url = file_token_url
+    def __init__(self, token, url, file_url):
+        self.__url = url + str(token) + "/"
+        self.__file_url = file_url + str(token) + "/"
         self.__next_update_id = None
 
         if type(self) is AbstractTelegramBot:

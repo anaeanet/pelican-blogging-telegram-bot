@@ -34,7 +34,10 @@ class IdleState(AbstractUserState):
 
         # delete previous bot message (if existing) before sending new ones
         if self.message_id is not None:
-            self.context.delete_message(chat_id, self.message_id)
+            result = self.context.delete_message(chat_id, self.message_id)
+            # edit message instead if deletion does not work due to messag ebeing too old
+            if False in result.values():
+                self.context.edit_message_text(chat_id, self.message_id, "Message/Command not recognized!")
 
         # welcome message
         if text in ["/start"]:
@@ -59,7 +62,10 @@ class IdleState(AbstractUserState):
 
         # delete previous bot message (if existing) before sending new ones
         if self.message_id is not None:
-            self.context.delete_message(chat_id, self.message_id)
+            result = self.context.delete_message(chat_id, self.message_id)
+            # edit message instead if deletion does not work due to messag ebeing too old
+            if False in result.values():
+                self.context.edit_message_text(chat_id, self.message_id, "Message/Command not recognized!")
 
         # simply ignore arbitrary photo message by moving current bot message underneath latest user message
         self.build_state_message(chat_id, self.welcome_message, reply_options=self.callback_options)

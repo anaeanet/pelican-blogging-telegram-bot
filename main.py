@@ -9,12 +9,13 @@ __author__ = "anaeanet"
 
 
 def main():
-    url = config.url.format(config.token)
-    file_url = config.file_url.format(config.token)
+    token = config.token
+    url = config.url
+    file_url = config.file_url
     database = SQLDBWrapper(config.database_name)
     authorized_users = config.authorized_users
 
-    bot = PelicanMarkdownBot(url, file_url, database, authorized_users=authorized_users)
+    bot = PelicanMarkdownBot(token, url, file_url, database, authorized_users=authorized_users)
     bot.run()   # TODO once development is finished, remove row
 
     try:

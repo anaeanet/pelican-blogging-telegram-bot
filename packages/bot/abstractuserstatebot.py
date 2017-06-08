@@ -10,8 +10,8 @@ class AbstractUserStateBot(AbstractTelegramBot):
     This bot class works like a finite state machine with multi-user support.
     """
 
-    def __init__(self, token_url, file_token_url, start_state_class):
-        super().__init__(token_url, file_token_url)
+    def __init__(self, token, url, file_url, start_state_class):
+        super().__init__(token, url, file_url)
         self.__start_state_class = start_state_class
         self.__user_state_dict = dict()
 
