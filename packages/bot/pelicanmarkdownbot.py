@@ -20,10 +20,12 @@ class PelicanMarkdownBot(AbstractUserStateBot):
     as well as linked image galleries for <a href="http://docs.getpelican.com/en/stable/">PELICAN</a> blog posts.
     """
 
-    def __init__(self, token, url, file_url, database, authorized_users=[]):
+    def __init__(self, token, url, file_url, database, post_target_url, gallery_target_url, authorized_users=[]):
         super().__init__(token, url, file_url, IdleState)
         self.__database = database
         self.__database.setup()
+        self.__post_target_url = post_target_url
+        self.__gallery_target_url = gallery_target_url
 
         # store all authorized users in database
         if authorized_users is not None:
@@ -87,11 +89,18 @@ class PelicanMarkdownBot(AbstractUserStateBot):
             # use current timestamp as publish date
             tmsp_publish = datetime.now()
 
-            # check if post is based on previously published one, use original publish data
+            # get original post if current post is based on an existing one
+            original_image_names = []
             if post.original_post is not None:
                 original_post = self.get_post(post.original_post)
+
+                # use original post's publish date
                 if original_post is not None:
                     tmsp_publish = original_post.tmsp_publish
+
+                # get all images attached to original post
+                    original_image_names = [image.name for image in original_post.gallery.images
+                                            + ([original_post.title_image] if original_post.title_image is not None else [])]
 
             # use tmsp_publish as filename for blog post
             md_file_name = tmsp_publish.strftime("%Y-%m-%d_%H-%M-%S")
@@ -99,6 +108,8 @@ class PelicanMarkdownBot(AbstractUserStateBot):
             # build content of markdown post file
             md_post = "Title: {}".format(post.title) \
                       + "\r\n" + "Date: {}".format(tmsp_publish.strftime("%Y-%m-%d %H:%M"))
+                    # TODO if draft->published, print current date as publication date
+
             if post.original_post is not None:
                 md_post += "\r\n" + "Modified: ".format(datetime.now().strftime("%Y-%m-%d %H:%M"))
             if len(post.tags) > 0:
@@ -111,16 +122,13 @@ class PelicanMarkdownBot(AbstractUserStateBot):
                        + "\r\n" \
                        + "\r\n" + post.content
 
-            # TODO is it possible to create file and gallery folder at target location directly?
-
             # write markdown post file to working directory
             with open(md_file_name + ".md", "w") as post_file:
                 post_file.write(md_post)
 
             # if any image is linked to post, create folder if it does not exist already
             if post.title_image is not None or len(post.gallery.images) > 0:
-                import os
-                import errno
+                import os, errno
 
                 try:
                     os.makedirs(md_file_name)
@@ -136,13 +144,26 @@ class PelicanMarkdownBot(AbstractUserStateBot):
             for image in post.gallery.images + ([post.title_image] if post.title_image is not None else []):
                 with open(os.path.join(md_file_name, image.name), "wb") as img_file:
                     img_file.write(image.file)
+
+                # append record for image and its caption in captions.txt
                 with open(os.path.join(md_file_name, "captions.txt"), "a") as captions_file:
                     captions_file.write("\r\n" + image.name + ":" + image.caption)
 
+                # remove all images from original_images list that continue to be linked to current post
+                if image.name in original_image_names:
+                    original_image_names.remove(image.name)
 
-            # TODO check if md file saving was successful, if image saving was successful
+            # if images were removed from post in comparison to original post, list them in blacklist
+            if len(original_image_names) > 0:
+                with open(os.path.join(md_file_name, "blacklist.txt"), "a") as captions_file:
+                    captions_file.write("\r\n".join(original_image_names))
 
-            # TODO publish post with tmsp_publish and publish_type, if update successful, return True and transfer files to target
+            # TODO make sure post file and images (including folder) were written successfully
+
+            is_published = self.__database.update_post(post.id, status=post_state.value, tmsp_publish=tmsp_publish) > 0
+            if is_published:
+                # TODO transfer files to target
+                None
 
         return is_published
 
