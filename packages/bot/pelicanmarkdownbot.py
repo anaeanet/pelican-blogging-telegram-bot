@@ -117,6 +117,9 @@ class PelicanMarkdownBot(AbstractUserStateBot):
         import subprocess
 
         is_published = False
+        format_datetime_db = "%Y-%m-%d_%H-%M-%S.%f"
+        format_datetime_file_name = "%Y-%m-%d_%H-%M-%S"
+        format_datetime_md = "%Y-%m-%d %H:%M"
 
         if post is not None and post_state in [state for state in PostState]:
 
@@ -124,22 +127,22 @@ class PelicanMarkdownBot(AbstractUserStateBot):
             if post.original_post is None:
                 if post.tmsp_publish is None:       # draft never published before
                     tmsp_publish = datetime.now()
-                else:                               # draft was publsihed earlier (as draft)
-                    tmsp_publish = datetime.strptime(post.tmsp_publish, "%Y-%m-%d %H:%M:%S.%f")
+                else:                               # draft was published earlier (as draft)
+                    tmsp_publish = datetime.strptime(post.tmsp_publish, format_datetime_db)
             else:                                   # draft is based on previously published post
                 original_post = self.get_post(post.original_post)
                 tmsp_publish = original_post.tmsp_publish
 
             # use tmsp_publish as filename for blog post
-            post_file_name = tmsp_publish.strftime("%Y-%m-%d_%H-%M-%S")
+            post_file_name = tmsp_publish.strftime(format_datetime_file_name)
 
             # build content of markdown post file
             md_post = "Title: {}".format(post.title)
             if post.original_post is not None:
-                md_post += "\r\n" + "Date: {}".format(tmsp_publish.strftime("%Y-%m-%d %H:%M"))
-                md_post += "\r\n" + "Modified: ".format(datetime.now().strftime("%Y-%m-%d %H:%M"))
+                md_post += "\r\n" + "Date: {}".format(tmsp_publish.strftime(format_datetime_md))
+                md_post += "\r\n" + "Modified: ".format(datetime.now().strftime(format_datetime_md))
             else:
-                md_post += "\r\n" + "Date: {}".format(datetime.now().strftime("%Y-%m-%d %H:%M"))
+                md_post += "\r\n" + "Date: {}".format(datetime.now().strftime(format_datetime_md))
             if post.user.name is not None and len(post.user.name) > 0:
                 md_post += "\r\n" + "Authors: {}".format(post.user.name)
             if len(post.tags) > 0:
@@ -148,9 +151,8 @@ class PelicanMarkdownBot(AbstractUserStateBot):
                 md_post += "\r\n" + "image: {photo}" + "{}".format(post_file_name) + "/" + "{}".format(post.title_image.name)
             if len(post.gallery.images) > 0:
                 md_post += "\r\n" + "gallery: {photo}" + "{}".format(post_file_name) + "{" + post.gallery.title + "}"
-            md_post += "\r\n" + "Status: {}".format(post_state.value) \
-                       + "\r\n" \
-                       + "\r\n" + post.content
+            md_post += "\r\n" + "Status: {}".format(post_state.value)
+            md_post += "\r\n\r\n" + post.content
 
             # write markdown post file to working directory
             md_written = self.__write_to_file(post_file_name + ".md", "w", md_post)
@@ -177,7 +179,7 @@ class PelicanMarkdownBot(AbstractUserStateBot):
                 rollback_tmsp_publish = post.tmsp_publish
                 rollback_status = post.status
 
-                if self.__database.update_post(post.id, status=post_state.value, tmsp_publish=tmsp_publish.strftime("%Y-%m-%d %H:%M:%S.%f")) > 0:
+                if self.__database.update_post(post.id, status=post_state.value, tmsp_publish=tmsp_publish.strftime(format_datetime_db)) > 0:
                     file_transfer_ok = subprocess.call(["rsync", "-rtvhP", post_file_name + ".md", self.__post_target_url])
                     if len(images) > 0:
                         file_transfer_ok += subprocess.call(["rsync", "-rtvhP", "--delete", post_file_name, self.__gallery_target_url])
@@ -198,15 +200,15 @@ class PelicanMarkdownBot(AbstractUserStateBot):
     # --- following message act as intermediary wrappers for states changing db data ---
 
     def get_user(self, user_id):
-        user = None
+        result_user = None
 
         users = self.__database.get_users(user_id=user_id)
         if len(users) == 1:
-            u = users[0]
+            user = users[0]
 
-            user = User(u["user_id"])
+            result_user = User(user["user_id"])
 
-        return user
+        return result_user
 
 
     def get_user_posts(self, user_id, status=None):
