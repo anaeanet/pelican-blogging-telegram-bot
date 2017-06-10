@@ -114,6 +114,8 @@ class PelicanMarkdownBot(AbstractUserStateBot):
             return result
 
     def publish(self, post, post_state):
+        import subprocess
+
         is_published = False
 
         if post is not None and post_state in [state for state in PostState]:
@@ -123,7 +125,7 @@ class PelicanMarkdownBot(AbstractUserStateBot):
                 if post.tmsp_publish is None:       # draft never published before
                     tmsp_publish = datetime.now()
                 else:                               # draft was publsihed earlier (as draft)
-                    tmsp_publish = post.tmsp_publish
+                    tmsp_publish = datetime.strptime(post.tmsp_publish, "%Y-%m-%d %H:%M:%S.%f")
             else:                                   # draft is based on previously published post
                 original_post = self.get_post(post.original_post)
                 tmsp_publish = original_post.tmsp_publish
@@ -155,7 +157,7 @@ class PelicanMarkdownBot(AbstractUserStateBot):
 
             # if post file written successfully, process gallery and title image
             images = post.gallery.images + ([post.title_image] if post.title_image is not None else [])
-            images_to_process = len(images)
+            written_img_count = 0
             if md_written and len(images) > 0:
                 import os
                 gallery_written = self.__create_folder(post_file_name)
@@ -168,21 +170,17 @@ class PelicanMarkdownBot(AbstractUserStateBot):
                         image_caption_written = self.__write_to_file(os.path.join(post_file_name, "captions.txt"), "a", "\r\n" + image.name + ":" + image.caption)
 
                         if image_written and image_caption_written:
-                            images_to_process -= 1
+                            written_img_count += 1
 
             # if all file creation was successful, attempt to publish
-            if md_written and images_to_process == 0:
+            if md_written and written_img_count == len(images):
                 rollback_tmsp_publish = post.tmsp_publish
                 rollback_status = post.status
 
-                if self.__database.update_post(post.id, status=post_state.value, tmsp_publish=tmsp_publish) > 0:
-                    import subprocess
+                if self.__database.update_post(post.id, status=post_state.value, tmsp_publish=tmsp_publish.strftime("%Y-%m-%d %H:%M:%S.%f")) > 0:
                     file_transfer_ok = subprocess.call(["rsync", "-rtvhP", post_file_name + ".md", self.__post_target_url])
                     if len(images) > 0:
-                        # TODO --delete option
-                        file_transfer_ok += subprocess.call(["rsync", "-rtvhP"
-                                                                  , post_file_name + "/"
-                                                                  , self.__gallery_target_url + post_file_name + "/"])
+                        file_transfer_ok += subprocess.call(["rsync", "-rtvhP", "--delete", post_file_name, self.__gallery_target_url])
 
                     # depending on file transfer, either mark post as successfully published or rollback
                     if file_transfer_ok == 0:
@@ -191,6 +189,9 @@ class PelicanMarkdownBot(AbstractUserStateBot):
                         self.__database.update_post(post.id, status=rollback_status, tmsp_publish=rollback_tmsp_publish)
                         is_published = False
                         # TODO log
+
+            # delete local files
+            subprocess.call(["rm", post_file_name + "*"])
 
         return is_published
 
@@ -225,31 +226,35 @@ class PelicanMarkdownBot(AbstractUserStateBot):
                                     , content=post["content"]
                                     , tags=tags
                                     , title_image=title_image
-                                    , gallery=gallery))
+                                    , gallery=gallery)
+                                    , tmsp_publish=post["tmsp_publish"]
+                                    , original_post=post["original_post"])
 
         return user_posts
 
     def get_post(self, post_id):
-        post = None
+        result_post = None
 
         posts = self.__database.get_posts(post_id=post_id)
         if len(posts) == 1:
-            p = posts[0]
+            post = posts[0]
 
-            user = self.get_user(p["user_id"])
+            user = self.get_user(post["user_id"])
 
             # fetch tags, gallery, and title image assigned to current post
             tags = self.get_post_tags(post_id)
             title_image = self.get_post_title_image(post_id)
             gallery = self.get_post_gallery(post_id)
 
-            post = Post(p["post_id"], user, p["title"], PostState(p["status"])
-                        , content=p["content"]
+            result_post = Post(post["post_id"], user, post["title"], PostState(post["status"])
+                        , content=post["content"]
                         , tags=tags
                         , title_image=title_image
-                        , gallery=gallery)
+                        , gallery=gallery
+                        , tmsp_publish=post["tmsp_publish"]
+                        , original_post=post["original_post"])
 
-        return post
+        return result_post
 
     def create_post(self, user_id, title, status, original_post=None):
         post = None

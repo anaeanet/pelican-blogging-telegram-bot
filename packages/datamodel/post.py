@@ -3,7 +3,7 @@ __author__ = 'anaeanet'
 
 class Post:
 
-    def __init__(self, post_id, user, title, status, content="", tags=[], title_image=None, gallery=None, original_post=None, tmsp_publish=None):
+    def __init__(self, post_id, user, title, status, content="", tags=[], title_image=None, gallery=None, tmsp_publish=None, original_post=None):
         self.__id = post_id
         self.__user = user
         self.__title = title
@@ -12,8 +12,8 @@ class Post:
         self.__tags = tags
         self.__title_image = title_image
         self.__gallery = gallery
-        self.__original_post = original_post
         self.__tmsp_publish = tmsp_publish
+        self.__original_post = original_post
 
     @property
     def id(self):
@@ -48,9 +48,9 @@ class Post:
         return self.__gallery
 
     @property
-    def original_post(self):
-        return self.__original_post
-
-    @property
     def tmsp_publish(self):
         return self.__tmsp_publish
+
+    @property
+    def original_post(self):
+        return self.__original_post
