@@ -4,6 +4,7 @@ from packages.datamodel.tag import Tag
 from packages.datamodel.image import Image
 from packages.datamodel.gallery import Gallery
 from packages.datamodel.poststate import PostState
+from packages.datamodel.user import User
 from packages.datamodel.post import Post
 import packages.bot.telegram as telegram
 from datetime import datetime
@@ -83,8 +84,7 @@ class PelicanMarkdownBot(AbstractUserStateBot):
     def publish(self, post, post_state):
         is_published = False
 
-        if post is not None and post_state in [state for state in PostState] \
-                and post.title is not None and post.content is not None:
+        if post is not None and post_state in [state for state in PostState]:
 
             # use current timestamp as publish date
             tmsp_publish = datetime.now()
@@ -169,18 +169,32 @@ class PelicanMarkdownBot(AbstractUserStateBot):
 
     # --- following message act as intermediary wrappers for states changing db data ---
 
+    def get_user(self, user_id):
+        user = None
+
+        users = self.__database.get_users(user_id=user_id)
+        if len(users) == 1:
+            u = users[0]
+
+            user = User(u["user_id"])
+
+        return user
+
+
     def get_user_posts(self, user_id, status=None):
         user_posts = []
 
         posts = self.__database.get_posts(user_id=user_id, status=status.value)
         for post in posts:
 
+            user = self.get_user(post["user_id"])
+
             # fetch tags, gallery, and title image assigned to current post
             tags = self.get_post_tags(post["post_id"])
             title_image = self.get_post_title_image(post["post_id"])
             gallery = self.get_post_gallery(post["post_id"])
 
-            user_posts.append(Post(post["post_id"], post["title"], PostState(post["status"])
+            user_posts.append(Post(post["post_id"], user, post["title"], PostState(post["status"])
                                     , content=post["content"]
                                     , tags=tags
                                     , title_image=title_image
@@ -195,12 +209,14 @@ class PelicanMarkdownBot(AbstractUserStateBot):
         if len(posts) == 1:
             p = posts[0]
 
+            user = self.get_user(p["user_id"])
+
             # fetch tags, gallery, and title image assigned to current post
             tags = self.get_post_tags(post_id)
             title_image = self.get_post_title_image(post_id)
             gallery = self.get_post_gallery(post_id)
 
-            post = Post(p["post_id"], p["title"], PostState(p["status"])
+            post = Post(p["post_id"], user, p["title"], PostState(p["status"])
                         , content=p["content"]
                         , tags=tags
                         , title_image=title_image

@@ -15,7 +15,10 @@ def main():
     database = SQLDBWrapper(config.database_name)
     authorized_users = config.authorized_users
 
-    bot = PelicanMarkdownBot(token, url, file_url, database, authorized_users=authorized_users)
+    post_target_url = config.markdown_target
+    gallery_target_url = config.gallery_target
+
+    bot = PelicanMarkdownBot(token, url, file_url, database, post_target_url, gallery_target_url, authorized_users=authorized_users)
     bot.run()   # TODO once development is finished, remove row
 
     try:

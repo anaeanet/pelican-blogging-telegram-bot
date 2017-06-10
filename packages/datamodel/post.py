@@ -3,8 +3,9 @@ __author__ = 'anaeanet'
 
 class Post:
 
-    def __init__(self, post_id, title, status, content=None, tags=[], title_image=None, gallery=None, original_post=None, tmsp_publish=None):
+    def __init__(self, post_id, user, title, status, content="", tags=[], title_image=None, gallery=None, original_post=None, tmsp_publish=None):
         self.__id = post_id
+        self.__user = user
         self.__title = title
         self.__status = status
         self.__content = content
@@ -17,6 +18,10 @@ class Post:
     @property
     def id(self):
         return self.__id
+
+    @property
+    def user(self):
+        return self.__user
 
     @property
     def title(self):

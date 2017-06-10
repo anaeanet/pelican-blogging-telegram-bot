@@ -14,8 +14,6 @@ class SQLDBWrapper:
 
     # TODO put statement execution in try-except and log any issues
     # TODO have sql functions return objects rather than dicts?
-    # TODO add author name in user table
-    # TODO make send_message, ... in abstracttelegrambot return an object rather than dict...
 
     def __init__(self, datbase_name):
         self.__conn = sqlite3.connect(datbase_name)
@@ -24,7 +22,8 @@ class SQLDBWrapper:
 
         # create required tables
         tbl_stmts = [ "CREATE TABLE IF NOT EXISTS user (user_id INTEGER NOT NULL PRIMARY KEY"
-                                                        + ", state TEXT NOT NULL)"
+                                                        + ", state TEXT NOT NULL"
+                                                        + ", name TEXT)"
 
                     , "CREATE TABLE IF NOT EXISTS post (post_id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT"
                                                         + ", user_id INTEGER NOT NULL"
@@ -103,7 +102,7 @@ class SQLDBWrapper:
 
     # -------------------------------------------------- user ----------------------------------------------------------
 
-    def get_users(self, user_id=None, state=None):
+    def get_users(self, user_id=None, state=None, name=None):
         """
         Fetches users from the database that fulfill *all* given criteria.
         If no criterion is specified, all users stored in the database are returned.
@@ -111,6 +110,7 @@ class SQLDBWrapper:
 
         :param user_id: only users with given user_id are returned (at most 1 as user_id is primary key)
         :param state: only users with specified state are returned
+        :param name: only users with specified name are returned
         :return: a list of dictionaries where each dictionary represents one user (user_id, state_class)
         """
 
@@ -128,11 +128,20 @@ class SQLDBWrapper:
                     args.append(value)
 
         return [dict({"user_id": x[0]
-                        , "state_class": SQLDBWrapper.__deserialize_state(x[1])}) for x in self.__conn.execute(stmt, tuple(args))]
+                        , "state_class": SQLDBWrapper.__deserialize_state(x[1])
+                        , "name": x[2]}) for x in self.__conn.execute(stmt, tuple(args))]
 
-    def add_user(self, user_id, state):
-        stmt = "INSERT INTO user (user_id, state) VALUES (?, ?)"
-        args = [user_id, SQLDBWrapper.__serialize_state(state)]
+    def add_user(self, user_id, state, name=None):
+        param_dict = dict({key: value for key, value in locals().items() if key != "self" and value is not None})
+
+        stmt = "INSERT INTO user (" + ",".join(param_dict.keys()) + ") VALUES (" + ",".join(["?" for x in param_dict.keys()]) + ")"
+        args = []
+
+        for key, value in param_dict.items():
+            if key == "state":
+                args.append(SQLDBWrapper.__serialize_state(value))
+            else:
+                args.append(value)
 
         cursor = self.__conn.cursor()
         cursor.execute(stmt, tuple(args))
@@ -140,7 +149,7 @@ class SQLDBWrapper:
 
         return cursor.lastrowid
 
-    def update_user(self, user_id, state=None):
+    def update_user(self, user_id, state=None, name=None):
         param_dict = dict({key: value for key, value in locals().items() if key != "self" and value is not None})
 
         stmt = "UPDATE user SET " + " = ?, ".join(param_dict.keys()) + " = ? WHERE user_id = ?"
