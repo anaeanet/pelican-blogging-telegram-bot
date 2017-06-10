@@ -81,89 +81,116 @@ class PelicanMarkdownBot(AbstractUserStateBot):
             # TODO: maybe do something with updates from unauthorized users?
             None
 
+    @staticmethod
+    def __create_folder(folder_name):
+        result = False
+
+        try:
+            import os
+            os.makedirs(folder_name)
+            result = True
+        except (OSError, IOError) as exception:
+            import errno
+            if exception.errno == errno.EEXIST:
+                result = True
+            else:
+                # TODO log
+                None
+        finally:
+            return result
+
+    @staticmethod
+    def __write_to_file(file_name, write_mode, file_content):
+        result = False
+
+        try:
+            with open(file_name, write_mode) as post_file:
+                post_file.write(file_content)
+            result = True
+        except (OSError, IOError) as e:
+            # TODO log
+            None
+        finally:
+            return result
+
     def publish(self, post, post_state):
         is_published = False
 
         if post is not None and post_state in [state for state in PostState]:
 
-            # use current timestamp as publish date
-            tmsp_publish = datetime.now()
-
-            # get original post if current post is based on an existing one
-            original_image_names = []
-            if post.original_post is not None:
+            # get publication timestamp, depending on whether draft has been published before
+            if post.original_post is None:
+                if post.tmsp_publish is None:       # draft never published before
+                    tmsp_publish = datetime.now()
+                else:                               # draft was publsihed earlier (as draft)
+                    tmsp_publish = post.tmsp_publish
+            else:                                   # draft is based on previously published post
                 original_post = self.get_post(post.original_post)
-
-                # use original post's publish date
-                if original_post is not None:
-                    tmsp_publish = original_post.tmsp_publish
-
-                # get all images attached to original post
-                    original_image_names = [image.name for image in original_post.gallery.images
-                                            + ([original_post.title_image] if original_post.title_image is not None else [])]
+                tmsp_publish = original_post.tmsp_publish
 
             # use tmsp_publish as filename for blog post
-            md_file_name = tmsp_publish.strftime("%Y-%m-%d_%H-%M-%S")
+            post_file_name = tmsp_publish.strftime("%Y-%m-%d_%H-%M-%S")
 
             # build content of markdown post file
-            md_post = "Title: {}".format(post.title) \
-                      + "\r\n" + "Date: {}".format(tmsp_publish.strftime("%Y-%m-%d %H:%M"))
-                    # TODO if draft->published, print current date as publication date
-
+            md_post = "Title: {}".format(post.title)
             if post.original_post is not None:
+                md_post += "\r\n" + "Date: {}".format(tmsp_publish.strftime("%Y-%m-%d %H:%M"))
                 md_post += "\r\n" + "Modified: ".format(datetime.now().strftime("%Y-%m-%d %H:%M"))
+            else:
+                md_post += "\r\n" + "Date: {}".format(datetime.now().strftime("%Y-%m-%d %H:%M"))
+            if post.user.name is not None and len(post.user.name) > 0:
+                md_post += "\r\n" + "Authors: {}".format(post.user.name)
             if len(post.tags) > 0:
                 md_post += "\r\n" + "Tags: {}".format(", ".join([tag.name for tag in post.tags]))
             if post.title_image is not None:
-                md_post += "\r\n" + "image: {photo}" + "{}".format(md_file_name) + "/" + "{}".format(post.title_image.name)
+                md_post += "\r\n" + "image: {photo}" + "{}".format(post_file_name) + "/" + "{}".format(post.title_image.name)
             if len(post.gallery.images) > 0:
-                md_post += "\r\n" + "gallery: {photo}" + "{}".format(md_file_name) + "{" + post.gallery.title + "}"
+                md_post += "\r\n" + "gallery: {photo}" + "{}".format(post_file_name) + "{" + post.gallery.title + "}"
             md_post += "\r\n" + "Status: {}".format(post_state.value) \
                        + "\r\n" \
                        + "\r\n" + post.content
 
             # write markdown post file to working directory
-            with open(md_file_name + ".md", "w") as post_file:
-                post_file.write(md_post)
+            md_written = self.__write_to_file(post_file_name + ".md", "w", md_post)
 
-            # if any image is linked to post, create folder if it does not exist already
-            if post.title_image is not None or len(post.gallery.images) > 0:
-                import os, errno
+            # if post file written successfully, process gallery and title image
+            images = post.gallery.images + ([post.title_image] if post.title_image is not None else [])
+            images_to_process = len(images)
+            if md_written and len(images) > 0:
+                import os
+                gallery_written = self.__create_folder(post_file_name)
+                captions_written = self.__write_to_file(os.path.join(post_file_name, "captions.txt"), "w", "# captions.txt") if gallery_written else False
 
-                try:
-                    os.makedirs(md_file_name)
-                except OSError as exception:
-                    if exception.errno != errno.EEXIST:
-                        raise
+                # if gallery folder and captions.txt written successfully
+                if gallery_written and captions_written:
+                    for image in images:
+                        image_written = self.__write_to_file(os.path.join(post_file_name, image.name), "wb", image.file)
+                        image_caption_written = self.__write_to_file(os.path.join(post_file_name, "captions.txt"), "a", "\r\n" + image.name + ":" + image.caption)
 
-                # create empty captions file
-                with open(os.path.join(md_file_name, "captions.txt"), "w") as captions_file:
-                    captions_file.write("# captions.txt")
+                        if image_written and image_caption_written:
+                            images_to_process -= 1
 
-            # store all post images in the corresponding folder
-            for image in post.gallery.images + ([post.title_image] if post.title_image is not None else []):
-                with open(os.path.join(md_file_name, image.name), "wb") as img_file:
-                    img_file.write(image.file)
+            # if all file creation was successful, attempt to publish
+            if md_written and images_to_process == 0:
+                rollback_tmsp_publish = post.tmsp_publish
+                rollback_status = post.status
 
-                # append record for image and its caption in captions.txt
-                with open(os.path.join(md_file_name, "captions.txt"), "a") as captions_file:
-                    captions_file.write("\r\n" + image.name + ":" + image.caption)
+                if self.__database.update_post(post.id, status=post_state.value, tmsp_publish=tmsp_publish) > 0:
+                    import subprocess
+                    file_transfer_ok = subprocess.call(["rsync", "-rtvhP", post_file_name + ".md", self.__post_target_url])
+                    if len(images) > 0:
+                        # TODO --delete option
+                        file_transfer_ok += subprocess.call(["rsync", "-rtvhP"
+                                                                  , post_file_name + "/"
+                                                                  , self.__gallery_target_url + post_file_name + "/"])
 
-                # remove all images from original_images list that continue to be linked to current post
-                if image.name in original_image_names:
-                    original_image_names.remove(image.name)
-
-            # if images were removed from post in comparison to original post, list them in blacklist
-            if len(original_image_names) > 0:
-                with open(os.path.join(md_file_name, "blacklist.txt"), "a") as captions_file:
-                    captions_file.write("\r\n".join(original_image_names))
-
-            # TODO make sure post file and images (including folder) were written successfully
-
-            is_published = self.__database.update_post(post.id, status=post_state.value, tmsp_publish=tmsp_publish) > 0
-            if is_published:
-                # TODO transfer files to target
-                None
+                    # depending on file transfer, either mark post as successfully published or rollback
+                    if file_transfer_ok == 0:
+                        is_published = True
+                    else:
+                        self.__database.update_post(post.id, status=rollback_status, tmsp_publish=rollback_tmsp_publish)
+                        is_published = False
+                        # TODO log
 
         return is_published
 
