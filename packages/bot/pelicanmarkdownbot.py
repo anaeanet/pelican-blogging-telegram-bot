@@ -117,7 +117,7 @@ class PelicanMarkdownBot(AbstractUserStateBot):
         import subprocess
 
         is_published = False
-        format_datetime_db = "%Y-%m-%d_%H-%M-%S.%f"
+        format_datetime_db = "%Y-%m-%d %H:%M:%S.%f"
         format_datetime_file_name = "%Y-%m-%d_%H-%M-%S"
         format_datetime_md = "%Y-%m-%d %H:%M"
 
