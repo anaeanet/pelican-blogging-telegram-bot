@@ -5,7 +5,7 @@ class Gallery:
 
     def __init__(self, title, images):
         self.__title = title
-        self.__images = images
+        self.__images = [image for image in images]
 
     @property
     def title(self):
@@ -13,4 +13,4 @@ class Gallery:
 
     @property
     def images(self):
-        return self.__images
+        return [image for image in self.__images]

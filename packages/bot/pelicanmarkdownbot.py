@@ -21,6 +21,10 @@ class PelicanMarkdownBot(AbstractUserStateBot):
     as well as linked image galleries for <a href="http://docs.getpelican.com/en/stable/">PELICAN</a> blog posts.
     """
 
+    format_datetime_db = "%Y-%m-%d %H:%M:%S.%f"
+    format_datetime_file_name = "%Y-%m-%d_%H-%M-%S"
+    format_datetime_md = "%Y-%m-%d %H:%M"
+
     def __init__(self, token, url, file_url, database, post_target_url, gallery_target_url, authorized_users=[]):
         super().__init__(token, url, file_url, IdleState)
         self.__database = database
@@ -117,9 +121,6 @@ class PelicanMarkdownBot(AbstractUserStateBot):
         import subprocess
 
         is_published = False
-        format_datetime_db = "%Y-%m-%d %H:%M:%S.%f"
-        format_datetime_file_name = "%Y-%m-%d_%H-%M-%S"
-        format_datetime_md = "%Y-%m-%d %H:%M"
 
         if post is not None and post_state in [state for state in PostState]:
 
@@ -128,21 +129,21 @@ class PelicanMarkdownBot(AbstractUserStateBot):
                 if post.tmsp_publish is None:       # draft never published before
                     tmsp_publish = datetime.now()
                 else:                               # draft was published earlier (as draft)
-                    tmsp_publish = datetime.strptime(post.tmsp_publish, format_datetime_db)
+                    tmsp_publish = datetime.strptime(post.tmsp_publish, self.format_datetime_db)
             else:                                   # draft is based on previously published post
                 original_post = self.get_post(post.original_post)
                 tmsp_publish = original_post.tmsp_publish
 
             # use tmsp_publish as filename for blog post
-            post_file_name = tmsp_publish.strftime(format_datetime_file_name)
+            post_file_name = tmsp_publish.strftime(self.format_datetime_file_name)
 
             # build content of markdown post file
             md_post = "Title: {}".format(post.title)
             if post.original_post is not None:
-                md_post += "\r\n" + "Date: {}".format(tmsp_publish.strftime(format_datetime_md))
-                md_post += "\r\n" + "Modified: ".format(datetime.now().strftime(format_datetime_md))
+                md_post += "\r\n" + "Date: {}".format(tmsp_publish.strftime(self.format_datetime_md))
+                md_post += "\r\n" + "Modified: ".format(datetime.now().strftime(self.format_datetime_md))
             else:
-                md_post += "\r\n" + "Date: {}".format(datetime.now().strftime(format_datetime_md))
+                md_post += "\r\n" + "Date: {}".format(datetime.now().strftime(self.format_datetime_md))
             if post.user.name is not None and len(post.user.name) > 0:
                 md_post += "\r\n" + "Authors: {}".format(post.user.name)
             if len(post.tags) > 0:
@@ -179,10 +180,14 @@ class PelicanMarkdownBot(AbstractUserStateBot):
                 rollback_tmsp_publish = post.tmsp_publish
                 rollback_status = post.status
 
-                if self.__database.update_post(post.id, status=post_state.value, tmsp_publish=tmsp_publish.strftime(format_datetime_db)) > 0:
+                if self.__database.update_post(post.id, status=post_state.value, tmsp_publish=tmsp_publish.strftime(self.format_datetime_db)) > 0:
                     file_transfer_ok = subprocess.call(["rsync", "-rtvhP", post_file_name + ".md", self.__post_target_url])
                     if len(images) > 0:
                         file_transfer_ok += subprocess.call(["rsync", "-rtvhP", "--delete", post_file_name, self.__gallery_target_url])
+                    else:
+                        # delete gallery folder from remote location
+                        # TODO remove files from remote location
+                        None
 
                     # depending on file transfer, either mark post as successfully published or rollback
                     if file_transfer_ok == 0:
@@ -196,6 +201,29 @@ class PelicanMarkdownBot(AbstractUserStateBot):
             subprocess.call(["rm", post_file_name + "*"])
 
         return is_published
+
+    def unpublish_post(self, post_id):
+        is_unpublished = False
+
+        post = self.get_post(post_id)
+        if post is not None:
+
+            # unpublish if draft/post was already published before
+            if post.tmsp_publish is not None or post.original_post is not None:
+                if post.tmsp_publish is not None:
+                    timestamp = post.tmsp_publish
+                else:
+                    timestamp = self.get_post(post.original_post).tmsp_publish
+
+                file_name = datetime.strptime(timestamp, self.format_datetime_file_name)
+
+                # TODO remove files from remote location
+
+            # draft/post has never been published before
+            else:
+                is_unpublished = True
+
+        return is_unpublished
 
     # --- following message act as intermediary wrappers for states changing db data ---
 
@@ -268,6 +296,42 @@ class PelicanMarkdownBot(AbstractUserStateBot):
 
         return post
 
+    def copy_post(self, post_id):
+        copy_post = None
+
+        post = self.get_post(post_id)
+        if post is not None:
+
+            new_post = self.create_post(post.user.id, post.title, post.status, original_post=post.id)
+            if new_post is not None:
+
+                # add tags to new post
+                for tag in post.tags:
+                    self.add_post_tag(new_post.id, tag.name)
+
+                # copy title image
+                if post.title_image is not None:
+                    title_image = self.get_post_title_image(post.id)
+                    if title_image is not None:
+                        image_id = self.add_post_image(new_post.id, title_image.file_name, title_image.file_id
+                                                       , thumb_id=title_image.thumb_id, caption=title_image.caption)
+                        self.set_post_title_image(new_post.id, image_id)
+
+                # add gallery to new post
+                if post.gallery is not None:
+                    for image in post.gallery.images:
+                        self.add_post_image(new_post.id, image.file_name, image.file_id, thumb_id=image.thumb_id, caption=image.caption)
+
+                new_post = self.get_post(new_post.id)
+
+                # check if copy was successful
+                if len(new_post.tags) == len(post.tags) and new_post.title_image == post.title_image \
+                    and (new_post.gallery == post.gallery or len(new_post.gallery.images) == len(post.gallery.images)):
+
+                    copy_post = new_post
+
+        return copy_post
+
     def update_post(self, post_id, title=None, content=None, gallery_title=None, tmsp_publish=None, original_post=None):
         updated_post = None
 
@@ -280,7 +344,7 @@ class PelicanMarkdownBot(AbstractUserStateBot):
         deleted_post = None
 
         post = self.get_post(post_id)
-        if post is not None:
+        if post is not None and self.unpublish_post(post.id):
 
             # remove tags from post
             for tag in post.tags:

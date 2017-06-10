@@ -1,5 +1,6 @@
 from packages.bot.parsemode import ParseMode
 from packages.states.navigation.selectdraftupdatestate import SelectDraftUpdateState
+from packages.datamodel.poststate import PostState
 
 __author__ = "aneanet"
 
@@ -27,7 +28,7 @@ class ConfirmDraftDeletionState(SelectDraftUpdateState):
         # add button to return to draft list
         reply_options = [{"text": "<< drafts", "callback_data": "/deletedraft"}, []]
 
-        # if post still exists, show buttn to confirm final deletion
+        # if post still exists, show button to confirm final deletion
         post = self.context.get_post(self.post_id)
         if post is not None:
             reply_options.append({"text": "YES, delete", "callback_data": "/confirmdraftdeletion /confirm"})
@@ -62,8 +63,8 @@ class ConfirmDraftDeletionState(SelectDraftUpdateState):
                                               , parse_mode=ParseMode.HTML.value)
 
                 # show remaining drafts for deletion
-                post_tags = self.context.get_post_tags(self.post_id)
-                if len(post_tags) > 0:
+                user_drafts = self.context.get_user_posts(user_id=user_id, status=PostState.DRAFT)
+                if len(user_drafts) > 0:
                     from packages.states.draft.deletedraftstate import DeleteDraftState
                     next_state = DeleteDraftState(self.context, user_id, chat_id=chat_id)
                 # no remaining drafts -> automatically go back to main menu

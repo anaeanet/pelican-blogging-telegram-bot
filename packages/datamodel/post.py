@@ -1,3 +1,6 @@
+from packages.datamodel.gallery import Gallery
+from packages.datamodel.poststate import PostState
+
 __author__ = 'anaeanet'
 
 
@@ -7,11 +10,11 @@ class Post:
         self.__id = post_id
         self.__user = user
         self.__title = title
-        self.__status = status
+        self.__status = PostState(status.value)
         self.__content = content
-        self.__tags = tags
+        self.__tags = [tag for tag in tags]
         self.__title_image = title_image
-        self.__gallery = gallery
+        self.__gallery = Gallery(gallery.title, gallery.images) if gallery is not None else None
         self.__tmsp_publish = tmsp_publish
         self.__original_post = original_post
 
@@ -37,7 +40,7 @@ class Post:
 
     @property
     def tags(self):
-        return self.__tags
+        return [tag for tag in self.__tags]
 
     @property
     def title_image(self):
@@ -45,7 +48,7 @@ class Post:
 
     @property
     def gallery(self):
-        return self.__gallery
+        return Gallery(self.gallery.title, self.__gallery.images) if self.__gallery is not None else None
 
     @property
     def tmsp_publish(self):
