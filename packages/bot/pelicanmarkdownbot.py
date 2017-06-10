@@ -228,9 +228,9 @@ class PelicanMarkdownBot(AbstractUserStateBot):
                                     , content=post["content"]
                                     , tags=tags
                                     , title_image=title_image
-                                    , gallery=gallery)
+                                    , gallery=gallery
                                     , tmsp_publish=post["tmsp_publish"]
-                                    , original_post=post["original_post"])
+                                    , original_post=post["original_post"]))
 
         return user_posts
 
