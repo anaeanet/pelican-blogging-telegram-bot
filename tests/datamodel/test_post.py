@@ -1,5 +1,6 @@
 import unittest
 from packages.datamodel.post import Post
+from packages.states.navigation.idlestate import IdleState
 from packages.datamodel.user import User
 from packages.datamodel.poststate import PostState
 from packages.datamodel.tag import Tag
@@ -12,7 +13,7 @@ class PostTest(unittest.TestCase):
 
     def setUp(self):
         self.post_id = 1
-        self.post_user = User(1, name="user_name")
+        self.post_user = User(1, IdleState, name="user_name")
         self.post_title = "post_title"
         self.post_status = PostState.DRAFT
         self.post_content = "content"
