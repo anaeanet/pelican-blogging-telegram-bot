@@ -48,7 +48,7 @@ class Post:
 
     @property
     def gallery(self):
-        return Gallery(self.gallery.title, self.__gallery.images) if self.__gallery is not None else None
+        return self.__gallery
 
     @property
     def tmsp_publish(self):

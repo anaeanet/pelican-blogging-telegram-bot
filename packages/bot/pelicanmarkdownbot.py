@@ -8,6 +8,7 @@ from packages.datamodel.user import User
 from packages.datamodel.post import Post
 import packages.bot.telegram as telegram
 from datetime import datetime
+import os
 
 __author__ = "anaeanet"
 
@@ -29,8 +30,8 @@ class PelicanMarkdownBot(AbstractUserStateBot):
         super().__init__(token, url, file_url, IdleState)
         self.__database = database
         self.__database.setup()
-        self.__post_target_url = post_target_url
-        self.__gallery_target_url = gallery_target_url
+        self.__post_target_url = post_target_url + ("/" if not post_target_url.endswith("/") else "")
+        self.__gallery_target_url = gallery_target_url + ("/" if not gallery_target_url.endswith("/") else "")
 
         # store all authorized users in database
         if authorized_users is not None:
@@ -117,9 +118,30 @@ class PelicanMarkdownBot(AbstractUserStateBot):
         finally:
             return result
 
-    def publish(self, post, post_state):
+    @staticmethod
+    def __transfer_file(source, target):
         import subprocess
+        return subprocess.call(["rsync", "-rtvhP", "--delete", source, target]) == 0
 
+    @staticmethod
+    def __remove_file(path_to_file):
+        import subprocess
+        removal_successful = False
+
+        server = None
+        path = path_to_file
+
+        if ":" in path:
+            server, path = path.split(":", 1)
+
+        if server is not None:
+            removal_successful = subprocess.call(["ssh", server, "'rm -rf " + path + "'"]) == 0
+        else:
+            removal_successful = subprocess.call(["rm", "-rf", path]) == 0
+
+        return removal_successful
+
+    def publish(self, post, post_state):
         is_published = False
 
         if post is not None and post_state in [state for state in PostState]:
@@ -162,7 +184,6 @@ class PelicanMarkdownBot(AbstractUserStateBot):
             images = post.gallery.images + ([post.title_image] if post.title_image is not None else [])
             written_img_count = 0
             if md_written and len(images) > 0:
-                import os
                 gallery_written = self.__create_folder(post_file_name)
                 captions_written = self.__write_to_file(os.path.join(post_file_name, "captions.txt"), "w", "# captions.txt") if gallery_written else False
 
@@ -181,24 +202,28 @@ class PelicanMarkdownBot(AbstractUserStateBot):
                 rollback_status = post.status
 
                 if self.__database.update_post(post.id, status=post_state.value, tmsp_publish=tmsp_publish.strftime(self.format_datetime_db)) > 0:
-                    file_transfer_ok = subprocess.call(["rsync", "-rtvhP", post_file_name + ".md", self.__post_target_url])
-                    if len(images) > 0:
-                        file_transfer_ok += subprocess.call(["rsync", "-rtvhP", "--delete", post_file_name, self.__gallery_target_url])
-                    else:
-                        # delete gallery folder from remote location
-                        # TODO remove files from remote location
-                        None
+                    md_transfer_ok = self.__transfer_file(post_file_name + ".md", self.__post_target_url)
+                    gallery_transfer_ok = self.__transfer_file(post_file_name, self.__gallery_target_url) if len(images) > 0 else True
+
+                    if len(images) == 0:
+                        # delete gallery folder from remote location (may never have existed)
+                        if not self.__remove_file(os.path.join(self.__post_target_url, post_file_name)):
+                            # TODO log
+                            None
 
                     # depending on file transfer, either mark post as successfully published or rollback
-                    if file_transfer_ok == 0:
+                    if md_transfer_ok and gallery_transfer_ok:
                         is_published = True
                     else:
                         self.__database.update_post(post.id, status=rollback_status, tmsp_publish=rollback_tmsp_publish)
-                        is_published = False
                         # TODO log
 
-            # delete local files
-            subprocess.call(["rm", post_file_name + "*"])
+            # delete local files - markdown file and gallery folder
+            md_removed = self.__remove_file(post_file_name + ".md")
+            gallery_removed = self.__remove_file(post_file_name)
+            if not (md_removed and gallery_removed):
+                # TODO log
+                None
 
         return is_published
 
@@ -217,7 +242,15 @@ class PelicanMarkdownBot(AbstractUserStateBot):
 
                 file_name = datetime.strptime(timestamp, self.format_datetime_file_name)
 
-                # TODO remove files from remote location
+                # remove published files (markdown and gallery) from target location
+                markdown_unpublished = self.__remove_file(os.path.join(self.__post_target_url, file_name + ".md"))
+                gallery_unpublished = self.__remove_file(os.path.join(self.__gallery_target_url, file_name))
+
+                if markdown_unpublished and gallery_unpublished:
+                    is_unpublished = True
+                else:
+                    # TODO log
+                    None
 
             # draft/post has never been published before
             else:
