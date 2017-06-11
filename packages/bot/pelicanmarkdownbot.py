@@ -240,7 +240,7 @@ class PelicanMarkdownBot(AbstractUserStateBot):
                 else:
                     timestamp = self.get_post(post.original_post).tmsp_publish
 
-                file_name = datetime.strptime(timestamp, self.format_datetime_file_name)
+                file_name = datetime.strptime(timestamp, self.format_datetime_db).strftime(self.format_datetime_file_name)
 
                 # remove published files (markdown and gallery) from target location
                 markdown_unpublished = self.__remove_file(os.path.join(self.__post_target_url, file_name + ".md"))
