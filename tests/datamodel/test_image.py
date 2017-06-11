@@ -13,23 +13,27 @@ class ImageTest(unittest.TestCase):
         self.image_file = "file_1"
         self.image_thumb_id = "thumb_id_1"
         self.image_caption = "caption_1"
-        self.image = Image(self.image_id, self.image_name, self.image_file_id, self.image_file, thumb_id=self.image_thumb_id, caption=self.image_caption)
+        self.image1 = Image(self.image_id, self.image_name, self.image_file_id, self.image_file, thumb_id=self.image_thumb_id, caption=self.image_caption)
+        self.image2 = Image(self.image_id, self.image_name, self.image_file_id, self.image_file, thumb_id=self.image_thumb_id, caption=self.image_caption)
 
     def test_constructor(self):
-        self.assertEqual(self.image.id, self.image_id)
-        self.assertEqual(self.image.name, self.image_name)
-        self.assertEqual(self.image.file_id, self.image_file_id)
-        self.assertEqual(self.image.file, self.image_file)
-        self.assertEqual(self.image.thumb_id, self.image_thumb_id)
-        self.assertEqual(self.image.caption, self.image_caption)
+        self.assertEqual(self.image1.id, self.image_id)
+        self.assertEqual(self.image1.name, self.image_name)
+        self.assertEqual(self.image1.file_id, self.image_file_id)
+        self.assertEqual(self.image1.file, self.image_file)
+        self.assertEqual(self.image1.thumb_id, self.image_thumb_id)
+        self.assertEqual(self.image1.caption, self.image_caption)
+        self.assertEqual(self.image1, self.image2)
+
+        self.assertNotEqual(id(self.image1), id(self.image2))
 
     def test_modification(self):
-        with self.assertRaises(AttributeError): self.image.id = None
-        with self.assertRaises(AttributeError): self.image.name = None
-        with self.assertRaises(AttributeError): self.image.file_id = None
-        with self.assertRaises(AttributeError): self.image.file = None
-        with self.assertRaises(AttributeError): self.image.thumb_id = None
-        with self.assertRaises(AttributeError): self.image.caption = None
+        with self.assertRaises(AttributeError): self.image1.id = None
+        with self.assertRaises(AttributeError): self.image1.name = None
+        with self.assertRaises(AttributeError): self.image1.file_id = None
+        with self.assertRaises(AttributeError): self.image1.file = None
+        with self.assertRaises(AttributeError): self.image1.thumb_id = None
+        with self.assertRaises(AttributeError): self.image1.caption = None
 
 
 if __name__ == '__main__':

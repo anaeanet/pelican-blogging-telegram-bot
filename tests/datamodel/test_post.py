@@ -22,34 +22,41 @@ class PostTest(unittest.TestCase):
         self.post_tmsp_publish = "2000-01-01 10:00:00.00000"
         self.post_original_post = 1
 
-        self.post = Post(self.post_id, self.post_user, self.post_title, self.post_status, content=self.post_content
+        self.post1 = Post(self.post_id, self.post_user, self.post_title, self.post_status, content=self.post_content
+                          , tags=self.post_tags, title_image=self.post_title_image, gallery=self.post_gallery
+                          , tmsp_publish=self.post_tmsp_publish, original_post=self.post_original_post)
+        self.post2 = Post(self.post_id, self.post_user, self.post_title, self.post_status, content=self.post_content
                          , tags=self.post_tags, title_image=self.post_title_image, gallery=self.post_gallery
                          , tmsp_publish=self.post_tmsp_publish, original_post=self.post_original_post)
 
     def test_constructor(self):
-        self.assertEqual(self.post.id, self.post_id)
-        self.assertEqual(self.post.user, self.post_user)
-        self.assertEqual(self.post.title, self.post_title)
-        self.assertEqual(self.post.status, self.post_status)
-        self.assertEqual(self.post.content, self.post_content)
-        self.assertEqual(self.post.tags, self.post_tags)
-        self.assertNotEqual(id(self.post.tags), id(self.post_tags))
-        self.assertEqual(self.post.title_image, self.post_title_image)
-        self.assertNotEqual(id(self.post.gallery), id(self.post_gallery))
-        self.assertEqual(self.post.tmsp_publish, self.post_tmsp_publish)
-        self.assertEqual(self.post.original_post, self.post_original_post)
+        self.assertEqual(self.post1.id, self.post_id)
+        self.assertEqual(self.post1.user, self.post_user)
+        self.assertEqual(self.post1.title, self.post_title)
+        self.assertEqual(self.post1.status, self.post_status)
+        self.assertEqual(self.post1.content, self.post_content)
+        self.assertEqual(self.post1.tags, self.post_tags)
+        self.assertEqual(self.post1.title_image, self.post_title_image)
+        self.assertEqual(self.post1.gallery, self.post_gallery)
+        self.assertEqual(self.post1.tmsp_publish, self.post_tmsp_publish)
+        self.assertEqual(self.post1.original_post, self.post_original_post)
+        self.assertEqual(self.post1, self.post2)
+
+        self.assertNotEqual(id(self.post1.tags), id(self.post_tags))
+        self.assertNotEqual(id(self.post1.gallery), id(self.post_gallery))
+        self.assertNotEqual(id(self.post1), id(self.post2))
 
     def test_modification(self):
-        with self.assertRaises(AttributeError): self.post.id = None
-        with self.assertRaises(AttributeError): self.post.user = None
-        with self.assertRaises(AttributeError): self.post.title = None
-        with self.assertRaises(AttributeError): self.post.status = None
-        with self.assertRaises(AttributeError): self.post.content = None
-        with self.assertRaises(AttributeError): self.post.tags = None
-        with self.assertRaises(AttributeError): self.post.title_image = None
-        with self.assertRaises(AttributeError): self.post.gallery = None
-        with self.assertRaises(AttributeError): self.post.tmsp_publish = None
-        with self.assertRaises(AttributeError): self.post.original_post = None
+        with self.assertRaises(AttributeError): self.post1.id = None
+        with self.assertRaises(AttributeError): self.post1.user = None
+        with self.assertRaises(AttributeError): self.post1.title = None
+        with self.assertRaises(AttributeError): self.post1.status = None
+        with self.assertRaises(AttributeError): self.post1.content = None
+        with self.assertRaises(AttributeError): self.post1.tags = None
+        with self.assertRaises(AttributeError): self.post1.title_image = None
+        with self.assertRaises(AttributeError): self.post1.gallery = None
+        with self.assertRaises(AttributeError): self.post1.tmsp_publish = None
+        with self.assertRaises(AttributeError): self.post1.original_post = None
 
 
 if __name__ == '__main__':
