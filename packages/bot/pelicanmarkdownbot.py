@@ -35,10 +35,13 @@ class PelicanMarkdownBot(AbstractUserStateBot):
 
         # store all authorized users in database
         if authorized_users is not None:
-            for user_id in authorized_users:
+            for user in authorized_users:
+                user_id = user["id"]
+                user_name = user["name"] if "name" in user else None
+
                 if not self.__database.get_users(user_id=user_id):
                     user_state = self.start_state_class(self, user_id)
-                    self.__database.add_user(user_id, user_state)
+                    self.__database.add_user(user_id, user_state, name=user_name)
 
         # load all users from database into bot's user-state-dictionary
         for user in self.__database.get_users():
@@ -267,7 +270,7 @@ class PelicanMarkdownBot(AbstractUserStateBot):
         if len(users) == 1:
             user = users[0]
 
-            result_user = User(user["user_id"])
+            result_user = User(user["user_id"], name=user["name"])
 
         return result_user
 
