@@ -6,7 +6,7 @@ from packages.states.abstract.abstractuserpoststate import AbstractUserPostState
 __author__ = 'anaeanet'
 
 
-class SQLDBWrapper:
+class DBWrapper:
     """
     Data Access Module (DAM) providing an interface 
     to separate bot implementation from specific database implementation.
@@ -123,12 +123,12 @@ class SQLDBWrapper:
             stmt += " WHERE " + " = ? AND ".join(param_dict.keys()) + " = ?"
             for key, value in param_dict.items():
                 if key == "state":
-                    args.append(SQLDBWrapper.__serialize_state(value))
+                    args.append(DBWrapper.__serialize_state(value))
                 else:
                     args.append(value)
 
         return [dict({"user_id": x[0]
-                        , "state_class": SQLDBWrapper.__deserialize_state(x[1])
+                        , "state_class": DBWrapper.__deserialize_state(x[1])
                         , "name": x[2]}) for x in self.__conn.execute(stmt, tuple(args))]
 
     def add_user(self, user_id, state, name=None):
@@ -139,7 +139,7 @@ class SQLDBWrapper:
 
         for key, value in param_dict.items():
             if key == "state":
-                args.append(SQLDBWrapper.__serialize_state(value))
+                args.append(DBWrapper.__serialize_state(value))
             else:
                 args.append(value)
 
@@ -157,7 +157,7 @@ class SQLDBWrapper:
 
         for key, value in param_dict.items():
             if key == "state":
-                args.append(SQLDBWrapper.__serialize_state(value))
+                args.append(DBWrapper.__serialize_state(value))
             else:
                 args.append(value)
         args.append(user_id)

@@ -1,5 +1,5 @@
 from packages.states.navigation.idlestate import IdleState
-from packages.persistence.sqldbwrapper import SQLDBWrapper
+from packages.persistence.dbwrapper import DBWrapper
 from packages.bot.pelicanmarkdownbot import PelicanMarkdownBot
 from packages.bot.parsemode import ParseMode
 
@@ -12,7 +12,7 @@ def main():
     token = config.token
     url = config.url
     file_url = config.file_url
-    database = SQLDBWrapper(config.database_name)
+    database = DBWrapper(config.database_name)
     authorized_users = config.authorized_users
 
     post_target_url = config.markdown_target
