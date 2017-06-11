@@ -1,9 +1,9 @@
+from packages.datamodel.abstractbotobject import AbstractBotObject
+
 __author__ = 'anaeanet'
 
 
-class User:
-
-    # TODO possibly add user name
+class User(AbstractBotObject):
 
     def __init__(self, user_id, name=None):
         self.__id = user_id

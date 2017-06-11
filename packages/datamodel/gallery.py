@@ -1,11 +1,14 @@
+from packages.datamodel.abstractbotobject import AbstractBotObject
+from packages.datamodel.image import Image
+
 __author__ = 'anaeanet'
 
 
-class Gallery:
+class Gallery(AbstractBotObject):
 
     def __init__(self, title, images):
         self.__title = title
-        self.__images = [image for image in images]
+        self.__images = [Image(image.id, image.name, image.file_id, image.file_id, thumb_id=image.thumb_id, caption=image.caption) for image in images]
 
     @property
     def title(self):
@@ -13,4 +16,4 @@ class Gallery:
 
     @property
     def images(self):
-        return [image for image in self.__images]
+        return self.__images

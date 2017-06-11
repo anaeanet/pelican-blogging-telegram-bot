@@ -1,7 +1,8 @@
+from packages.datamodel.abstractbotobject import AbstractBotObject
+
 __author__ = 'anaeanet'
 
-
-class Tag:
+class Tag(AbstractBotObject):
 
     def __init__(self, tag_id, name):
         self.__id = tag_id

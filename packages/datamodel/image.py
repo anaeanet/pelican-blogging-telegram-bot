@@ -1,7 +1,9 @@
+from packages.datamodel.abstractbotobject import AbstractBotObject
+
 __author__ = 'anaeanet'
 
 
-class Image:
+class Image(AbstractBotObject):
 
     def __init__(self, image_id, name, file_id, file, thumb_id=None, caption=None):
         self.__id = image_id
