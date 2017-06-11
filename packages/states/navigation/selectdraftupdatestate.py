@@ -105,8 +105,8 @@ class SelectDraftUpdateState(AbstractUserPostState, IdleState):
                 from packages.states.draft.editdrafttitlestate import EditDraftTitleState
                 next_state = EditDraftTitleState(self.context, user_id, self.post_id, chat_id=chat_id, message_id=self.message_id)
             elif command_array[1] == "/editcontent":
-                from packages.states.draft.editcontentstate import EditContentState
-                next_state = EditContentState(self.context, user_id, self.post_id, chat_id=chat_id, message_id=self.message_id)
+                from packages.states.draft.editdraftcontentstate import EditDraftContentState
+                next_state = EditDraftContentState(self.context, user_id, self.post_id, chat_id=chat_id, message_id=self.message_id)
             elif command_array[1] == "/addtag":
                 from packages.states.tag.addtagstate import AddTagState
                 next_state = AddTagState(self.context, user_id, self.post_id, chat_id=chat_id, message_id=self.message_id)

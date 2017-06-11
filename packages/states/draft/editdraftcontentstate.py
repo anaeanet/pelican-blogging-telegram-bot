@@ -5,7 +5,7 @@ from packages.datamodel.poststate import PostState
 __author__ = "aneanet"
 
 
-class EditContentState(SelectDraftUpdateState):
+class EditDraftContentState(SelectDraftUpdateState):
     """
     Concrete state implementation.
 
@@ -66,7 +66,7 @@ class EditContentState(SelectDraftUpdateState):
                 # replace edit instructions with current draft content
                 self.context.edit_message_text(chat_id, self.message_id, post.content)
 
-                next_state = EditContentState(self.context, user_id, post.id, chat_id=chat_id)
+                next_state = EditDraftContentState(self.context, user_id, post.id, chat_id=chat_id)
 
             # previously selected post no longer exists
             else:
@@ -102,7 +102,7 @@ class EditContentState(SelectDraftUpdateState):
                 # replace edit instructions with Markdown formatting options
                 self.context.edit_message_text(chat_id, self.message_id, message, parse_mode=ParseMode.HTML.value)
 
-                next_state = EditContentState(self.context, user_id, post.id, chat_id=chat_id)
+                next_state = EditDraftContentState(self.context, user_id, post.id, chat_id=chat_id)
 
             # previously selected post no longer exists
             else:
