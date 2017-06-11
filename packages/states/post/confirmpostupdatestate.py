@@ -5,7 +5,7 @@ from packages.datamodel.poststate import PostState
 __author__ = "aneanet"
 
 
-class ConfirmPostDeletionState(SelectDraftUpdateState):
+class ConfirmPostUpdateState(SelectDraftUpdateState):
     """
     Concrete state implementation.
 
@@ -57,9 +57,9 @@ class ConfirmPostDeletionState(SelectDraftUpdateState):
                                                    , "New draft for modification of post <b>" + new_draft.title + "</b> has been <b>created</b>."
                                                    , parse_mode=ParseMode.HTML.value)
 
-                    # shoe update options for newly created draft
+                    # show update options for newly created draft
                     from packages.states.navigation.selectdraftupdatestate import SelectDraftUpdateState
-                    next_state = SelectDraftUpdateState(self.context, user_id, new_draft.post_id, chat_id=chat_id)
+                    next_state = SelectDraftUpdateState(self.context, user_id, new_draft.id, chat_id=chat_id)
 
                 # draft creation not successful
                 else:

@@ -319,10 +319,10 @@ class PelicanMarkdownBot(AbstractUserStateBot):
 
         return result_post
 
-    def create_post(self, user_id, title, status, original_post=None):
+    def create_post(self, user_id, title, status, content="", gallery_title="Bildergalerie", title_image=None, original_post=None):
         post = None
 
-        post_id = self.__database.add_post(user_id, title, status=status.value, gallery_title="Bildergalerie", tmsp_create=datetime.now(), content="", title_image=None, tmsp_publish=None, original_post=original_post)
+        post_id = self.__database.add_post(user_id, title, status=status.value, gallery_title=gallery_title, tmsp_create=datetime.now(), content=content, title_image=title_image, tmsp_publish=None, original_post=original_post)
 
         if post_id:
             post = self.get_post(post_id)
@@ -335,7 +335,7 @@ class PelicanMarkdownBot(AbstractUserStateBot):
         post = self.get_post(post_id)
         if post is not None:
 
-            new_post = self.create_post(post.user.id, post.title, post.status, original_post=post.id)
+            new_post = self.create_post(post.user.id, post.title, PostState.DRAFT, content=post.content, gallery_title=post.gallery.title, title_image=post.title_image, original_post=post.id)
             if new_post is not None:
 
                 # add tags to new post
@@ -346,14 +346,14 @@ class PelicanMarkdownBot(AbstractUserStateBot):
                 if post.title_image is not None:
                     title_image = self.get_post_title_image(post.id)
                     if title_image is not None:
-                        image_id = self.add_post_image(new_post.id, title_image.file_name, title_image.file_id
+                        image_id = self.add_post_image(new_post.id, title_image.name, title_image.file_id
                                                        , thumb_id=title_image.thumb_id, caption=title_image.caption)
                         self.set_post_title_image(new_post.id, image_id)
 
                 # add gallery to new post
                 if post.gallery is not None:
                     for image in post.gallery.images:
-                        self.add_post_image(new_post.id, image.file_name, image.file_id, thumb_id=image.thumb_id, caption=image.caption)
+                        self.add_post_image(new_post.id, image.name, image.file_id, thumb_id=image.thumb_id, caption=image.caption)
 
                 new_post = self.get_post(new_post.id)
 
@@ -523,7 +523,9 @@ class PelicanMarkdownBot(AbstractUserStateBot):
                     post_image_id = self.__database.add_post_image(post.id, image_id, caption=caption)
 
                     if post_image_id > 0:
-                        image = Image(image_id, file_name, file_id, file, thumb_id=thumb_id, caption=caption)
+                        files = self.__database.get_images(file_id=file_id)
+                        if len(files) == 1:
+                            image = Image(image_id, file_name, file_id, files[0]["file"], thumb_id=thumb_id, caption=caption)
 
         return image
 

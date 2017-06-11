@@ -28,8 +28,13 @@ class IdleState(AbstractUserState):
             reply_options.append({"text": "DELETE a draft", "callback_data": "/deletedraft"})
         user_posts = self.context.get_user_posts(self.user_id, status=PostState.PUBLISHED)
         if len(user_posts) > 0:
-            reply_options.append({"text": "UPDATE published post", "callback_data": "/updatepost"})
-            reply_options.append({"text": "DELETE published post", "callback_data": "/deletepost"})
+
+            user_drafts = self.context.get_user_posts(self.user_id, status=PostState.DRAFT)
+
+            # only allow modification or deletion of post, if there is not already a draft based on that post
+            if len([post.id for post in user_posts]) > len([draft.original_post for draft in user_drafts]):
+                reply_options.append({"text": "UPDATE published post", "callback_data": "/updatepost"})
+                reply_options.append({"text": "DELETE published post", "callback_data": "/deletepost"})
 
         return reply_options
 
@@ -94,10 +99,10 @@ class IdleState(AbstractUserState):
                 from packages.states.draft.deletedraftstate import DeleteDraftState
                 next_state = DeleteDraftState(self.context, user_id, chat_id=chat_id, message_id=message_id)
             elif command_array[0] == "/updatepost":
-                # TODO
-                None
+                from packages.states.post.updatepoststate import UpdatePostState
+                next_state = UpdatePostState(self.context, user_id, chat_id=chat_id, message_id=message_id)
             elif command_array[0] == "/deletepost":
-                # TODO
-                None
-                
+                from packages.states.post.deletepoststate import DeletePostState
+                next_state = DeletePostState(self.context, user_id, chat_id=chat_id, message_id=message_id)
+
         return next_state

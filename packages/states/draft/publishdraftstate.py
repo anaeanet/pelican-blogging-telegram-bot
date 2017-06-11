@@ -75,7 +75,7 @@ class PublishDraftState(SelectDraftUpdateState):
                         from packages.states.navigation.idlestate import IdleState
                         next_state = IdleState(self.context, user_id, chat_id=chat_id)
                     else:
-                        next_state = PublishDraftState(self.context, user_id, post.id, chat_id=chat_id)
+                        next_state = SelectDraftUpdateState(self.context, user_id, post.id, chat_id=chat_id)
 
                 # publishing not successful
                 else:

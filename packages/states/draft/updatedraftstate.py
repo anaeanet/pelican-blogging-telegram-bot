@@ -22,7 +22,12 @@ class UpdateDraftState(IdleState):
         # for all user drafts show corresponding button
         user_drafts = self.context.get_user_posts(self.user_id, status=PostState.DRAFT)
         for post in user_drafts:
-            reply_options.append({"text": post.title, "callback_data": "/updatedraft " + str(post.id)})
+            button_text = post.title
+
+            if post.original_post is not None:
+                button_text = "[PUBLISHED] " + button_text
+
+            reply_options.append({"text": button_text, "callback_data": "/updatedraft " + str(post.id)})
 
         # add button to return to main menu
         reply_options.append({"text": "<< main menu", "callback_data": "/mainmenu"})
