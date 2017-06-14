@@ -58,7 +58,7 @@ class PelicanMarkdownBot2(AbstractUserStateBot):
             else:
                 user_state = state_class(self, user.id, message_id=message_id)
 
-            super().set_state(user.id, user_state, name=user.name)
+            super().set_state(user.id, user_state)
 
     @property
     def persistence(self):
