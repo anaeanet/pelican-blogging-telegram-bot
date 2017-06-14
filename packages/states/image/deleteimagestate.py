@@ -16,7 +16,7 @@ class DeleteImageState(SelectDraftUpdateState):
     def welcome_message(self):
         message = "It seems the draft you selected no longer exists..."
 
-        post = self.context.get_post(self.post_id)
+        post = self.context.persistence.get_post(self.post_id)
         if post is not None:
             message = "Which <b>image</b> do you want to <b>delete</b> from draft <b>" + post.title + "</b>?"
 
@@ -30,7 +30,7 @@ class DeleteImageState(SelectDraftUpdateState):
                         , {"text": "<< drafts", "callback_data": "/updatedraft"}]
 
         # show deletion and preview button for every image currently assigned to draft
-        post = self.context.get_post(self.post_id)
+        post = self.context.persistence.get_post(self.post_id)
         if post is not None:
 
             if post.title_image is not None:
@@ -56,10 +56,10 @@ class DeleteImageState(SelectDraftUpdateState):
             image_id = command_array[1]
 
             # check if previously selected post still exists
-            post = self.context.get_post(self.post_id)
+            post = self.context.persistence.get_post(self.post_id)
             if post is not None:
 
-                deleted_image = self.context.delete_post_image(post.id, image_id)
+                deleted_image = self.context.persistence.delete_post_image(post.id, image_id)
 
                 # image removal successful
                 if deleted_image is not None:
@@ -87,7 +87,7 @@ class DeleteImageState(SelectDraftUpdateState):
                                           , parse_mode=ParseMode.HTML.value)
 
                 # show remaining drafts for updating
-                user_drafts = self.context.get_user_posts(user_id=user_id, status=PostState.DRAFT)
+                user_drafts = self.context.persistence.get_posts(user_id=user_id, status=PostState.DRAFT)
                 if len(user_drafts) > 0:
                     from packages.states.draft.updatedraftstate import DeleteDraftState
                     next_state = DeleteDraftState(self.context, user_id, chat_id=chat_id)
@@ -105,7 +105,7 @@ class DeleteImageState(SelectDraftUpdateState):
             self.build_state_message(chat_id, self.welcome_message, message_id=self.message_id)
 
             # check if previously selected post still exists
-            post = self.context.get_post(self.post_id)
+            post = self.context.persistence.get_post(self.post_id)
             if post is not None:
 
                 preview_image = None
@@ -134,7 +134,7 @@ class DeleteImageState(SelectDraftUpdateState):
                                           , parse_mode=ParseMode.HTML.value)
 
                 # show remaining drafts for updating
-                user_drafts = self.context.get_user_posts(user_id=user_id, status=PostState.DRAFT)
+                user_drafts = self.context.persistence.get_posts(user_id=user_id, status=PostState.DRAFT)
                 if len(user_drafts) > 0:
                     from packages.states.draft.updatedraftstate import DeleteDraftState
                     next_state = DeleteDraftState(self.context, user_id, chat_id=chat_id)

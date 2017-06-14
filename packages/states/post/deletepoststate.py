@@ -20,12 +20,11 @@ class DeletePostState(IdleState):
         reply_options = []
 
         # for all user posts show corresponding button
-        user_drafts = self.context.get_user_posts(self.user_id, status=PostState.PUBLISHED)
-        for post in user_drafts:
+        user_posts = self.context.persistence.get_posts(user_id=self.user_id, status=PostState.PUBLISHED)
+        for post in [p for p in user_posts if p.status == PostState.PUBLISHED]:
 
             # only allow deletion of published posts that do not already have a follow-up draft
-            user_drafts = self.context.get_user_posts(self.user_id, status=PostState.DRAFT)
-            if post.id not in [draft.original_post for draft in user_drafts]:
+            if post.id not in [draft.original_post for draft in user_posts if draft.status == PostState.DRAFT]:
                 reply_options.append({"text": post.title, "callback_data": "/deletepost " + str(post.id)})
 
         # add button to return to main menu
@@ -42,8 +41,8 @@ class DeletePostState(IdleState):
 
             post_id = command_array[1]
 
-            from packages.states.draft.confirmdraftdeletionstate import ConfirmDraftDeletionState
-            next_state = ConfirmDraftDeletionState(self.context, user_id, post_id, chat_id=chat_id, message_id=message_id)
+            from packages.states.post.confirmpostdeletionstate import ConfirmPostDeletionState
+            next_state = ConfirmPostDeletionState(self.context, user_id, post_id, chat_id=chat_id, message_id=message_id)
 
         else:
             next_state = super().process_callback_query(user_id, chat_id, message_id, data)

@@ -16,7 +16,7 @@ class EditDraftContentState(SelectDraftUpdateState):
     def welcome_message(self):
         message = "It seems the draft you selected no longer exists..."
 
-        post = self.context.get_post(self.post_id)
+        post = self.context.persistence.get_post(self.post_id)
         if post is not None:
 
             # content is not empty
@@ -42,7 +42,7 @@ class EditDraftContentState(SelectDraftUpdateState):
                         , {"text": "INFO markdown", "callback_data": "/formatting"}, []]
 
         # if content is not empty, show "preview" button
-        post = self.context.get_post(self.post_id)
+        post = self.context.persistence.get_post(self.post_id)
         if post is not None and len(post.content) > 0:
             reply_options.append({"text": "PREVIEW content", "callback_data": "/previewcontent"})
             reply_options.append([])
@@ -60,7 +60,7 @@ class EditDraftContentState(SelectDraftUpdateState):
         if len(command_array) == 1 and command_array[0] == "/previewcontent":
 
             # check if previously selected post still exists
-            post = self.context.get_post(self.post_id)
+            post = self.context.persistence.get_post(self.post_id)
             if post is not None:
 
                 # replace edit instructions with current draft content
@@ -75,7 +75,7 @@ class EditDraftContentState(SelectDraftUpdateState):
                                           , parse_mode=ParseMode.HTML.value)
 
                 # show remaining drafts for updating
-                user_drafts = self.context.get_user_posts(user_id=user_id, status=PostState.DRAFT)
+                user_drafts = self.context.persistence.get_posts(user_id=user_id, status=PostState.DRAFT)
                 if len(user_drafts) > 0:
                     from packages.states.draft.updatedraftstate import UpdateDraftState
                     next_state = UpdateDraftState(self.context, user_id, chat_id=chat_id)
@@ -88,7 +88,7 @@ class EditDraftContentState(SelectDraftUpdateState):
         elif len(command_array) == 1 and command_array[0] == "/formatting":
 
             # check if previously selected post still exists
-            post = self.context.get_post(self.post_id)
+            post = self.context.persistence.get_post(self.post_id)
             if post is not None:
 
                 message = "Following <b>Markdown</b> options are supported:\r\n\r\n" \
@@ -111,7 +111,7 @@ class EditDraftContentState(SelectDraftUpdateState):
                                           , parse_mode=ParseMode.HTML.value)
 
                 # show remaining drafts for updating
-                user_drafts = self.context.get_user_posts(user_id=user_id, status=PostState.DRAFT)
+                user_drafts = self.context.persistence.get_posts(user_id=user_id, status=PostState.DRAFT)
                 if len(user_drafts) > 0:
                     from packages.states.draft.updatedraftstate import UpdateDraftState
                     next_state = UpdateDraftState(self.context, user_id, chat_id=chat_id)
@@ -139,7 +139,7 @@ class EditDraftContentState(SelectDraftUpdateState):
             self.build_state_message(chat_id, self.welcome_message, message_id=self.message_id)
 
             # check if previously selected post still exists
-            post = self.context.get_post(self.post_id)
+            post = self.context.persistence.get_post(self.post_id)
             if post is not None:
 
                 if text.startswith("/append"):
@@ -152,7 +152,12 @@ class EditDraftContentState(SelectDraftUpdateState):
                 else:
                     new_content = text
 
-                updated_post = self.context.update_post(post.id, content=new_content)
+                updated_post = self.context.persistence.update_post(post.id, post.user.id, post.title, post.status
+                                                                    , post.gallery.title
+                                                                    , new_content
+                                                                    , None if post.title_image is None else post.title_image.id
+                                                                    , post.tmsp_publish
+                                                                    , post.original_post)
 
                 # post update successful
                 if updated_post is not None:
@@ -174,7 +179,7 @@ class EditDraftContentState(SelectDraftUpdateState):
                                           , parse_mode=ParseMode.HTML.value)
 
                 # show remaining drafts for updating
-                user_drafts = self.context.get_user_posts(user_id=user_id, status=PostState.DRAFT)
+                user_drafts = self.context.persistence.get_posts(user_id=user_id, status=PostState.DRAFT)
                 if len(user_drafts) > 0:
                     from packages.states.draft.updatedraftstate import UpdateDraftState
                     next_state = UpdateDraftState(self.context, user_id, chat_id=chat_id)

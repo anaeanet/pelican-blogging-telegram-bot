@@ -4,7 +4,7 @@ import subprocess
 __author__ = "anaeanet"
 
 
-def __create_folder(folder_name):
+def create_folder(folder_name):
     result = False
 
     try:
@@ -21,7 +21,7 @@ def __create_folder(folder_name):
         return result
 
 
-def __write_to_file(file_name, write_mode, file_content):
+def write_to_file(file_name, write_mode, file_content):
     result = False
 
     try:
@@ -35,11 +35,11 @@ def __write_to_file(file_name, write_mode, file_content):
         return result
 
 
-def __transfer_file(source, target):
+def transfer_file(source, target):
     return subprocess.call(["rsync", "-rtvhP", "--delete", source, target]) == 0
 
 
-def __remove_file(path_to_file):
+def remove_file(path_to_file):
     server = None
     path = path_to_file
 

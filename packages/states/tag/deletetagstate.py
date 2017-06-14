@@ -16,7 +16,7 @@ class DeleteTagState(SelectDraftUpdateState):
     def welcome_message(self):
         message = "It seems the draft you selected no longer exists..."
 
-        post = self.context.get_post(self.post_id)
+        post = self.context.persistence.get_post(self.post_id)
         if post is not None:
             message = "Which <b>tag</b> do you want to <b>delete</b> from draft <b>" + post.title + "</b>?"
 
@@ -30,7 +30,7 @@ class DeleteTagState(SelectDraftUpdateState):
                         , {"text": "<< drafts", "callback_data": "/updatedraft"}]
 
         # show deletion button for every tag currently assigned to draft
-        post_tags = self.context.get_post_tags(self.post_id)
+        post_tags = self.context.persistence.get_post_tags(post_id=self.post_id)
         for tag in post_tags:
             reply_options.append({"text": tag.name, "callback_data": "/deleteposttag " + str(tag.id)})
 
@@ -51,10 +51,10 @@ class DeleteTagState(SelectDraftUpdateState):
             tag_id = command_array[1]
 
             # check if previously selected post still exists
-            post = self.context.get_post(self.post_id)
+            post = self.context.persistence.get_post(self.post_id)
             if post is not None:
 
-                deleted_tag = self.context.delete_post_tag(post.id, tag_id)
+                deleted_tag = self.context.persistence.delete_post_tag(post.id, tag_id)
 
                 # tag removal successful
                 if deleted_tag is not None:
@@ -81,7 +81,7 @@ class DeleteTagState(SelectDraftUpdateState):
                                           , parse_mode=ParseMode.HTML.value)
 
                 # show remaining drafts for updating
-                user_drafts = self.context.get_user_posts(user_id=user_id, status=PostState.DRAFT)
+                user_drafts = self.context.persistence.get_posts(user_id=user_id, status=PostState.DRAFT)
                 if len(user_drafts) > 0:
                     from packages.states.draft.updatedraftstate import DeleteDraftState
                     next_state = DeleteDraftState(self.context, user_id, chat_id=chat_id)

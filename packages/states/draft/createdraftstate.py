@@ -35,7 +35,7 @@ class CreateDraftState(IdleState):
             self.build_state_message(chat_id, self.welcome_message, message_id=self.message_id)
 
             # try to create new draft
-            post = self.context.create_post(user_id, text, PostState.DRAFT)
+            post = self.context.persistence.add_post(user_id, text, PostState.DRAFT, "Bildergalerie", "")
 
             # post creation was successful -> show post update options
             if post is not None:

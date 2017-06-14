@@ -16,7 +16,7 @@ class EditGalleryTitleState(SelectDraftUpdateState):
     def welcome_message(self):
         message = "It seems the draft you selected no longer exists..."
 
-        post = self.context.get_post(self.post_id)
+        post = self.context.persistence.get_post(self.post_id)
         if post is not None:
             message = "What is the <b>new title</b> for the <b>image gallery</b> of draft <b>" + post.title + "</b>?" \
                 + "\r\n\r\n" \
@@ -45,11 +45,11 @@ class EditGalleryTitleState(SelectDraftUpdateState):
             self.build_state_message(chat_id, self.welcome_message, message_id=self.message_id)
 
             # check if previously selected post still exists
-            post = self.context.get_post(self.post_id)
+            post = self.context.persistence.get_post(self.post_id)
             if post is not None:
-                gallery_title = text.strip(' \t\n\r')
+                new_gallery_title = text.strip(' \t\n\r')
 
-                updated_post = self.context.update_post(post.id, gallery_title=gallery_title)
+                updated_post = self.context.persistence.update_post(post.id, post.user.id, post.title, post.status, new_gallery_title, post.content, post.title_image, post.tmsp_publish, post.original_post)
 
                 # post update successful
                 if updated_post is not None:
@@ -71,7 +71,7 @@ class EditGalleryTitleState(SelectDraftUpdateState):
                                           , parse_mode=ParseMode.HTML.value)
 
                 # show remaining drafts for updating
-                user_drafts = self.context.get_user_posts(user_id=user_id, status=PostState.DRAFT)
+                user_drafts = self.context.persistence.get_posts(user_id=user_id, status=PostState.DRAFT)
                 if len(user_drafts) > 0:
                     from packages.states.draft.updatedraftstate import UpdateDraftState
                     next_state = UpdateDraftState(self.context, user_id, chat_id=chat_id)

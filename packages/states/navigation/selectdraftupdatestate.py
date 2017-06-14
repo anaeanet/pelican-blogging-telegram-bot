@@ -16,7 +16,7 @@ class SelectDraftUpdateState(AbstractUserPostState, IdleState):
     def welcome_message(self):
         message = "It seems the draft you selected no longer exists..."
 
-        post = self.context.get_post(self.post_id)
+        post = self.context.persistence.get_post(self.post_id)
         if post is not None:
             message = "What do you want to do with draft <b>" + post.title + "</b>?"
 
@@ -29,7 +29,7 @@ class SelectDraftUpdateState(AbstractUserPostState, IdleState):
         reply_options = [{"text": "<< drafts", "callback_data": "/updatedraft"}, []]
 
         # show update options only if previously selected post still exists
-        post = self.context.get_post(self.post_id)
+        post = self.context.persistence.get_post(self.post_id)
         if post is not None:
 
             reply_options.append({"text": "EDIT title", "callback_data": "/selectupdate /edittitle"})

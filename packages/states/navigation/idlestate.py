@@ -13,28 +13,29 @@ class IdleState(AbstractUserState):
     and provides functionality to process common commands and navigation.
     """
 
+    # TODO if user sends anything else but text message or photo, ignore and treat as unrecognized item
+
     @property
     def welcome_message(self):
         return "What do you want to do?"
 
     @property
     def callback_options(self):
+
+        # show optin to create new draft from scratch
         reply_options = [{"text": "CREATE a draft", "callback_data": "/createdraft"}]
 
         # if user already has any draft posts, show buttons to update or delete them
-        user_drafts = self.context.get_user_posts(self.user_id, status=PostState.DRAFT)
+        user_drafts = self.context.persistence.get_posts(user_id=self.user_id, status=PostState.DRAFT)
         if len(user_drafts) > 0:
             reply_options.append({"text": "UPDATE a draft", "callback_data": "/updatedraft"})
             reply_options.append({"text": "DELETE a draft", "callback_data": "/deletedraft"})
-        user_posts = self.context.get_user_posts(self.user_id, status=PostState.PUBLISHED)
-        if len(user_posts) > 0:
 
-            user_drafts = self.context.get_user_posts(self.user_id, status=PostState.DRAFT)
-
-            # only allow modification or deletion of post, if there is not already a draft based on that post
-            if len([post.id for post in user_posts]) > len([draft.original_post for draft in user_drafts]):
-                reply_options.append({"text": "UPDATE published post", "callback_data": "/updatepost"})
-                reply_options.append({"text": "DELETE published post", "callback_data": "/deletepost"})
+        # show update/delete options for previously published posts if at least one is not currentl ybeing modified by a draft
+        user_posts = self.context.persistence.get_posts(user_id=self.user_id, status=PostState.PUBLISHED)
+        if len(user_posts) > 0 and len([post.id for post in user_posts]) > len([draft.original_post for draft in user_drafts]):
+            reply_options.append({"text": "UPDATE published post", "callback_data": "/updatepost"})
+            reply_options.append({"text": "DELETE published post", "callback_data": "/deletepost"})
 
         return reply_options
 

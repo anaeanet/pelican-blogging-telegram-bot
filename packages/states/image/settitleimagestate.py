@@ -16,7 +16,7 @@ class SetTitleImageState(SelectDraftUpdateState):
     def welcome_message(self):
         message = "It seems the draft you selected no longer exists..."
 
-        post = self.context.get_post(self.post_id)
+        post = self.context.persistence.get_post(self.post_id)
         if post is not None:
             message = "Which <b>image</b> do you want to <b>set as title image</b> of draft <b>" + post.title + "</b>?"
 
@@ -30,7 +30,7 @@ class SetTitleImageState(SelectDraftUpdateState):
                         , {"text": "<< drafts", "callback_data": "/updatedraft"}]
 
         # show deletion and preview button for every image currently assigned to draft
-        post = self.context.get_post(self.post_id)
+        post = self.context.persistence.get_post(self.post_id)
         if post is not None:
 
             if post.title_image is not None:
@@ -56,14 +56,14 @@ class SetTitleImageState(SelectDraftUpdateState):
             image_id = command_array[1]
 
             # check if previously selected post still exists
-            post = self.context.get_post(self.post_id)
+            post = self.context.persistence.get_post(self.post_id)
             if post is not None:
 
-                title_image = self.context.set_post_title_image(post.id, image_id)
+                updated_post = self.context.persistence.update_post(post.id, post.user.id, post.title, post.status, post.gallery.title, post.content, image_id, post.tmsp_publish, post.original_post)
 
-                if title_image is not None:
+                if updated_post is not None:
                     self.context.edit_message_text(chat_id, message_id
-                                                   , "Image <b>" + title_image.name + "</b> has been <b>set as title image</b> for draft <b>" + post.title + "</b>."
+                                                   , "Image <b>" + updated_post.title_image.name + "</b> has been <b>set as title image</b> for draft <b>" + post.title + "</b>."
                                                    , parse_mode=ParseMode.HTML.value)
 
                 else:
@@ -81,7 +81,7 @@ class SetTitleImageState(SelectDraftUpdateState):
                                           , parse_mode=ParseMode.HTML.value)
 
                 # show remaining drafts for updating
-                user_drafts = self.context.get_user_posts(user_id=user_id, status=PostState.DRAFT)
+                user_drafts = self.context.persistence.get_posts(user_id=user_id, status=PostState.DRAFT)
                 if len(user_drafts) > 0:
                     from packages.states.draft.updatedraftstate import DeleteDraftState
                     next_state = DeleteDraftState(self.context, user_id, chat_id=chat_id)
@@ -99,7 +99,7 @@ class SetTitleImageState(SelectDraftUpdateState):
             self.build_state_message(chat_id, self.welcome_message, message_id=self.message_id)
 
             # check if previously selected post still exists
-            post = self.context.get_post(self.post_id)
+            post = self.context.persistence.get_post(self.post_id)
             if post is not None:
 
                 preview_image = None
@@ -128,7 +128,7 @@ class SetTitleImageState(SelectDraftUpdateState):
                                           , parse_mode=ParseMode.HTML.value)
 
                 # show remaining drafts for updating
-                user_drafts = self.context.get_user_posts(user_id=user_id, status=PostState.DRAFT)
+                user_drafts = self.context.persistence.get_posts(user_id=user_id, status=PostState.DRAFT)
                 if len(user_drafts) > 0:
                     from packages.states.draft.updatedraftstate import DeleteDraftState
                     next_state = DeleteDraftState(self.context, user_id, chat_id=chat_id)

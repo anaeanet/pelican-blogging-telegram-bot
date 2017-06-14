@@ -16,7 +16,7 @@ class AddImageState(SelectDraftUpdateState):
     def welcome_message(self):
         message = "It seems the draft you selected no longer exists..."
 
-        post = self.context.get_post(self.post_id)
+        post = self.context.persistence.get_post(self.post_id)
         if post is not None:
             message = "What <b>image(s)</b> do you want to <b>add</b> to draft <b>" + post.title + "</b>?"
 
@@ -46,10 +46,18 @@ class AddImageState(SelectDraftUpdateState):
         self.build_state_message(chat_id, self.welcome_message, message_id=self.message_id)
 
         # check if previously selected post still exists
-        post = self.context.get_post(self.post_id)
+        post = self.context.persistence.get_post(self.post_id)
         if post is not None:
 
-            image = self.context.add_post_image(post.id, file_name, file_id, thumb_id=thumb_id, caption=caption)
+            image = None
+            # TODO move this code to bot? -> file = self.context.download_file(file_id)
+            telegram_file = self.context.get_file(file_id)
+            if "result" in telegram_file and "file_path" in telegram_file["result"]:
+                file_url = telegram_file["result"]["file_path"]
+                file = self.context.download_file(file_url)
+
+                if file is not None:
+                    image = self.context.persistence.add_post_image(post.id, file, file_id, thumb_id=thumb_id, caption=caption)
 
             if image is not None:
                 self.context.send_message(chat_id

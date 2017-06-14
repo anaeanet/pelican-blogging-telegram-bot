@@ -18,7 +18,7 @@ class AddTagState(SelectDraftUpdateState):
     def welcome_message(self):
         message = "It seems the draft you selected no longer exists..."
 
-        post = self.context.get_post(self.post_id)
+        post = self.context.persistence.get_post(self.post_id)
         if post is not None:
             message = "What <b>tag(s)</b> do you want to add to draft <b>" + post.title + "</b>? " \
                         + "Comma-separate multiple tags."
@@ -51,17 +51,17 @@ class AddTagState(SelectDraftUpdateState):
             self.build_state_message(chat_id, self.welcome_message, message_id=self.message_id)
 
             # check if previously selected post still exists
-            post = self.context.get_post(self.post_id)
+            post = self.context.persistence.get_post(self.post_id)
             if post is not None:
 
                 new_tags = []
-                for new_tag in [x.strip(' \t\n\r') for x in re.split("[,\t\n\r]", text)]:
+                for new_tag_name in [x.strip(' \t\n\r') for x in re.split("[,\t\n\r]", text)]:
 
                     # ignore "empty" tags
-                    if len(new_tag) == 0:
+                    if len(new_tag_name) == 0:
                         continue
 
-                    tag = self.context.add_post_tag(post.id, new_tag)
+                    tag = self.context.persistence.add_post_tag(post.id, new_tag_name)
                     if tag is not None:
                         new_tags.append(tag.name)
 
@@ -83,7 +83,7 @@ class AddTagState(SelectDraftUpdateState):
                                           , parse_mode=ParseMode.HTML.value)
 
                 # show remaining drafts for updating
-                user_drafts = self.context.get_user_posts(user_id=user_id, status=PostState.DRAFT)
+                user_drafts = self.context.persistence.get_posts(user_id=user_id, status=PostState.DRAFT)
                 if len(user_drafts) > 0:
                     from packages.states.draft.updatedraftstate import UpdateDraftState
                     next_state = UpdateDraftState(self.context, user_id, chat_id=chat_id)

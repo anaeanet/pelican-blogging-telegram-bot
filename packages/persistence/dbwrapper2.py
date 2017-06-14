@@ -40,7 +40,7 @@ class DBWrapper2:
                                                 + ", tmsp_publish TIMESTAMP"
                                                 + ", original_post INTEGER"
                                                 + ", FOREIGN KEY(user_id) REFERENCES user(user_id)"
-                                                + ", FOREIGN KEY(post_id, title_image) REFERENCES post_image(post_id, image_id)"
+            #TODO add FK for title_image
                                                 + ", FOREIGN KEY(original_post) REFERENCES post(post_id))"
 
             , "CREATE TABLE IF NOT EXISTS tag (tag_id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT"
@@ -204,7 +204,7 @@ class DBWrapper2:
             stmt += " WHERE " + " = ? AND ".join(param_dict.keys()) + " = ?"
             for key, value in param_dict.items():
                 if key == "tmsp_publish":
-                    args.append(value.strftime("%Y-%m-%d %H:%M:%S.%f"))
+                    args.append(value.strftime("%Y-%m-%d %H:%M:%S.%f") if value is not None else None)
                 elif key == "status":
                     args.append(value.value)
                 else:
@@ -213,30 +213,43 @@ class DBWrapper2:
         posts = []
         for p in [post for post in self.__conn.execute(stmt, tuple(args))]:
             p_post_id = p[0]
-            p_user_id = self.get_user(p[1])
+            p_user = self.get_user(p[1])
             p_title = p[2]
             p_status = PostState(p[3])
             p_gallery_title = p[4]
             p_content = p[5]
-            post_images = self.get_post_images(post_image_id=p[6])
-            p_title_image = post_images[0] if len(post_images) == 1 else None
+
+            p_title_image = None
+            p_gallery_images = []
+            post_images = self.get_post_images(post_id=post_id)
+            for post_image in post_images:
+
+                # set title_image
+                if post_image.id == p[6]:
+                    p_title_image = post_image
+                else:
+                    # add to gallery images
+                    p_gallery_images.append(post_image)
+
             p_tmsp_publish = p[7]
             p_original_post = p[8]
 
-            posts.append(Post(p_post_id, p_user_id, p_title, p_status
-                              , content=p_content
-                              , tags=self.get_post_tags(post_id=p_post_id)
-                              , title_image=p_title_image
-                              , gallery=Gallery(p_gallery_title, [image for image in self.get_post_images(post_id=p_post_id) if image.id != p_title_image.id])
-                              , tmsp_publish=datetime.strptime(p_tmsp_publish, "%Y-%m-%d %H:%M:%S.%f")
-                              , original_post=self.get_post(post_id=p_original_post)))
+            posts.append(
+                Post(p_post_id, p_user, p_title, p_status
+                    , content=p_content
+                    , tags=self.get_post_tags(post_id=p_post_id)
+                    , title_image=p_title_image
+                    , gallery=Gallery(p_gallery_title, p_gallery_images)
+                    , tmsp_publish=datetime.strptime(p_tmsp_publish, "%Y-%m-%d %H:%M:%S.%f") if p_tmsp_publish is not None else None
+                    , original_post=self.get_post(post_id=p_original_post) if p_original_post is not None else None)
+            )
 
         return posts
 
     def get_post(self, post_id):
         post = None
 
-        posts = self.get_users(post_id=post_id)
+        posts = self.get_posts(post_id)
         if len(posts) == 1:
             post = posts[0]
 
@@ -250,7 +263,7 @@ class DBWrapper2:
 
         for key, value in param_dict.items():
             if key == "tmsp_publish":
-                args.append(value.strftime("%Y-%m-%d %H:%M:%S.%f"))
+                args.append(value.strftime("%Y-%m-%d %H:%M:%S.%f") if value is not None else None)
             elif key == "status":
                 args.append(value.value)
             else:
@@ -263,6 +276,49 @@ class DBWrapper2:
 
         return self.get_post(cursor.lastrowid)
 
+    def copy_post(self, post_id):
+        copy_post = None
+
+        post = self.get_post(post_id)
+        if post is not None:
+
+            new_post = self.add_post(post.user.id, post.title, PostState.DRAFT, post.gallery.title, post.content
+                                     , title_image=post.title_image
+                                     , original_post=post.id
+                                     , commit=False)
+            if new_post is not None:
+
+                # add tags to new post
+                for tag in post.tags:
+                    self.add_post_tag(new_post.id, tag.name, commit=False)
+
+                # copy title image
+                if post.title_image is not None:
+                    self.add_post_image(new_post.id, post.title_image.file_id, post.title_image.file, thumb_id=post.title_image.thumb_id, caption=post.title_image.caption, commit=False)
+                    self.update_post(new_post.id, new_post.user.id, new_post.title, new_post.status, new_post.gallery_title, new_post.content, post.title_image.id, new_post.tmsp_publish, new_post.original_post, commit=False)
+
+                # add gallery to new post
+                if post.gallery is not None:
+                    for image in post.gallery.images:
+                        self.add_post_image(new_post.id, image.file_id, image.file
+                                            , thumb_id=image.thumb_id
+                                            , caption=image.caption
+                                            , commit=False)
+
+                new_post = self.get_post(new_post.id)
+
+                # check if copy was successful
+                if new_post.tags == post.tags and new_post.title_image == post.title_image and new_post.gallery == post.gallery:
+                    copy_post = new_post
+                    self.__conn.commit()
+                else:
+                    self.__conn.rollback()
+
+            else:
+                self.__conn.rollback()
+
+        return copy_post
+
     def update_post(self, post_id, user_id, title, status, gallery_title, content, title_image, tmsp_publish, original_post, commit=True):
         param_dict = dict({key: value for key, value in locals().items() if key not in ["self", "commit"]})
 
@@ -270,7 +326,12 @@ class DBWrapper2:
         args = []
 
         for key, value in param_dict.items():
-            args.append(value)
+            if key == "tmsp_publish":
+                args.append(value.strftime("%Y-%m-%d %H:%M:%S.%f") if value is not None else None)
+            elif key == "status":
+                args.append(value.value)
+            else:
+                args.append(value)
         args.append(post_id)
 
         cursor = self.__conn.cursor()
@@ -370,7 +431,7 @@ class DBWrapper2:
             if commit:
                 self.__conn.commit()
 
-            post_tag = self.get_post_tag(cursor.lastrowid)
+            post_tag = self.get_post_tag(post_id, tag.id) if cursor.lastrowid > 0 else None
 
         else:
             post_tag = None
@@ -387,10 +448,11 @@ class DBWrapper2:
         if commit:
             self.__conn.commit()
 
-        # if tag not used in any other post delete it
-        tags = self.get_post_tag(tag_id=tag_id)
-        if len(tags) == 0:
-            self.delete_tag(tag_id)
+        if cursor.rowcount > 0:
+            # if tag not used in any other post delete it
+            tags = self.get_post_tags(tag_id=tag_id)
+            if len(tags) == 0:
+                self.delete_tag(tag_id)
 
         return post_tag if cursor.rowcount > 0 else None
 
@@ -410,7 +472,7 @@ class DBWrapper2:
         post_images = []
         for img in [x for x in self.__conn.execute(stmt, tuple(args))]:
             image = self.get_image(img[2])
-            post_images.append(Image(image.image_id, image.name, image.file_id, image.file, thumb_id=image.thumb_id, caption=img[3]))
+            post_images.append(Image(image.id, image.name, image.file_id, image.file, thumb_id=image.thumb_id, caption=img[3]))
 
         return post_images
 
@@ -447,7 +509,7 @@ class DBWrapper2:
             if commit:
                 self.__conn.commit()
 
-            post_image = self.get_post_image(cursor.lastrowid)
+            post_image = self.get_post_image(post_id, image.id) if cursor.lastrowid > 0 else None
 
         else:
             post_image = None
@@ -464,10 +526,11 @@ class DBWrapper2:
         if commit:
             self.__conn.commit()
 
-        # if image not used in any other post delete it
-        images = self.get_post_image(image_id=image_id)
-        if len(images) == 0:
-            self.delete_tag(image_id)
+        if cursor.rowcount > 0:
+            # if image not used in any other post delete it
+            images = self.get_post_images(image_id=image_id)
+            if len(images) == 0:
+                self.delete_image(image_id)
 
         return post_image if cursor.rowcount > 0 else None
 

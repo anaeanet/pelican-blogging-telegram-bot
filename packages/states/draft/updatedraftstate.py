@@ -20,7 +20,7 @@ class UpdateDraftState(IdleState):
         reply_options = []
 
         # for all user drafts show corresponding button
-        user_drafts = self.context.get_user_posts(self.user_id, status=PostState.DRAFT)
+        user_drafts = self.context.persistence.get_posts(user_id=self.user_id, status=PostState.DRAFT)
         for post in user_drafts:
             button_text = post.title
 
