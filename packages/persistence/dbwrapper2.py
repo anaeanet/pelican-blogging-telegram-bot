@@ -421,7 +421,7 @@ class DBWrapper2:
         else:
             tag = self.add_tag(name, commit=False)
 
-        if tag is not None:
+        if tag is not None and self.get_post_tag(post_id, tag.id) is None:
 
             stmt = "INSERT INTO post_tag (post_id, tag_id) VALUES (?, ?)"
             args = [post_id, tag.id]
@@ -495,7 +495,7 @@ class DBWrapper2:
         else:
             image = self.add_image(file_id, file, thumb_id=thumb_id, commit=False)
 
-        if image is not None:
+        if image is not None and self.get_post_image(post_id, image.id) is None:
             param_dict["image_id"] = image.id
 
             stmt = "INSERT INTO post_image (" + ",".join(param_dict.keys()) + ") VALUES (" + ",".join(["?" for x in param_dict.keys()]) + ")"

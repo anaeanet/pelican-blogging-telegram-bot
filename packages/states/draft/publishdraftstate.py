@@ -61,8 +61,7 @@ class PublishDraftState(SelectDraftUpdateState):
             post = self.context.persistence.get_post(self.post_id)
             if post is not None:
 
-                # TODO introduce confirmpublishdraftstate?
-                is_published = self.context.publish(post, PostState(publish_type))
+                is_published = self.context.publish(post.id, PostState(publish_type))
 
                 # publishing successful
                 if is_published:

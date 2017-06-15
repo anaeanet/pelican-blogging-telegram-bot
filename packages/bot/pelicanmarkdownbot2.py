@@ -18,16 +18,13 @@ class PelicanMarkdownBot2(AbstractUserStateBot):
     as well as linked image galleries for <a href="http://docs.getpelican.com/en/stable/">PELICAN</a> blog posts.
     """
 
-    format_datetime_db = "%Y-%m-%d %H:%M:%S.%f"
-    format_datetime_file_name = "%Y-%m-%d_%H-%M-%S"
-    format_datetime_md = "%Y-%m-%d %H:%M"
-
     def __init__(self, token, url, file_url, database, post_target_url, gallery_target_url, authorized_users=[]):
         super().__init__(token, url, file_url, IdleState)
         self.__database = database
         self.__database.setup()
         self.__post_target_url = post_target_url + ("/" if not post_target_url.endswith("/") else "")
         self.__gallery_target_url = gallery_target_url + ("/" if not gallery_target_url.endswith("/") else "")
+        self.format_datetime_file_name = "%Y-%m-%d_%H-%M-%S"
 
         # store all authorized users in database
         if authorized_users is not None:
@@ -89,9 +86,10 @@ class PelicanMarkdownBot2(AbstractUserStateBot):
             # TODO: maybe do something with updates from unauthorized users?
             None
 
-    def publish(self, post, publish_state):
+    def publish(self, post_id, publish_state):
         is_published = False
 
+        post = self.persistence.get_post(post_id)
         if post is not None and publish_state in [state for state in PostState]:
 
             # get publication timestamp, depending on whether draft has been published before
@@ -108,12 +106,13 @@ class PelicanMarkdownBot2(AbstractUserStateBot):
             post_file_name = tmsp_publish.strftime(self.format_datetime_file_name)
 
             # build content of markdown post file
+            format_datetime_md = "%Y-%m-%d %H:%M"
             md_post = "Title: {}".format(post.title)
             if post.original_post is not None:
-                md_post += "\r\n" + "Date: {}".format(tmsp_publish.strftime(self.format_datetime_md))
-                md_post += "\r\n" + "Modified: ".format(datetime.now().strftime(self.format_datetime_md))
+                md_post += "\r\n" + "Date: {}".format(tmsp_publish.strftime(format_datetime_md))
+                md_post += "\r\n" + "Modified: ".format(datetime.now().strftime(format_datetime_md))
             else:
-                md_post += "\r\n" + "Date: {}".format(datetime.now().strftime(self.format_datetime_md))
+                md_post += "\r\n" + "Date: {}".format(datetime.now().strftime(format_datetime_md))
             if post.user.name is not None and len(post.user.name) > 0:
                 md_post += "\r\n" + "Authors: {}".format(post.user.name)
             if len(post.tags) > 0:
@@ -180,7 +179,7 @@ class PelicanMarkdownBot2(AbstractUserStateBot):
 
         return is_published
 
-    def unpublish_post(self, post_id):
+    def unpublish(self, post_id):
         is_unpublished = False
 
         post = self.persistence.get_post(post_id)

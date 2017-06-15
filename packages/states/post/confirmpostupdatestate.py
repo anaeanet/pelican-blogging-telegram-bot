@@ -26,7 +26,7 @@ class ConfirmPostUpdateState(SelectDraftUpdateState):
     def callback_options(self):
 
         # add button to return to post list
-        reply_options = [{"text": "<< drafts", "callback_data": "/deletepost"}, []]
+        reply_options = [{"text": "<< drafts", "callback_data": "/updatepost"}, []]
 
         # if post still exists, show button to confirm final deletion
         post = self.context.persistence.get_post(self.post_id)

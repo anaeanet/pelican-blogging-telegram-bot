@@ -49,7 +49,8 @@ class ConfirmDraftDeletionState(SelectDraftUpdateState):
             # confirmed draft deletion
             if command_array[1] == "/confirm":
 
-                deleted_post = self.context.persistence.delete_post(self.post_id) if self.context.unpublish else None
+
+                deleted_post = self.context.persistence.delete_post(self.post_id) if self.context.unpublish(self.post_id) else None
 
                 # post removal successful
                 if deleted_post is not None:
