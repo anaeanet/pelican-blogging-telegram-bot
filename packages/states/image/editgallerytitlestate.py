@@ -49,7 +49,12 @@ class EditGalleryTitleState(SelectDraftUpdateState):
             if post is not None:
                 new_gallery_title = text.strip(' \t\n\r')
 
-                updated_post = self.context.persistence.update_post(post.id, post.user.id, post.title, post.status, new_gallery_title, post.content, post.title_image, post.tmsp_publish, post.original_post)
+                updated_post = self.context.persistence.update_post(post.id, post.user.id, post.title, post.status
+                                                                    , new_gallery_title
+                                                                    , post.content
+                                                                    , None if post.title_image is None else post.title_image.id
+                                                                    , post.tmsp_publish
+                                                                    , None if post.original_post is None else post.original_post.id)
 
                 # post update successful
                 if updated_post is not None:

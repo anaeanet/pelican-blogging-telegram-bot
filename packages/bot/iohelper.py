@@ -31,6 +31,9 @@ def write_to_file(file_name, write_mode, file_content):
     except (OSError, IOError) as e:
         # TODO log
         None
+    except Exception as e:
+        # TODO log
+        None
     finally:
         return result
 

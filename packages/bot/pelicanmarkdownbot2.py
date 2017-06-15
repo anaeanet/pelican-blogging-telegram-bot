@@ -99,18 +99,19 @@ class PelicanMarkdownBot2(AbstractUserStateBot):
                 else:  # draft was published earlier (as draft)
                     tmsp_publish = post.tmsp_publish
             else:  # draft is based on previously published post
-                original_post = self.persistence.get_post(post.original_post)
-                tmsp_publish = original_post.tmsp_publish
+                tmsp_publish = post.original_post.tmsp_publish
 
             # use tmsp_publish as filename for blog post
-            post_file_name = tmsp_publish.strftime(self.format_datetime_file_name)
+            file_name = tmsp_publish.strftime(self.format_datetime_file_name)
+            if publish_state == PostState.DRAFT:
+                file_name += "_draft"
 
             # build content of markdown post file
             format_datetime_md = "%Y-%m-%d %H:%M"
             md_post = "Title: {}".format(post.title)
             if post.original_post is not None:
                 md_post += "\r\n" + "Date: {}".format(tmsp_publish.strftime(format_datetime_md))
-                md_post += "\r\n" + "Modified: ".format(datetime.now().strftime(format_datetime_md))
+                md_post += "\r\n" + "Modified: {}".format(datetime.now().strftime(format_datetime_md))
             else:
                 md_post += "\r\n" + "Date: {}".format(datetime.now().strftime(format_datetime_md))
             if post.user.name is not None and len(post.user.name) > 0:
@@ -118,30 +119,30 @@ class PelicanMarkdownBot2(AbstractUserStateBot):
             if len(post.tags) > 0:
                 md_post += "\r\n" + "Tags: {}".format(", ".join([tag.name for tag in post.tags]))
             if post.title_image is not None:
-                md_post += "\r\n" + "image: {photo}" + "{}".format(post_file_name) + "/" + "{}".format(
+                md_post += "\r\n" + "image: {photo}" + "{}".format(file_name) + "/" + "{}".format(
                     post.title_image.name)
             if len(post.gallery.images) > 0:
-                md_post += "\r\n" + "gallery: {photo}" + "{}".format(post_file_name) + "{" + post.gallery.title + "}"
+                md_post += "\r\n" + "gallery: {photo}" + "{}".format(file_name) + "{" + post.gallery.title + "}"
             md_post += "\r\n" + "Status: {}".format(publish_state.value)
             md_post += "\r\n\r\n" + post.content
 
             # write markdown post file to working directory
-            md_written = iohelper.write_to_file(post_file_name + ".md", "w", md_post)
+            md_written = iohelper.write_to_file(file_name + ".md", "w", md_post)
 
             # if post file written successfully, process gallery and title image
             images = post.gallery.images + ([post.title_image] if post.title_image is not None else [])
             written_img_count = 0
             if md_written and len(images) > 0:
-                gallery_written = iohelper.create_folder(post_file_name)
-                captions_written = iohelper.write_to_file(os.path.join(post_file_name, "captions.txt"), "w",
+                gallery_written = iohelper.create_folder(file_name)
+                captions_written = iohelper.write_to_file(os.path.join(file_name, "captions.txt"), "w",
                                                         "# captions.txt") if gallery_written else False
 
                 # if gallery folder and captions.txt written successfully
                 if gallery_written and captions_written:
                     for image in images:
-                        image_written = iohelper.write_to_file(os.path.join(post_file_name, image.name), "wb", image.file)
-                        image_caption_written = iohelper.write_to_file(os.path.join(post_file_name, "captions.txt"), "a",
-                                                                     "\r\n" + image.name + ":" + image.caption)
+                        image_written = iohelper.write_to_file(os.path.join(file_name, image.name), "wb", image.file)
+                        image_caption_written = iohelper.write_to_file(os.path.join(file_name, "captions.txt"), "a"
+                                                                       , "\r\n" + image.name + ":" + image.caption)
 
                         if image_written and image_caption_written:
                             written_img_count += 1
@@ -153,13 +154,12 @@ class PelicanMarkdownBot2(AbstractUserStateBot):
 
                 updated_post = self.persistence.update_post(post.id, post.user.id, post.title, publish_state, post.gallery.title, post.content, post.title_image.id if post.title_image is not None else None, tmsp_publish, post.original_post)
                 if updated_post is not None:
-                    md_transfer_ok = iohelper.transfer_file(post_file_name + ".md", self.__post_target_url)
-                    gallery_transfer_ok = iohelper.transfer_file(post_file_name, self.__gallery_target_url) if len(
-                        images) > 0 else True
+                    md_transfer_ok = iohelper.transfer_file(file_name + ".md", self.__post_target_url)
+                    gallery_transfer_ok = True if len(images) == 0 else iohelper.transfer_file(file_name, self.__gallery_target_url)
 
                     if len(images) == 0:
                         # delete gallery folder from remote location (may never have existed)
-                        if not iohelper.remove_file(os.path.join(self.__post_target_url, post_file_name)):
+                        if not iohelper.remove_file(os.path.join(self.__post_target_url, file_name)):
                             # TODO log
                             None
 
@@ -171,8 +171,8 @@ class PelicanMarkdownBot2(AbstractUserStateBot):
                         # TODO log
 
             # delete local files - markdown file and gallery folder
-            md_removed = iohelper.remove_file(post_file_name + ".md")
-            gallery_removed = iohelper.remove_file(post_file_name)
+            md_removed = iohelper.remove_file(file_name + ".md")
+            gallery_removed = iohelper.remove_file(file_name)
             if not (md_removed and gallery_removed):
                 # TODO log
                 None
@@ -193,6 +193,8 @@ class PelicanMarkdownBot2(AbstractUserStateBot):
                     timestamp = self.persistence.get_post(post.original_post).tmsp_publish
 
                 file_name = timestamp.strftime(self.format_datetime_file_name)
+                if post.status == PostState.DRAFT:
+                    file_name += "_draft"
 
                 # remove published files (markdown and gallery) from target location
                 markdown_unpublished = iohelper.remove_file(os.path.join(self.__post_target_url, file_name + ".md"))

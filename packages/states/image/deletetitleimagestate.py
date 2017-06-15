@@ -53,7 +53,12 @@ class DeleteTitleImageState(SelectDraftUpdateState):
             if post is not None:
 
                 removed_image = post.title_image
-                updated_post = self.context.persistence.update_post(post.id, post.user.id, post.title, post.status, post.gallery.title, post.content, None, post.tmsp_publish, post.original_post)
+                updated_post = self.context.persistence.update_post(post.id, post.user.id, post.title, post.status
+                                                                    , post.gallery.title
+                                                                    , post.content
+                                                                    , None
+                                                                    , post.tmsp_publish
+                                                                    , None if post.original_post is None else post.original_post.id)
 
                 if updated_post is not None:
                     self.context.edit_message_text(chat_id, message_id

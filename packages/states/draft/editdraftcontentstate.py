@@ -157,7 +157,7 @@ class EditDraftContentState(SelectDraftUpdateState):
                                                                     , new_content
                                                                     , None if post.title_image is None else post.title_image.id
                                                                     , post.tmsp_publish
-                                                                    , post.original_post)
+                                                                    , None if post.original_post is None else post.original_post.id)
 
                 # post update successful
                 if updated_post is not None:
