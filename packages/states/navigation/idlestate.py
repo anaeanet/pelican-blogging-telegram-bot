@@ -25,15 +25,18 @@ class IdleState(AbstractUserState):
         # show optin to create new draft from scratch
         reply_options = [{"text": "CREATE a draft", "callback_data": "/createdraft"}]
 
+        user_posts = self.context.persistence.get_posts(user_id=self.user_id)
+
         # if user already has any draft posts, show buttons to update or delete them
-        user_drafts = self.context.persistence.get_posts(user_id=self.user_id, status=PostState.DRAFT)
+        user_drafts = [post for post in user_posts if post.status == PostState.DRAFT]
         if len(user_drafts) > 0:
             reply_options.append({"text": "UPDATE a draft", "callback_data": "/updatedraft"})
             reply_options.append({"text": "DELETE a draft", "callback_data": "/deletedraft"})
 
-        # show update/delete options for previously published posts if at least one is not currentl ybeing modified by a draft
-        user_posts = self.context.persistence.get_posts(user_id=self.user_id, status=PostState.PUBLISHED)
-        if len(user_posts) > 0 and len([post.id for post in user_posts]) > len([draft.original_post for draft in user_drafts]):
+        # show update/delete options for previously published posts that do not have a follow-up draft or post
+        published_posts = [post for post in user_posts if post.status == PostState.PUBLISHED]
+        derived_posts = [post for post in user_posts if post.original_post is not None]
+        if len(published_posts) > len(derived_posts):
             reply_options.append({"text": "UPDATE published post", "callback_data": "/updatepost"})
             reply_options.append({"text": "DELETE published post", "callback_data": "/deletepost"})
 

@@ -19,13 +19,13 @@ class UpdatePostState(IdleState):
     def callback_options(self):
         reply_options = []
 
-        # for all user posts show corresponding button
-        user_posts = self.context.persistence.get_posts(user_id=self.user_id, status=PostState.PUBLISHED)
-        for post in [p for p in user_posts if p.status == PostState.PUBLISHED]:
+        user_posts = self.context.persistence.get_posts(user_id=self.user_id)
 
-            # only allow modification of published posts that do not already have a follow-up draft
-            if post.id not in [draft.original_post for draft in user_posts if draft.status == PostState.DRAFT]:
-                reply_options.append({"text": post.title, "callback_data": "/updatepost " + str(post.id)})
+        # show button for every published post that does not have a follow-up draft/post
+        published_posts = [post for post in user_posts if post.status == PostState.PUBLISHED]
+        base_post_ids = [post.original_post.id for post in user_posts if post.original_post is not None]
+        for post in [p for p in published_posts if p.id not in base_post_ids]:
+            reply_options.append({"text": post.title, "callback_data": "/updatepost " + str(post.id)})
 
         # add button to return to main menu
         reply_options.append({"text": "<< main menu", "callback_data": "/mainmenu"})
