@@ -1,5 +1,5 @@
-from packages.persistence.dbwrapper2 import DBWrapper2
-from packages.bot.pelicanmarkdownbot2 import PelicanMarkdownBot2
+from packages.persistence.dbwrapper import DBWrapper
+from packages.bot.pelicanmarkdownbot import PelicanMarkdownBot
 from packages.bot.parsemode import ParseMode
 
 import config
@@ -11,13 +11,13 @@ def main():
     token = config.token
     url = config.url
     file_url = config.file_url
-    database = DBWrapper2(config.database_name)
+    database = DBWrapper(config.database_name)
     authorized_users = config.authorized_users
 
     post_target_url = config.markdown_target
     gallery_target_url = config.gallery_target
 
-    bot = PelicanMarkdownBot2(token, url, file_url, database, post_target_url, gallery_target_url, authorized_users=authorized_users)
+    bot = PelicanMarkdownBot(token, url, file_url, database, post_target_url, gallery_target_url, authorized_users=authorized_users)
     bot.run()   # TODO once development is finished, remove row
 
     try:

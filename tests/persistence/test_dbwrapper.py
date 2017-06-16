@@ -1,5 +1,5 @@
 import unittest
-from packages.persistence.dbwrapper2 import DBWrapper2
+from packages.persistence.dbwrapper import DBWrapper
 from packages.states.navigation.idlestate import IdleState
 
 __author__ = 'anaeanet'
@@ -11,7 +11,7 @@ class DBWrapperTest(unittest.TestCase):
 
     def setUp(self):
         self.db_name = "test_db.sqlite"
-        self.db = DBWrapper2(self.db_name)
+        self.db = DBWrapper(self.db_name)
         self.db.setup()
 
     def test_user(self):
