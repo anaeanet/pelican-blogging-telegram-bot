@@ -19,6 +19,9 @@ class DBWrapper2:
     to separate bot implementation from specific database implementation.
     """
 
+    # TODO get rid of image id, use file_id
+    # TODO re-introduce image_name in table
+
     def __init__(self, datbase_name):
         self.__conn = sqlite3.connect(datbase_name)
 
@@ -104,6 +107,14 @@ class DBWrapper2:
         param_dict = {param_list[i]: param_list[i+1] for i in range(0, len(param_list), 2)}
 
         return getattr(importlib.import_module(module), klass), param_dict
+
+    # -------------------------------------------------- commit/rollback -----------------------------------------------
+
+    def commit(self):
+        self.__conn.commit()
+
+    def rollback(self):
+        self.__conn.rollback()
 
     # -------------------------------------------------- user ----------------------------------------------------------
 

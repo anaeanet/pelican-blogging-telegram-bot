@@ -32,7 +32,7 @@ def write_to_file(file_name, write_mode, file_content):
         # TODO log
         None
     except Exception as e:
-        # TODO log
+        # TODO log, remove this one
         None
     finally:
         return result
