@@ -111,10 +111,6 @@ class AbstractUserState(AbstractState):
             if "photo" in update[update_type]:
                 photo = update[update_type]["photo"]
 
-            sticker = None
-            if "sticker" in update[update_type]:
-                photo = update[update_type]["sticker"]
-
             # --- process specific message type ---
 
             # text message
@@ -122,8 +118,7 @@ class AbstractUserState(AbstractState):
                 next_state = self.process_message(user_id, chat_id, text, entities)
 
             # photo/document message
-            elif document or photo or sticker:
-                file_name = "IMG" + str(update[update_type]["message_id"])
+            elif document or photo:
                 caption = update[update_type]["caption"] if "caption" in update[update_type] else None
 
                 # picture was sent as document
@@ -132,17 +127,12 @@ class AbstractUserState(AbstractState):
                     thumb_id = document["thumb"]["file_id"] if "thumb" in document else None
 
                 # picture was sent as photo
-                elif photo:
+                else:
                     # sort photos by width
                     photo.sort(key=lambda x: x["width"])
 
                     file_id = photo[len(photo)-1]["file_id"]    # image with greatest size
                     thumb_id = photo[0]["file_id"]              # image with smallest size
-
-                # picture was sent as sticker
-                else:
-                    file_id = sticker["file_id"]
-                    thumb_id = sticker["thumb"]["file_id"] if "thumb" in sticker else None
 
                 if file_id is not None:
                     next_state = self.process_photo_message(user_id, chat_id, file_id, thumb_id=thumb_id, caption=caption)
