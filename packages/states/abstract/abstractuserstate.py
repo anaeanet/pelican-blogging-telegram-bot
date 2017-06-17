@@ -73,82 +73,87 @@ class AbstractUserState(AbstractState):
     def process_callback_query(self, user_id, chat_id, message_id, data):
         raise NotImplementedError("Abstract method! Implement in child class", type(self))
 
+    def process_unknown_update(self, chat_id):
+
+        # delete previous bot message (if existing) before sending new ones
+        if self.message_id is not None:
+            result = self.context.delete_message(chat_id, self.message_id)
+            # edit message instead if deletion does not work due to message being too old
+            if False in result.values():
+                self.context.edit_message_text(chat_id, self.message_id, "Message/Command not recognized!")
+
+        # simply ignore arbitrary update by moving current bot message underneath latest user message
+        self.build_state_message(chat_id, self.welcome_message, reply_options=self.callback_options)
+
+        return self
+
     def process_update(self, update):
         next_state = self
         update_type = telegram.get_update_type(update)
         user_id = telegram.get_update_sender_id(update)
 
-        # make sure that state's user is the same who triggered the current update
-        if user_id == self.user_id:
+        if update_type == "message":
+            chat_id = update[update_type]["chat"]["id"]
 
-            if update_type == "message":
-                chat_id = update[update_type]["chat"]["id"]
+            # check if user sent text message
+            text = None
+            if "text" in update[update_type]:
+                text = update[update_type]["text"].strip(' \t\n\r')
+                entities = update[update_type]["entities"] if "entities" in update[update_type] else []
 
-                # check if user sent text message
-                text = None
-                if "text" in update[update_type]:
-                    text = update[update_type]["text"].strip(' \t\n\r')
-                    entities = update[update_type]["entities"] if "entities" in update[update_type] else []
+            # check if user sent photo as a document (yes, if there is a thumbnail)
+            document = None
+            if "document" in update[update_type] and "thumb" in update[update_type]["document"]:
+                document = update[update_type]["document"]
 
-                # check if user sent photo as a document (yes, if there is a thumbnail)
-                document = None
-                if "document" in update[update_type] and "thumb" in update[update_type]["document"]:
-                    document = update[update_type]["document"]
+            # check if user sent photo message
+            photo = None
+            if "photo" in update[update_type]:
+                photo = update[update_type]["photo"]
 
-                # check if user sent photo message
-                photo = None
-                if "photo" in update[update_type]:
-                    photo = update[update_type]["photo"]
+            # --- process specific message type ---
 
-                # --- process specific message type ---
+            # text message
+            if text is not None:
+                next_state = self.process_message(user_id, chat_id, text, entities)
 
-                # text message
-                if text is not None:
-                    next_state = self.process_message(user_id, chat_id, text, entities)
+            # photo/document message
+            elif document is not None or photo is not None:
+                file_name = "IMG" + str(update[update_type]["message_id"])
+                caption = update[update_type]["caption"] if "caption" in update[update_type] else None
 
-                # photo/document message
-                elif document is not None or photo is not None:
-                    file_name = "IMG" + str(update[update_type]["message_id"])
-                    caption = update[update_type]["caption"] if "caption" in update[update_type] else None
-
-                    # picture was sent as document
-                    if document is not None:
-                        file_id = document["file_id"]
-                        thumb_id = document["thumb"]["file_id"] if "thumb" in document["thumb"] else None
-                    # picture was sent as photo
-                    else:
-                        # sort photos by width
-                        photo.sort(key=lambda x: x["width"])
-
-                        file_id = photo[len(photo)-1]["file_id"]    # image with greatest size
-                        thumb_id = photo[0]["file_id"]         # image with smallest size
-
-                    if file_id is not None and file_name is not None:
-                        next_state = self.process_photo_message(user_id, chat_id, file_name, file_id, thumb_id=thumb_id, caption=caption)
-
+                # picture was sent as document
+                if document is not None:
+                    file_id = document["file_id"]
+                    thumb_id = document["thumb"]["file_id"] if "thumb" in document["thumb"] else None
+                # picture was sent as photo
                 else:
-                    # TODO log
-                    None
+                    # sort photos by width
+                    photo.sort(key=lambda x: x["width"])
 
-            elif update_type == "callback_query":
-                self.context.answer_callback_query(update[update_type]["id"])
+                    file_id = photo[len(photo)-1]["file_id"]    # image with greatest size
+                    thumb_id = photo[0]["file_id"]         # image with smallest size
 
-                chat_id = update[update_type]["message"]["chat"]["id"]
-                message_id = update[update_type]["message"]["message_id"]
-                data = update[update_type]["data"].strip(' \t\n\r') if "data" in update[update_type] else None
+                if file_id is not None and file_name is not None:
+                    next_state = self.process_photo_message(user_id, chat_id, file_name, file_id, thumb_id=thumb_id, caption=caption)
 
-                if data is not None:
-                    next_state = self.process_callback_query(user_id, chat_id, message_id, data)
-                else:
-                    # TODO log
-                    None
+            else:
+                next_state = self.process_unknown_update(chat_id)
 
-            else:   # unsupported update type
-                print("unsupported update type:", update_type) # TODO change to log rather than print
+        elif update_type == "callback_query":
+            self.context.answer_callback_query(update[update_type]["id"])
 
-        # state's user is different from update sender
-        else:
-            # TODO: maybe do something with updates from unauthorized users?
+            chat_id = update[update_type]["message"]["chat"]["id"]
+            message_id = update[update_type]["message"]["message_id"]
+            data = update[update_type]["data"].strip(' \t\n\r') if "data" in update[update_type] else None
+
+            if data is not None:
+                next_state = self.process_callback_query(user_id, chat_id, message_id, data)
+            else:
+                next_state = self.process_unknown_update(chat_id)
+
+        else:   # unsupported update type
+            # TODO log: user triggered update_type
             None
 
         return next_state

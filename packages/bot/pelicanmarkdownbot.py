@@ -82,7 +82,7 @@ class PelicanMarkdownBot(AbstractUserStateBot):
                   update[telegram.get_update_type(update)])  # TODO remove print
             super().handle_update(update)
         else:
-            # TODO: maybe do something with updates from unauthorized users?
+            # TODO: log unauthorized user and update_type
             None
 
     @staticmethod
@@ -153,7 +153,7 @@ class PelicanMarkdownBot(AbstractUserStateBot):
 
                 gallery_written = gallery_written and iohelper.write_to_file(os.path.join(file_name, img.name), "wb", img.file)
                 captions_written = captions_written and iohelper.write_to_file(os.path.join(file_name, "captions.txt"), "a"
-                                                                               , "\r\n" + img.name + ":" + img.caption)
+                                                                               , "\r\n" + img.name + ":" + (img.caption if img.caption else img.name))
 
             # final result depends on successful processing of ALL images
             is_published_locally = gallery_written and captions_written

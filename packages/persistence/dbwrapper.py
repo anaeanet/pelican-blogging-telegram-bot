@@ -19,17 +19,14 @@ class DBWrapper:
     to separate bot implementation from specific database implementation.
     """
 
-    # TODO get rid of image id, use file_id
-    # TODO re-introduce image_name in table
-
-    def __init__(self, datbase_name):
-        self.__conn = sqlite3.connect(datbase_name)
+    def __init__(self, database_name):
+        self.__conn = sqlite3.connect(database_name)
 
     def setup(self):
 
         # create required tables
-        tbl_stmts = [
-            "CREATE TABLE IF NOT EXISTS user (user_id INTEGER NOT NULL PRIMARY KEY"
+        tbl_statements = [
+              "CREATE TABLE IF NOT EXISTS user (user_id INTEGER NOT NULL PRIMARY KEY"
                                                 + ", state TEXT NOT NULL"
                                                 + ", name TEXT)"
 
@@ -43,7 +40,7 @@ class DBWrapper:
                                                 + ", tmsp_publish TIMESTAMP"
                                                 + ", original_post INTEGER"
                                                 + ", FOREIGN KEY(user_id) REFERENCES user(user_id)"
-            #TODO add FK for title_image
+                                                + ", FOREIGN KEY(title_image) REFERENCES image(image_id)"
                                                 + ", FOREIGN KEY(original_post) REFERENCES post(post_id))"
 
             , "CREATE TABLE IF NOT EXISTS tag (tag_id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT"
@@ -69,13 +66,19 @@ class DBWrapper:
                                                 + ", FOREIGN KEY(image_id) REFERENCES image(image_id))"
         ]
 
-        for stmt in tbl_stmts:
+        for stmt in tbl_statements:
             self.__conn.execute(stmt)
 
         # create some indexes
-        # TODO
-        idx_stmts = ["CREATE INDEX IF NOT EXISTS postTitle ON post (title ASC)"]
-        for stmt in idx_stmts:
+        idx_statements = [
+              "CREATE INDEX IF NOT EXISTS user_id ON user (user_id ASC)"
+            , "CREATE INDEX IF NOT EXISTS post_id ON post (post_id ASC)"
+            , "CREATE INDEX IF NOT EXISTS tag_id ON tag (tag_id ASC)"
+            , "CREATE INDEX IF NOT EXISTS post_tag_id ON post_tag (post_tag_id ASC)"
+            , "CREATE INDEX IF NOT EXISTS image_id ON image (image_id ASC)"
+            , "CREATE INDEX IF NOT EXISTS post_image_id ON post_image (post_image_id ASC)"
+        ]
+        for stmt in idx_statements:
             self.__conn.execute(stmt)
 
         # make sure foreign keys are enforced
@@ -561,8 +564,6 @@ class DBWrapper:
 
     # -------------------------------------------------- tag -----------------------------------------------------------
 
-    # TODO make tag methods private?
-
     def get_tags(self, tag_id=None, name=None):
         param_dict = dict({key: value for key, value in locals().items() if key not in ["self"] and value is not None})
 
@@ -609,8 +610,6 @@ class DBWrapper:
         return tag if cursor.rowcount > 0 else None
 
     # -------------------------------------------------- image ---------------------------------------------------------
-
-    # TODO make image methods private?
 
     def get_images(self, image_id=None, file_id=None, file=None, thumb_id=None):
         param_dict = dict({key: value for key, value in locals().items() if key not in ["self"] and value is not None})

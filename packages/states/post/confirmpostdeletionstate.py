@@ -12,8 +12,6 @@ class ConfirmPostDeletionState(SelectDraftUpdateState):
     Lets the user confirm or abort deletion of a previously chosen post.
     """
 
-    # TODO maybe merge with confirmdraftdeletion?
-
     @property
     def welcome_message(self):
         message = "It seems the post you selected no longer exists..."

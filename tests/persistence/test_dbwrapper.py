@@ -7,8 +7,6 @@ __author__ = 'anaeanet'
 
 class DBWrapperTest(unittest.TestCase):
 
-    # TODO change to DBWarpper when pelicanbot was re-written
-
     def setUp(self):
         self.db_name = "test_db.sqlite"
         self.db = DBWrapper(self.db_name)
@@ -38,9 +36,10 @@ class DBWrapperTest(unittest.TestCase):
 
     def test_image(self):
         file_id = "file_id"
+        file_name = "file_name"
         file = "abcdefgh"
         thumb_id = "hgfedcba"
-        image = self.db.add_image(file_id, file, thumb_id=thumb_id)
+        image = self.db.add_image(file_id, file_name, file, thumb_id=thumb_id)
         images = self.db.get_images()
 
         self.assertTrue(len(images) == 1)

@@ -13,8 +13,6 @@ class IdleState(AbstractUserState):
     and provides functionality to process common commands and navigation.
     """
 
-    # TODO if user sends anything else but text message or photo, ignore and treat as unrecognized item
-
     @property
     def welcome_message(self):
         return "What do you want to do?"
@@ -43,47 +41,32 @@ class IdleState(AbstractUserState):
         return reply_options
 
     def process_message(self, user_id, chat_id, text, entities):
-        next_state = self
 
-        # delete previous bot message (if existing) before sending new ones
-        if self.message_id is not None:
-            result = self.context.delete_message(chat_id, self.message_id)
-            # edit message instead if deletion does not work due to messag ebeing too old
-            if False in result.values():
-                self.context.edit_message_text(chat_id, self.message_id, "Message/Command not recognized!")
-
-        # welcome message
+        # global commands
         if text in ["/start"]:
-            self.context.send_message(chat_id,
-                                            "Welcome to your mobile blogging bot!"
-                                            + "\r\n"
-                                            + "\r\n"
-                                            + "I am here to help you create new blog posts or manage existing ones. "
-                                            + "Just follow the interactive menu!"
-                                            , parse_mode=ParseMode.HTML.value)
-            # reset to start state
+
+            # delete previous bot message (if existing) before sending new ones
+            if self.message_id is not None:
+                result = self.context.delete_message(chat_id, self.message_id)
+                # edit message instead if deletion does not work due to message being too old
+                if False in result.values():
+                    self.context.edit_message_text(chat_id, self.message_id, "Message/Command not recognized!")
+
+            self.context.send_message(chat_id
+                                      , "Welcome to your mobile blogging bot!"
+                                      + "\r\n\r\n"
+                                      + "I am here to help you create new blog posts or manage existing ones. "
+                                      + "Just follow the interactive menu!"
+                                      , parse_mode=ParseMode.HTML.value)
             next_state = IdleState(self.context, user_id, chat_id=chat_id)
 
-        # simply ignore arbitrary text message by moving current bot message underneath latest user message
         else:
-            self.build_state_message(chat_id, self.welcome_message, reply_options=self.callback_options)
+            next_state = self.process_unknown_update(chat_id)
 
         return next_state
 
     def process_photo_message(self, user_id, chat_id, file_name, file_id, thumb_id=None, caption=None):
-        next_state = self
-
-        # delete previous bot message (if existing) before sending new ones
-        if self.message_id is not None:
-            result = self.context.delete_message(chat_id, self.message_id)
-            # edit message instead if deletion does not work due to messag ebeing too old
-            if False in result.values():
-                self.context.edit_message_text(chat_id, self.message_id, "Message/Command not recognized!")
-
-        # simply ignore arbitrary photo message by moving current bot message underneath latest user message
-        self.build_state_message(chat_id, self.welcome_message, reply_options=self.callback_options)
-
-        return next_state
+        return self.process_unknown_update(chat_id)
 
     def process_callback_query(self, user_id, chat_id, message_id, data):
         next_state = self
