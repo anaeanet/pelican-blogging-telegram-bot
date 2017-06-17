@@ -16,7 +16,7 @@ class ConfirmPostDeletionState(SelectDraftUpdateState):
     def welcome_message(self):
         message = "It seems the post you selected no longer exists..."
 
-        post = self.context.persistence.get_post(self.post_id)
+        post = self.bot.persistence.get_post(self.post_id)
         if post is not None:
             message = "Do you <b>really</b> want to <b>delete</b> post <b>" + post.title + "</b>?"
 
@@ -29,7 +29,7 @@ class ConfirmPostDeletionState(SelectDraftUpdateState):
         reply_options = [{"text": "<< drafts", "callback_data": "/deletepost"}, []]
 
         # if post still exists, show button to confirm final deletion
-        post = self.context.persistence.get_post(self.post_id)
+        post = self.bot.persistence.get_post(self.post_id)
         if post is not None:
             reply_options.append({"text": "YES, delete", "callback_data": "/confirmpostdeletion /confirm"})
             reply_options.append([])
@@ -49,35 +49,35 @@ class ConfirmPostDeletionState(SelectDraftUpdateState):
             # confirmed post deletion
             if command_array[1] == "/confirm":
 
-                deleted_post = self.context.persistence.delete_post(self.post_id) if self.context.unpublish(self.post_id) else None
+                deleted_post = self.bot.persistence.delete_post(self.post_id) if self.bot.unpublish(self.post_id) else None
                 original_post_id = None if deleted_post.original_post is None else deleted_post.original_post.id
 
                 # delete all predecessor posts
                 while original_post_id:
-                    original_post = self.context.persistence.delete_post(original_post_id)
+                    original_post = self.bot.persistence.delete_post(original_post_id)
                     original_post_id = None if not (original_post and original_post.original_post) else original_post.original_post.id
 
                 # post removal successful
                 if deleted_post is not None:
-                    self.context.edit_message_text(chat_id, message_id
-                                                   , "Post <b>" + deleted_post.title + "</b> has been <b>deleted</b>."
-                                                   , parse_mode=ParseMode.HTML.value)
+                    self.bot.edit_message_text(chat_id, message_id
+                                               , "Post <b>" + deleted_post.title + "</b> has been <b>deleted</b>."
+                                               , parse_mode=ParseMode.HTML.value)
                 # post removal not successful
                 else:
-                    self.context.edit_message_text(chat_id, self.message_id
-                                              , "It seems the post you selected no longer exists..."
-                                              , parse_mode=ParseMode.HTML.value)
+                    self.bot.edit_message_text(chat_id, self.message_id
+                                               , "It seems the post you selected no longer exists..."
+                                               , parse_mode=ParseMode.HTML.value)
 
                 # show remaining posts for deletion
-                user_posts = self.context.persistence.get_posts(user_id=user_id, status=PostState.PUBLISHED)
+                user_posts = self.bot.persistence.get_posts(user_id=user_id, status=PostState.PUBLISHED)
                 if len([post for post in user_posts if post.status == PostState.PUBLISHED]) \
                         > len([draft for draft in user_posts if draft.status == PostState.DRAFT and draft.original_post is not None]):
                     from packages.states.post.deletepoststate import DeletePostState
-                    next_state = DeletePostState(self.context, user_id, chat_id=chat_id)
+                    next_state = DeletePostState(self.bot, user_id, chat_id=chat_id)
                 # no remaining posts -> automatically go back to main menu
                 else:
                     from packages.states.navigation.idlestate import IdleState
-                    next_state = IdleState(self.context, user_id, chat_id=chat_id)
+                    next_state = IdleState(self.bot, user_id, chat_id=chat_id)
 
         else:
             next_state = super().process_callback_query(user_id, chat_id, message_id, data)

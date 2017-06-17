@@ -16,7 +16,7 @@ class AddImageState(SelectDraftUpdateState):
     def welcome_message(self):
         message = "It seems the draft you selected no longer exists..."
 
-        post = self.context.persistence.get_post(self.post_id)
+        post = self.bot.persistence.get_post(self.post_id)
         if post is not None:
             message = "What <b>image(s)</b> do you want to <b>add</b> to draft <b>" + post.title + "</b>?"
 
@@ -46,45 +46,45 @@ class AddImageState(SelectDraftUpdateState):
         self.build_state_message(chat_id, self.welcome_message, message_id=self.message_id)
 
         # check if previously selected post still exists
-        post = self.context.persistence.get_post(self.post_id)
+        post = self.bot.persistence.get_post(self.post_id)
         if post is not None:
 
             image = None
             # TODO move this code to bot? -> file = self.context.download_file(file_id)
-            telegram_file = self.context.get_file(file_id)
+            telegram_file = self.bot.get_file(file_id)
             if "result" in telegram_file and "file_path" in telegram_file["result"]:
                 file_url = telegram_file["result"]["file_path"]
-                file = self.context.download_file(file_url)
+                file = self.bot.download_file(file_url)
 
                 if file is not None:
                     file_name = str(self.message_id) + "." + file_url.rsplit(".", 1)[1]
-                    image = self.context.persistence.add_post_image(post.id, file_id, file_name, file, thumb_id=thumb_id, caption=caption)
+                    image = self.bot.persistence.add_post_image(post.id, file_id, file_name, file, thumb_id=thumb_id, caption=caption)
 
             if image is not None:
-                self.context.send_message(chat_id
-                                          , "Image <b>" + image.name + "</b> has been <b>added</b> to draft <b>" + post.title + "</b>."
-                                          , parse_mode=ParseMode.HTML.value)
+                self.bot.send_message(chat_id
+                                      , "Image <b>" + image.name + "</b> has been <b>added</b> to draft <b>" + post.title + "</b>."
+                                      , parse_mode=ParseMode.HTML.value)
             else:
-                self.context.send_message(chat_id
-                                          , "<b>Image not added</b> to draft <b>" + post.title + "</b>."
-                                          , parse_mode=ParseMode.HTML.value)
+                self.bot.send_message(chat_id
+                                      , "<b>Image not added</b> to draft <b>" + post.title + "</b>."
+                                      , parse_mode=ParseMode.HTML.value)
 
-            next_state = AddImageState(self.context, user_id, post.id, chat_id=chat_id)
+            next_state = AddImageState(self.bot, user_id, post.id, chat_id=chat_id)
 
         # previously selected post no longer exists
         else:
-            self.context.send_message(chat_id
-                                      , "It seems the draft you selected no longer exists..."
-                                      , parse_mode=ParseMode.HTML.value)
+            self.bot.send_message(chat_id
+                                  , "It seems the draft you selected no longer exists..."
+                                  , parse_mode=ParseMode.HTML.value)
 
             # show remaining drafts for updating
-            user_drafts = self.context.get_user_posts(user_id=user_id, status=PostState.DRAFT)
+            user_drafts = self.bot.get_user_posts(user_id=user_id, status=PostState.DRAFT)
             if len(user_drafts) > 0:
                 from packages.states.draft.updatedraftstate import UpdateDraftState
-                next_state = UpdateDraftState(self.context, user_id, chat_id=chat_id)
+                next_state = UpdateDraftState(self.bot, user_id, chat_id=chat_id)
             # no remaining drafts -> automatically go back to main menu
             else:
                 from packages.states.navigation.idlestate import IdleState
-                next_state = IdleState(self.context, user_id, chat_id=chat_id)
+                next_state = IdleState(self.bot, user_id, chat_id=chat_id)
 
         return next_state

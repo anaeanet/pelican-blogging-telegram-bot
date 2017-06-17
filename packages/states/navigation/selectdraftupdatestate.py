@@ -16,7 +16,7 @@ class SelectDraftUpdateState(AbstractUserPostState, IdleState):
     def welcome_message(self):
         message = "It seems the draft you selected no longer exists..."
 
-        post = self.context.persistence.get_post(self.post_id)
+        post = self.bot.persistence.get_post(self.post_id)
         if post is not None:
             message = "What do you want to do with draft <b>" + post.title + "</b>?"
 
@@ -29,7 +29,7 @@ class SelectDraftUpdateState(AbstractUserPostState, IdleState):
         reply_options = [{"text": "<< drafts", "callback_data": "/updatedraft"}, []]
 
         # show update options only if previously selected post still exists
-        post = self.context.persistence.get_post(self.post_id)
+        post = self.bot.persistence.get_post(self.post_id)
         if post is not None:
 
             reply_options.append({"text": "EDIT title", "callback_data": "/selectupdate /edittitle"})
@@ -95,7 +95,7 @@ class SelectDraftUpdateState(AbstractUserPostState, IdleState):
 
         # accept "/selectupdate" callback query -> serves as global return command to show update options menu
         if len(command_array) == 1 and command_array[0] == "/selectupdate":
-            next_state = SelectDraftUpdateState(self.context, user_id, self.post_id, chat_id=chat_id, message_id=message_id)
+            next_state = SelectDraftUpdateState(self.bot, user_id, self.post_id, chat_id=chat_id, message_id=message_id)
 
         # only accept "/selectupdate <update_option>" callback queries
         elif len(command_array) == 2 and command_array[0] == "/selectupdate":
@@ -103,34 +103,34 @@ class SelectDraftUpdateState(AbstractUserPostState, IdleState):
             # user attempts to update the selected draft's content
             if command_array[1] == "/edittitle":
                 from packages.states.draft.editdrafttitlestate import EditDraftTitleState
-                next_state = EditDraftTitleState(self.context, user_id, self.post_id, chat_id=chat_id, message_id=self.message_id)
+                next_state = EditDraftTitleState(self.bot, user_id, self.post_id, chat_id=chat_id, message_id=self.message_id)
             elif command_array[1] == "/editcontent":
                 from packages.states.draft.editdraftcontentstate import EditDraftContentState
-                next_state = EditDraftContentState(self.context, user_id, self.post_id, chat_id=chat_id, message_id=self.message_id)
+                next_state = EditDraftContentState(self.bot, user_id, self.post_id, chat_id=chat_id, message_id=self.message_id)
             elif command_array[1] == "/addtag":
                 from packages.states.tag.addtagstate import AddTagState
-                next_state = AddTagState(self.context, user_id, self.post_id, chat_id=chat_id, message_id=self.message_id)
+                next_state = AddTagState(self.bot, user_id, self.post_id, chat_id=chat_id, message_id=self.message_id)
             elif command_array[1] == "/deletetag":
                 from packages.states.tag.deletetagstate import DeleteTagState
-                next_state = DeleteTagState(self.context, user_id, self.post_id, chat_id=chat_id, message_id=self.message_id)
+                next_state = DeleteTagState(self.bot, user_id, self.post_id, chat_id=chat_id, message_id=self.message_id)
             elif command_array[1] == "/addimage":
                 from packages.states.image.addimagestate import AddImageState
-                next_state = AddImageState(self.context, user_id, self.post_id, chat_id=chat_id, message_id=self.message_id)
+                next_state = AddImageState(self.bot, user_id, self.post_id, chat_id=chat_id, message_id=self.message_id)
             elif command_array[1] == "/deleteimage":
                 from packages.states.image.deleteimagestate import DeleteImageState
-                next_state = DeleteImageState(self.context, user_id, self.post_id, chat_id=chat_id, message_id=self.message_id)
+                next_state = DeleteImageState(self.bot, user_id, self.post_id, chat_id=chat_id, message_id=self.message_id)
             elif command_array[1] == "/settitleimage":
                 from packages.states.image.settitleimagestate import SetTitleImageState
-                next_state = SetTitleImageState(self.context, user_id, self.post_id, chat_id=chat_id, message_id=self.message_id)
+                next_state = SetTitleImageState(self.bot, user_id, self.post_id, chat_id=chat_id, message_id=self.message_id)
             elif command_array[1] == "/deletetitleimage":
                 from packages.states.image.deletetitleimagestate import DeleteTitleImageState
-                next_state = DeleteTitleImageState(self.context, user_id, self.post_id, chat_id=chat_id, message_id=self.message_id)
+                next_state = DeleteTitleImageState(self.bot, user_id, self.post_id, chat_id=chat_id, message_id=self.message_id)
             elif command_array[1] == "/editgallerytitle":
                 from packages.states.image.editgallerytitlestate import EditGalleryTitleState
-                next_state = EditGalleryTitleState(self.context, user_id, self.post_id, chat_id=chat_id, message_id=self.message_id)
+                next_state = EditGalleryTitleState(self.bot, user_id, self.post_id, chat_id=chat_id, message_id=self.message_id)
             elif command_array[1] == "/publish":
                 from packages.states.draft.publishdraftstate import PublishDraftState
-                next_state = PublishDraftState(self.context, user_id, self.post_id, chat_id=chat_id, message_id=self.message_id)
+                next_state = PublishDraftState(self.bot, user_id, self.post_id, chat_id=chat_id, message_id=self.message_id)
 
         else:
             next_state = super().process_callback_query(user_id, chat_id, message_id, data)

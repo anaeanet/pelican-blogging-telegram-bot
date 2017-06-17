@@ -13,10 +13,10 @@ class AbstractUserState(AbstractState):
     Implements mandatory process_update and provides more specialized methods to process certain update types.
     """
 
-    def __init__(self, context, user_id, chat_id=None, message_id=None):
+    def __init__(self, bot, user_id, chat_id=None, message_id=None):
         self.__user_id = user_id
         self.__message_id = message_id
-        super().__init__(context)
+        super().__init__(bot)
 
         if chat_id is not None:
             self.build_state_message(chat_id, self.welcome_message, message_id=message_id, reply_options=self.callback_options)
@@ -42,15 +42,15 @@ class AbstractUserState(AbstractState):
 
     def build_state_message(self, chat_id, message_text, message_id=None, reply_options=None, keyboard_columns=1):
         if message_id is not None:
-            self.context.edit_message_text(chat_id, message_id, message_text
-                                           , parse_mode=ParseMode.HTML.value
-                                           , reply_markup=telegram.build_keyboard(reply_options
+            self.bot.edit_message_text(chat_id, message_id, message_text
+                                       , parse_mode=ParseMode.HTML.value
+                                       , reply_markup=telegram.build_keyboard(reply_options
                                                                                   , KeyboardType.INLINE
                                                                                   , columns=keyboard_columns))
         else:
-            sent_message = self.context.send_message(chat_id, message_text
-                                                     , parse_mode=ParseMode.HTML.value
-                                                     , reply_markup=telegram.build_keyboard(reply_options
+            sent_message = self.bot.send_message(chat_id, message_text
+                                                 , parse_mode=ParseMode.HTML.value
+                                                 , reply_markup=telegram.build_keyboard(reply_options
                                                                                             , KeyboardType.INLINE
                                                                                             , columns=keyboard_columns))
 
@@ -77,10 +77,10 @@ class AbstractUserState(AbstractState):
 
         # delete previous bot message (if existing) before sending new ones
         if self.message_id is not None:
-            result = self.context.delete_message(chat_id, self.message_id)
+            result = self.bot.delete_message(chat_id, self.message_id)
             # edit message instead if deletion does not work due to message being too old
             if False in result.values():
-                self.context.edit_message_text(chat_id, self.message_id, "Message/Command not recognized!")
+                self.bot.edit_message_text(chat_id, self.message_id, "Message/Command not recognized!")
 
         # simply ignore arbitrary update by moving current bot message underneath latest user message
         self.build_state_message(chat_id, self.welcome_message, reply_options=self.callback_options)
@@ -141,7 +141,7 @@ class AbstractUserState(AbstractState):
                 next_state = self.process_unknown_update(chat_id)
 
         elif update_type == "callback_query":
-            self.context.answer_callback_query(update[update_type]["id"])
+            self.bot.answer_callback_query(update[update_type]["id"])
 
             chat_id = update[update_type]["message"]["chat"]["id"]
             message_id = update[update_type]["message"]["message_id"]

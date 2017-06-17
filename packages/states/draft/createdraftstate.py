@@ -35,21 +35,21 @@ class CreateDraftState(IdleState):
             self.build_state_message(chat_id, self.welcome_message, message_id=self.message_id)
 
             # try to create new draft
-            post = self.context.persistence.add_post(user_id, text, PostState.DRAFT, "Bildergalerie", "")
+            post = self.bot.persistence.add_post(user_id, text, PostState.DRAFT, "Bildergalerie", "")
 
             # post creation was successful -> show post update options
             if post is not None:
-                self.context.send_message(chat_id
-                                            , "Draft <b>" + text + "</b> has been <b>created</b>."
-                                            , parse_mode=ParseMode.HTML.value)
+                self.bot.send_message(chat_id
+                                      , "Draft <b>" + text + "</b> has been <b>created</b>."
+                                      , parse_mode=ParseMode.HTML.value)
                 from packages.states.navigation.selectdraftupdatestate import SelectDraftUpdateState
-                next_state = SelectDraftUpdateState(self.context, user_id, post.id, chat_id=chat_id)
+                next_state = SelectDraftUpdateState(self.bot, user_id, post.id, chat_id=chat_id)
 
             # post creation failed -> back to main menu
             else:
-                self.context.send_message(chat_id
-                                          , "New draft could not be created. Returning to main menu."
-                                          , parse_mode=ParseMode.HTML.value)
-                next_state = IdleState(self.context, user_id, chat_id=chat_id)
+                self.bot.send_message(chat_id
+                                      , "New draft could not be created. Returning to main menu."
+                                      , parse_mode=ParseMode.HTML.value)
+                next_state = IdleState(self.bot, user_id, chat_id=chat_id)
 
         return next_state

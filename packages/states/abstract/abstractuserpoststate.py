@@ -9,9 +9,9 @@ class AbstractUserPostState(AbstractUserState):
     Adds attribute post_id and sets default layout of inline keyboard to two-columns.
     """
 
-    def __init__(self, context, user_id, post_id, chat_id=None, message_id=None):
+    def __init__(self, bot, user_id, post_id, chat_id=None, message_id=None):
         self.__post_id = post_id
-        super().__init__(context, user_id, chat_id=chat_id, message_id=message_id)
+        super().__init__(bot, user_id, chat_id=chat_id, message_id=message_id)
 
     @property
     def post_id(self):

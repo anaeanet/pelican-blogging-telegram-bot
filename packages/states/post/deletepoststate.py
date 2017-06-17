@@ -19,7 +19,7 @@ class DeletePostState(IdleState):
     def callback_options(self):
         reply_options = []
 
-        user_posts = self.context.persistence.get_posts(user_id=self.user_id)
+        user_posts = self.bot.persistence.get_posts(user_id=self.user_id)
 
         # show button for every published post that does not have a follow-up draft/post
         published_posts = [post for post in user_posts if post.status == PostState.PUBLISHED]
@@ -42,7 +42,7 @@ class DeletePostState(IdleState):
             post_id = command_array[1]
 
             from packages.states.post.confirmpostdeletionstate import ConfirmPostDeletionState
-            next_state = ConfirmPostDeletionState(self.context, user_id, post_id, chat_id=chat_id, message_id=message_id)
+            next_state = ConfirmPostDeletionState(self.bot, user_id, post_id, chat_id=chat_id, message_id=message_id)
 
         else:
             next_state = super().process_callback_query(user_id, chat_id, message_id, data)

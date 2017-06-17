@@ -20,7 +20,7 @@ class UpdateDraftState(IdleState):
         reply_options = []
 
         # for all user drafts show corresponding button
-        user_drafts = self.context.persistence.get_posts(user_id=self.user_id, status=PostState.DRAFT)
+        user_drafts = self.bot.persistence.get_posts(user_id=self.user_id, status=PostState.DRAFT)
         for post in user_drafts:
             button_text = post.title
 
@@ -44,7 +44,7 @@ class UpdateDraftState(IdleState):
             post_id = command_array[1]
 
             from packages.states.navigation.selectdraftupdatestate import SelectDraftUpdateState
-            next_state = SelectDraftUpdateState(self.context, user_id, post_id, chat_id=chat_id, message_id=message_id)
+            next_state = SelectDraftUpdateState(self.bot, user_id, post_id, chat_id=chat_id, message_id=message_id)
 
         else:
             next_state = super().process_callback_query(user_id, chat_id, message_id, data)
