@@ -212,19 +212,26 @@ class PelicanMarkdownBot(AbstractUserStateBot):
         is_unpublished = False
 
         post = self.persistence.get_post(post_id)
-        if post is not None and (post.tmsp_publish is not None or post.original_post is not None):
+        if post is not None:
 
-            # fetch publication timestamp, use it as filename
-            tmsp_publish, file_name = PelicanMarkdownBot.__get_tmsp_and_filename(post, post.status)
-
-            # remove published files (markdown and gallery) from target location
-            markdown_unpublished = iohelper.remove_file(os.path.join(self.__post_target_url, file_name + ".md"))
-            gallery_unpublished = iohelper.remove_file(os.path.join(self.__gallery_target_url, file_name))
-
-            if markdown_unpublished and gallery_unpublished:
+            # a draft that was never published before is automatically unpublished
+            if not post.tmsp_publish:
                 is_unpublished = True
+
+            # previously published draft or post
             else:
-                # TODO log
-                None
+
+                # fetch publication timestamp, use it as filename
+                tmsp_publish, file_name = PelicanMarkdownBot.__get_tmsp_and_filename(post, post.status)
+
+                # remove published files (markdown and gallery) from target location
+                markdown_unpublished = iohelper.remove_file(os.path.join(self.__post_target_url, file_name + ".md"))
+                gallery_unpublished = iohelper.remove_file(os.path.join(self.__gallery_target_url, file_name))
+
+                if markdown_unpublished and gallery_unpublished:
+                    is_unpublished = True
+                else:
+                    # TODO log
+                    None
 
         return is_unpublished

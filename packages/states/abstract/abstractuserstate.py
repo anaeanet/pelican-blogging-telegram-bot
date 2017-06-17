@@ -67,7 +67,7 @@ class AbstractUserState(AbstractState):
     def process_message(self, user_id, chat_id, text, entities):
         raise NotImplementedError("Abstract method! Implement in child class", type(self))
 
-    def process_photo_message(self, user_id, chat_id, file_name, file_id, thumb_file_id=None, caption=None):
+    def process_photo_message(self, user_id, chat_id, file_id, thumb_file_id=None, caption=None):
         raise NotImplementedError("Abstract method! Implement in child class", type(self))
 
     def process_callback_query(self, user_id, chat_id, message_id, data):
@@ -111,6 +111,10 @@ class AbstractUserState(AbstractState):
             if "photo" in update[update_type]:
                 photo = update[update_type]["photo"]
 
+            sticker = None
+            if "sticker" in update[update_type]:
+                photo = update[update_type]["sticker"]
+
             # --- process specific message type ---
 
             # text message
@@ -118,24 +122,30 @@ class AbstractUserState(AbstractState):
                 next_state = self.process_message(user_id, chat_id, text, entities)
 
             # photo/document message
-            elif document is not None or photo is not None:
+            elif document or photo or sticker:
                 file_name = "IMG" + str(update[update_type]["message_id"])
                 caption = update[update_type]["caption"] if "caption" in update[update_type] else None
 
                 # picture was sent as document
-                if document is not None:
+                if document:
                     file_id = document["file_id"]
-                    thumb_id = document["thumb"]["file_id"] if "thumb" in document["thumb"] else None
+                    thumb_id = document["thumb"]["file_id"] if "thumb" in document else None
+
                 # picture was sent as photo
-                else:
+                elif photo:
                     # sort photos by width
                     photo.sort(key=lambda x: x["width"])
 
                     file_id = photo[len(photo)-1]["file_id"]    # image with greatest size
-                    thumb_id = photo[0]["file_id"]         # image with smallest size
+                    thumb_id = photo[0]["file_id"]              # image with smallest size
 
-                if file_id is not None and file_name is not None:
-                    next_state = self.process_photo_message(user_id, chat_id, file_name, file_id, thumb_id=thumb_id, caption=caption)
+                # picture was sent as sticker
+                else:
+                    file_id = sticker["file_id"]
+                    thumb_id = sticker["thumb"]["file_id"] if "thumb" in sticker else None
+
+                if file_id is not None:
+                    next_state = self.process_photo_message(user_id, chat_id, file_id, thumb_id=thumb_id, caption=caption)
 
             else:
                 next_state = self.process_unknown_update(chat_id)

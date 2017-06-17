@@ -65,7 +65,7 @@ class IdleState(AbstractUserState):
 
         return next_state
 
-    def process_photo_message(self, user_id, chat_id, file_name, file_id, thumb_id=None, caption=None):
+    def process_photo_message(self, user_id, chat_id, file_id, thumb_id=None, caption=None):
         return self.process_unknown_update(chat_id)
 
     def process_callback_query(self, user_id, chat_id, message_id, data):

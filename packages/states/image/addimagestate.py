@@ -39,7 +39,7 @@ class AddImageState(SelectDraftUpdateState):
             , {"text": "<< drafts", "callback_data": "/updatedraft"}
             , {"text": "<< main menu", "callback_data": "/mainmenu"}]
 
-    def process_photo_message(self, user_id, chat_id, file_name, file_id, thumb_id=None, caption=None):
+    def process_photo_message(self, user_id, chat_id, file_id, thumb_id=None, caption=None):
         next_state = self
 
         # remove inline keyboard from latest bot message (by leaving out reply_options parameter)
