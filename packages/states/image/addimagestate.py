@@ -57,7 +57,8 @@ class AddImageState(SelectDraftUpdateState):
                 file = self.context.download_file(file_url)
 
                 if file is not None:
-                    image = self.context.persistence.add_post_image(post.id, file, file_id, thumb_id=thumb_id, caption=caption)
+                    file_name = str(self.message_id) + "." + file_url.rsplit(".", 1)[1]
+                    image = self.context.persistence.add_post_image(post.id, file_id, file_name, file, thumb_id=thumb_id, caption=caption)
 
             if image is not None:
                 self.context.send_message(chat_id

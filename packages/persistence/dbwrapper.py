@@ -57,6 +57,7 @@ class DBWrapper:
 
             , "CREATE TABLE IF NOT EXISTS image (image_id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT"
                                                 + ", file_id TEXT NOT NULL UNIQUE"
+                                                + ", file_name TEXT NOT NULL UNIQUE"
                                                 + ", file BLOB NOT NULL"
                                                 + ", thumb_id TEXT)"
 
@@ -294,7 +295,7 @@ class DBWrapper:
         if post is not None:
 
             new_post = self.add_post(post.user.id, post.title, PostState.DRAFT, post.gallery.title, post.content
-                                     , title_image=post.title_image
+                                     , title_image=None if post.title_image is None else post.title_image.id
                                      , original_post=post.id
                                      , commit=False)
             if new_post is not None:
@@ -305,13 +306,19 @@ class DBWrapper:
 
                 # copy title image
                 if post.title_image is not None:
-                    self.add_post_image(new_post.id, post.title_image.file_id, post.title_image.file, thumb_id=post.title_image.thumb_id, caption=post.title_image.caption, commit=False)
-                    self.update_post(new_post.id, new_post.user.id, new_post.title, new_post.status, new_post.gallery_title, new_post.content, post.title_image.id, new_post.tmsp_publish, new_post.original_post, commit=False)
+                    self.add_post_image(new_post.id, post.title_image.file_id, post.title_image.name, post.title_image.file, thumb_id=post.title_image.thumb_id, caption=post.title_image.caption, commit=False)
+                    self.update_post(new_post.id, new_post.user.id, new_post.title, new_post.status
+                                     , new_post.gallery.title
+                                     , new_post.content
+                                     , post.title_image.id
+                                     , new_post.tmsp_publish
+                                     , new_post.original_post.id
+                                     , commit=False)
 
                 # add gallery to new post
                 if post.gallery is not None:
                     for image in post.gallery.images:
-                        self.add_post_image(new_post.id, image.file_id, image.file
+                        self.add_post_image(new_post.id, image.file_id, image.name, image.file
                                             , thumb_id=image.thumb_id
                                             , caption=image.caption
                                             , commit=False)
@@ -367,7 +374,14 @@ class DBWrapper:
 
             # un-set title image, then attempt to delete it, rollback in case of failure
             if post.title_image is not None:
-                updated_post = self.update_post(post_id, post.user.id, post.title, post.status, post.gallery.title, post.content, None, post.tmsp_publish, post.original_post, commit=False)
+                updated_post = self.update_post(post_id, post.user.id, post.title, post.status
+                                                , post.gallery.title
+                                                , post.content
+                                                , None
+                                                , post.tmsp_publish
+                                                , None if post.original_post is None else post.original_post.id
+                                                , commit=False)
+
                 if updated_post is not None and updated_post.title_image is None:
                     deleted_image = self.delete_post_image(post.id, post.title_image.id)
 
@@ -496,7 +510,7 @@ class DBWrapper:
 
         return post_image
 
-    def add_post_image(self, post_id, file_id, file, thumb_id=None, caption=None, commit=True):
+    def add_post_image(self, post_id, file_id, file_name, file, thumb_id=None, caption=None, commit=True):
         param_dict = dict({key: value for key, value in locals().items() if key in ["post_id", "caption"] and value is not None})
 
         # if image already exists fetch it, otherwise add new image record
@@ -504,7 +518,7 @@ class DBWrapper:
         if len(images) == 1:
             image = images[0]
         else:
-            image = self.add_image(file_id, file, thumb_id=thumb_id, commit=False)
+            image = self.add_image(file_id, file_name, file, thumb_id=thumb_id, commit=False)
 
         if image is not None and self.get_post_image(post_id, image.id) is None:
             param_dict["image_id"] = image.id
@@ -609,7 +623,7 @@ class DBWrapper:
             for key, value in param_dict.items():
                 args.append(value)
 
-        return [Image(x[0], "IMG_" + str(x[0]), x[1], x[2], thumb_id=x[3]) for x in self.__conn.execute(stmt, tuple(args))]
+        return [Image(x[0], x[2], x[1], x[3], thumb_id=x[4]) for x in self.__conn.execute(stmt, tuple(args))]
 
     def get_image(self, image_id):
         image = None
@@ -620,7 +634,7 @@ class DBWrapper:
 
         return image
 
-    def add_image(self, file_id, file, thumb_id=None, commit=True):
+    def add_image(self, file_id, file_name, file, thumb_id=None, commit=True):
         param_dict = dict({key: value for key, value in locals().items() if key not in ["self", "commit"] and value is not None})
 
         stmt = "INSERT INTO image (" + ",".join(param_dict.keys()) + ") VALUES (" + ",".join(["?" for x in param_dict.keys()]) + ")"
