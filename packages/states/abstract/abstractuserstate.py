@@ -110,6 +110,10 @@ class AbstractUserState(AbstractState):
             if "document" in update[update_type] and "thumb" in update[update_type]["document"]:
                 document = update[update_type]["document"]
 
+                # if document is not an image, ignore message
+                if not ("mime_type" in document and document["mime_type"].startswith("image")):
+                    document = None
+
             # check if user sent photo message
             photo = None
             if "photo" in update[update_type]:
