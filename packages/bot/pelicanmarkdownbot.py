@@ -189,14 +189,17 @@ class PelicanMarkdownBot(AbstractUserStateBot):
                                                             , commit=False)
 
                 if updated_post is not None:
-                    is_published = iohelper.transfer_file(file_name + ".md", self.__post_target_url)
 
-                    if is_published and (len(post.gallery.images) > 0 or post.title_image is not None):
+                    # transfer gallery
+                    if len(post.gallery.images) > 0 or post.title_image is not None:
                         is_published = iohelper.transfer_file(file_name, self.__gallery_target_url)
                     else:
                         # delete gallery folder from remote location (may never have existed in the first place)
                         if not iohelper.remove_file(os.path.join(self.__gallery_target_url, file_name)):
                             logger.warning("obsolete gallery '" + file_name + "' could not be removed from: " + self.__gallery_target_url)
+
+                    # transfer blog post file
+                    is_published = is_published and iohelper.transfer_file(file_name + ".md", self.__post_target_url)
 
                 if is_published:
                     self.persistence.commit()
