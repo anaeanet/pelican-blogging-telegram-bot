@@ -106,7 +106,7 @@ class PelicanMarkdownBot(AbstractUserStateBot):
 
     @staticmethod
     def __build_pelican_post(post, tmsp_publish, gallery_file_name, publish_state):
-        format_datetime_md = "%Y-%m-%d %H:%M"
+        format_datetime_md = "%Y-%m-%d %H:%M:%S"
 
         md_post = "Title: {}".format(post.title)
 
