@@ -82,7 +82,12 @@ class SelectDraftUpdateState(AbstractUserPostState, IdleState):
 
             if len(post.title) > 0 and len(post.content) > 0:
                 reply_options.append({"text": "PUBLISH", "callback_data": "/selectupdate /publish"})
-                reply_options.append([])
+
+                # if draft was already published, show button pointing to preview url
+                if post.tmsp_publish:
+                    reply_options.append({"text": "PREVIEW draft", "url": self.bot.get_draft_url(post)})
+                else:
+                    reply_options.append([])
 
         # add button to return to main menu
         reply_options.append({"text": "<< main menu", "callback_data": "/mainmenu"})

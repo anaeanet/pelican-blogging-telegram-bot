@@ -20,12 +20,13 @@ class PelicanMarkdownBot(AbstractUserStateBot):
     as well as linked image galleries for <a href="http://docs.getpelican.com/en/stable/">PELICAN</a> blog posts.
     """
 
-    def __init__(self, token, url, file_url, database, post_target_url, gallery_target_url, authorized_users=[]):
+    def __init__(self, token, url, file_url, database, post_target_url, gallery_target_url, draft_url, authorized_users=[]):
         super().__init__(token, url, file_url, IdleState)
         self.__database = database
         self.__database.setup()
         self.__post_target_url = post_target_url + ("/" if not post_target_url.endswith("/") else "")
         self.__gallery_target_url = gallery_target_url + ("/" if not gallery_target_url.endswith("/") else "")
+        self.__draft_url = draft_url
 
         # store all authorized users in database
         if authorized_users is not None:
@@ -65,6 +66,9 @@ class PelicanMarkdownBot(AbstractUserStateBot):
     @property
     def persistence(self):
         return self.__database
+
+    def get_draft_url(self, post):
+        return post.tmsp_publish.strftime(self.__draft_url) if post.tmsp_publish else None
 
     def set_state(self, user_id, state, name=None):
         if self.persistence.get_user(user_id) is None:
@@ -197,11 +201,14 @@ class PelicanMarkdownBot(AbstractUserStateBot):
                 if is_published:
                     self.persistence.commit()
 
-                    # remove draft files from remote location if this publicationa s post
+                    # remove draft files from remote location if this publication is post
                     if publish_state == PostState.PUBLISHED:
                         iohelper.remove_file(os.path.join(self.__post_target_url, file_name + "_draft.md"))
                         iohelper.remove_file(os.path.join(self.__gallery_target_url, file_name + "_draft"))
 
+                    # draft publication, return URL
+                    else:
+                        is_published = self.__draft_url + updated_post.tmsp_publish.strftime("%Y/%m/%d/%H/%M/%S/%f")
                 else:
                     self.persistence.rollback()
                     logger.warning("publication of " + ("draft" if publish_state == PostState.DRAFT else "post")

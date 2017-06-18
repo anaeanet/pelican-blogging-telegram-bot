@@ -22,9 +22,10 @@ def main():
 
         post_target_url = config.post_target
         gallery_target_url = config.gallery_target
+        draft_url = config.draft_url
 
-        bot = PelicanMarkdownBot(token, url, file_url, DBWrapper(), post_target_url, gallery_target_url,
-                                 authorized_users=authorized_users)
+        bot = PelicanMarkdownBot(token, url, file_url, DBWrapper(), post_target_url, gallery_target_url, draft_url
+                                 , authorized_users=authorized_users)
         # start bot
         bot.run()
 
