@@ -76,7 +76,7 @@ class PelicanMarkdownBot(AbstractUserStateBot):
         super().set_state(user_id, state)
 
     def handle_update(self, update):
-        logger = logging.getLogger("pelicanBlogBot.packages.bot.pelicanmarkdownbot.handle_update")
+        logger = logging.getLogger("pelicanblogbot").getChild("packages.bot.pelicanmarkdownbot.handle_update")
 
         user_id = telegram.get_update_sender_id(update)
         user = None if user_id is None else self.persistence.get_user(user_id)
@@ -88,7 +88,8 @@ class PelicanMarkdownBot(AbstractUserStateBot):
 
             super().handle_update(update)
         else:
-            self.logger.info("Unauthorized user '" + str(user_id) + "' interacting with bot: " + update)
+            logger.info("Unauthorized user '" + str(user_id) + "' interacting with bot: " + str(update))
+            print("unauthorized user: " + str(user_id)) # TODO remove line eventually
 
     @staticmethod
     def __get_tmsp_and_filename(post, publish_type):
@@ -166,7 +167,7 @@ class PelicanMarkdownBot(AbstractUserStateBot):
         return is_published_locally
 
     def publish(self, post_id, publish_state):
-        logger = logging.getLogger("pelicanBlogBot.packages.bot.pelicanmarkdownbot.publish")
+        logger = logging.getLogger("pelicanblogbot").getChild("packages.bot.pelicanmarkdownbot.publish")
         is_published = False
 
         post = self.persistence.get_post(post_id)
@@ -214,7 +215,7 @@ class PelicanMarkdownBot(AbstractUserStateBot):
         return is_published
 
     def unpublish(self, post_id):
-        logger = logging.getLogger("pelicanBlogBot.packages.bot.pelicanmarkdownbot.unpublish")
+        logger = logging.getLogger("pelicanblogbot").getChild("packages.bot.pelicanmarkdownbot.unpublish")
         is_unpublished = False
 
         post = self.persistence.get_post(post_id)

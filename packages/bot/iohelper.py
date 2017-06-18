@@ -6,7 +6,8 @@ __author__ = "anaeanet"
 
 
 def create_folder(folder_name):
-    logger = logging.getLogger("pelicanBlogBot.packages.bot.iohelper.create_folder")
+
+    logger = logging.getLogger("pelicanblogbot").getChild("packages.bot.iohelper.create_folder")
     result = False
 
     try:
@@ -23,7 +24,7 @@ def create_folder(folder_name):
 
 
 def write_to_file(file_name, write_mode, file_content):
-    logger = logging.getLogger("pelicanBlogBot.packages.bot.iohelper.write_to_file")
+    logger = logging.getLogger("pelicanblogbot").getChild("packages.bot.iohelper.write_to_file")
     result = False
 
     try:

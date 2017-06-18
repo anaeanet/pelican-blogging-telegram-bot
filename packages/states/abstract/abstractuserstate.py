@@ -42,7 +42,7 @@ class AbstractUserState(AbstractState):
         raise NotImplementedError("Abstract method! Implement in child class", type(self))
 
     def build_state_message(self, chat_id, message_text, message_id=None, reply_options=None, keyboard_columns=1):
-        logger = logging.getLogger("pelicanBlogBot.packages.states.abstractuserstate.build_state_message")
+        logger = logging.getLogger("pelicanblogbot").getChild("packages.states.abstractuserstate.build_state_message")
 
         if message_id is not None:
             self.bot.edit_message_text(chat_id, message_id, message_text
@@ -90,7 +90,7 @@ class AbstractUserState(AbstractState):
         return self
 
     def process_update(self, update):
-        logger = logging.getLogger("pelicanBlogBot.packages.states.abstractuserstate.process_update")
+        logger = logging.getLogger("pelicanblogbot").getChild("packages.states.abstractuserstate.process_update")
 
         next_state = self
         update_type = telegram.get_update_type(update)
