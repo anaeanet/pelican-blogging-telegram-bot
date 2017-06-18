@@ -89,7 +89,6 @@ class PelicanMarkdownBot(AbstractUserStateBot):
             super().handle_update(update)
         else:
             logger.info("Unauthorized user '" + str(user_id) + "' interacting with bot: " + str(update))
-            print("unauthorized user: " + str(user_id)) # TODO remove line eventually
 
     @staticmethod
     def __get_tmsp_and_filename(post, publish_type):
