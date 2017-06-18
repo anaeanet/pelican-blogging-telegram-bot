@@ -1,6 +1,5 @@
 from packages.persistence.dbwrapper import DBWrapper
 from packages.bot.pelicanmarkdownbot import PelicanMarkdownBot
-from packages.bot.parsemode import ParseMode
 
 import logging
 import logging.config
@@ -11,7 +10,7 @@ __author__ = "anaeanet"
 
 def main():
     logging.config.fileConfig('logging.conf')
-    logger = logging.getLogger("pelicanBlogBot")
+    logger = logging.getLogger("pelicanblogbot")
 
     logger.info("starting pelicanBlogBot")
 
@@ -39,7 +38,7 @@ def main():
 
         # inform all authorized users about crashing blogging bot
         for user_id in authorized_users:
-            bot.send_message(user_id, "BloggingBot was terminated unexpectedly!", parse_mode=ParseMode.HTML.value)
+            bot.send_message(user_id, "BloggingBot was terminated unexpectedly!")
 
         raise
 

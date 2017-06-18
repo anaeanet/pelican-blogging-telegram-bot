@@ -6,6 +6,8 @@ from packages.bot.abstractuserstatebot import AbstractUserStateBot
 from packages.states.navigation.idlestate import IdleState
 from packages.datamodel.poststate import PostState
 
+import logging
+
 __author__ = "anaeanet"
 
 
@@ -74,16 +76,19 @@ class PelicanMarkdownBot(AbstractUserStateBot):
         super().set_state(user_id, state)
 
     def handle_update(self, update):
-        user_id = telegram.get_update_sender_id(update)
-        user = self.persistence.get_user(user_id)
+        logger = logging.getLogger("pelicanBlogBot.packages.bot.pelicanmarkdownbot.handle_update")
 
-        if user_id is not None and user is not None:
-            print(self.get_state(user_id).__class__.__name__,
-                  update[telegram.get_update_type(update)])  # TODO remove print
+        user_id = telegram.get_update_sender_id(update)
+        user = None if user_id is None else self.persistence.get_user(user_id)
+
+        if user is not None:
+            logger.debug(user.name + "/" + str(user.id)
+                         + " (" + self.get_state(user.id).__class__.__name__ + ") -> "
+                         + str(update[telegram.get_update_type(update)]))
+
             super().handle_update(update)
         else:
-            # TODO: log unauthorized user and update_type
-            None
+            self.logger.info("Unauthorized user '" + str(user_id) + "' interacting with bot: " + update)
 
     @staticmethod
     def __get_tmsp_and_filename(post, publish_type):
@@ -161,6 +166,7 @@ class PelicanMarkdownBot(AbstractUserStateBot):
         return is_published_locally
 
     def publish(self, post_id, publish_state):
+        logger = logging.getLogger("pelicanBlogBot.packages.bot.pelicanmarkdownbot.publish")
         is_published = False
 
         post = self.persistence.get_post(post_id)
@@ -186,8 +192,7 @@ class PelicanMarkdownBot(AbstractUserStateBot):
                     else:
                         # delete gallery folder from remote location (may never have existed in the first place)
                         if not iohelper.remove_file(os.path.join(self.__gallery_target_url, file_name)):
-                            # TODO log
-                            None
+                            logger.warning("obsolete gallery '" + file_name + "' could not be removed from: " + self.__gallery_target_url)
 
                 if is_published:
                     self.persistence.commit()
@@ -199,16 +204,17 @@ class PelicanMarkdownBot(AbstractUserStateBot):
 
                 else:
                     self.persistence.rollback()
-                    # TODO log
+                    logger.warning("publication of " + ("draft" if publish_state == PostState.DRAFT else "post")
+                                   + "'" + post.title + "' failed and had to be rolled back.")
 
             # delete local files - markdown file and gallery folder
             if not (iohelper.remove_file(file_name + ".md") and iohelper.remove_file(file_name)):
-                # TODO log
-                None
+                logger.warning("locally published files '" + file_name + "*' could not deleted.")
 
         return is_published
 
     def unpublish(self, post_id):
+        logger = logging.getLogger("pelicanBlogBot.packages.bot.pelicanmarkdownbot.unpublish")
         is_unpublished = False
 
         post = self.persistence.get_post(post_id)
@@ -231,7 +237,6 @@ class PelicanMarkdownBot(AbstractUserStateBot):
                 if markdown_unpublished and gallery_unpublished:
                     is_unpublished = True
                 else:
-                    # TODO log
-                    None
+                    logger.warning("'" + post.title + "' could not be unpublished")
 
         return is_unpublished

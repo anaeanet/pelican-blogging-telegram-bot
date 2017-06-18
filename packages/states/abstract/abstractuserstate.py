@@ -1,4 +1,5 @@
 import packages.bot.telegram as telegram
+import logging
 from packages.bot.keyboardtype import KeyboardType
 from packages.bot.parsemode import ParseMode
 from packages.states.abstract.abstractstate import AbstractState
@@ -41,6 +42,8 @@ class AbstractUserState(AbstractState):
         raise NotImplementedError("Abstract method! Implement in child class", type(self))
 
     def build_state_message(self, chat_id, message_text, message_id=None, reply_options=None, keyboard_columns=1):
+        logger = logging.getLogger("pelicanBlogBot.packages.states.abstractuserstate.build_state_message")
+
         if message_id is not None:
             self.bot.edit_message_text(chat_id, message_id, message_text
                                        , parse_mode=ParseMode.HTML.value
@@ -61,8 +64,7 @@ class AbstractUserState(AbstractState):
                 else:
                     self.__message_id = max(sent_message["result"]["message_id"], self.__message_id)
             else:
-                # TODO log
-                None
+                logger.warning("sending message '" + message_text + "' to user " + str(chat_id) + " failed.")
 
     def process_message(self, user_id, chat_id, text, entities):
         raise NotImplementedError("Abstract method! Implement in child class", type(self))
@@ -88,6 +90,8 @@ class AbstractUserState(AbstractState):
         return self
 
     def process_update(self, update):
+        logger = logging.getLogger("pelicanBlogBot.packages.states.abstractuserstate.process_update")
+
         next_state = self
         update_type = telegram.get_update_type(update)
         user_id = telegram.get_update_sender_id(update)
@@ -153,7 +157,6 @@ class AbstractUserState(AbstractState):
                 next_state = self.process_unknown_update(chat_id)
 
         else:   # unsupported update type
-            # TODO log: user triggered update_type
-            None
+            logger.info("user " + str(user_id) + " sent unsupported update '" + update_type + "': " + str(update[update_type]))
 
         return next_state
