@@ -49,7 +49,7 @@ def remove_file(path_to_file):
         server, path = path.split(":", 1)
 
     if server is not None:
-        removal_successful = subprocess.call(["ssh", server, "'rm -rf " + path + "'"]) == 0
+        removal_successful = subprocess.call(["ssh", server, "rm -rf " + path]) == 0
     else:
         removal_successful = subprocess.call(["rm", "-rf", path]) == 0
 
