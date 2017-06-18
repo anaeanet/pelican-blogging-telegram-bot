@@ -19,8 +19,8 @@ class DBWrapper:
     to separate bot implementation from specific database implementation.
     """
 
-    def __init__(self, database_name):
-        self.__conn = sqlite3.connect(database_name)
+    def __init__(self):
+        self.__conn = sqlite3.connect("database.sqlite")
 
     def setup(self):
 

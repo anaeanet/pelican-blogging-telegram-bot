@@ -18,13 +18,12 @@ def main():
         token = config.token
         url = config.url
         file_url = config.file_url
-        database = DBWrapper(config.database_name)
         authorized_users = config.authorized_users
 
-        post_target_url = config.markdown_target
+        post_target_url = config.post_target
         gallery_target_url = config.gallery_target
 
-        bot = PelicanMarkdownBot(token, url, file_url, database, post_target_url, gallery_target_url,
+        bot = PelicanMarkdownBot(token, url, file_url, DBWrapper(), post_target_url, gallery_target_url,
                                  authorized_users=authorized_users)
         # start bot
         bot.run()
