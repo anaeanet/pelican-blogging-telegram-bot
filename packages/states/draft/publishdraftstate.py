@@ -35,9 +35,10 @@ class PublishDraftState(SelectDraftUpdateState):
         if post is not None:
             reply_options.append({"text": "PUBLISH as draft", "callback_data": "/publish " + PostState.DRAFT.value})
 
+            # TODO enable final pubication once test runs with draft publication only were successful
             # only show "publish as post" if draft has already been published as draft to (p)review
-            if post.tmsp_publish is not None:
-                reply_options.append({"text": "PUBLISH as post", "callback_data": "/publish " + PostState.PUBLISHED.value})
+            #if post.tmsp_publish is not None:
+            #    reply_options.append({"text": "PUBLISH as post", "callback_data": "/publish " + PostState.PUBLISHED.value})
 
         # add button to return to main menu, make sure it always covers entire width of table
         if len(reply_options) % 2 == 1:
