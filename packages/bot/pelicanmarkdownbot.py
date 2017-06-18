@@ -119,7 +119,11 @@ class PelicanMarkdownBot(AbstractUserStateBot):
             md_post += "\r\n" + "Date: {}".format(tmsp_publish.strftime(format_datetime_md))
             md_post += "\r\n" + "Modified: {}".format(datetime.now().strftime(format_datetime_md))
         else:
-            md_post += "\r\n" + "Date: {}".format(datetime.now().strftime(format_datetime_md))
+            # if draft was published before (as draft), use original publication date
+            if tmsp_publish is not None:
+                md_post += "\r\n" + "Date: {}".format(tmsp_publish.strftime(format_datetime_md))
+            else:
+                md_post += "\r\n" + "Date: {}".format(datetime.now().strftime(format_datetime_md))
 
         # put author name into post, if author's name is provided
         if post.user.name is not None and len(post.user.name) > 0:
