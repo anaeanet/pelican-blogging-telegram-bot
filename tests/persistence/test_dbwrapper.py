@@ -1,15 +1,23 @@
 import unittest
+import sqlite3
 from packages.persistence.dbwrapper import DBWrapper
 from packages.states.navigation.idlestate import IdleState
 
 __author__ = 'anaeanet'
 
 
+class TestDBWrapper(DBWrapper):
+
+    def __init__(self, db_name):
+        super().__init__()
+        self.__conn = sqlite3.connect(db_name)
+
+
 class DBWrapperTest(unittest.TestCase):
 
     def setUp(self):
-        self.db_name = "test_db.sqlite"
-        self.db = DBWrapper(self.db_name)
+        self.db_name = "database_test.sqlite"
+        self.db = TestDBWrapper(self.db_name)
         self.db.setup()
 
     def test_user(self):
